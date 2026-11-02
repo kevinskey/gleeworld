@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { ConfirmPill, type ConfirmPillRequest } from '@/components/ui/confirm-pill';
 import { useProductImageUpload } from '@/hooks/useProductImageUpload';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -491,6 +492,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
   // not the first render's empty array (stale closure).
   const pendingImagesRef = useRef(pendingImages);
   pendingImagesRef.current = pendingImages;
+  const [confirmImageDelete, setConfirmImageDelete] = useState<(ConfirmPillRequest & { run: () => Promise<void> }) | null>(null);
   useEffect(() => () => {
     pendingImagesRef.current.forEach(p => URL.revokeObjectURL(p.preview));
   }, []);
@@ -933,7 +935,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
                         }} />
                       </td>
                       <td className="p-1 text-center">
-                        <Button type="button" variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => setVariantRows(variantRows.filter((_, i) => i !== idx))}>
+                        <Button type="button" variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => setVariantRows(variantRows.filter((_, i) => i !== idx))} aria-label={`Remove variant row ${idx + 1}`} title={`Remove variant row ${idx + 1}`}>
                           <Trash2 className="w-3.5 h-3.5" />
                         </Button>
                       </td>
@@ -959,7 +961,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-2">
                 {product.images?.map(image => <div key={image.id} className="relative group">
                     <RetryImage src={image.image_url} alt={image.alt_text} className="w-full aspect-square object-cover rounded border" />
-                    <Button variant="destructive" size="sm" className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity" onClick={async () => {
+                    <Button type="button" variant="destructive" size="sm" className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity" aria-label={`Delete image${image.alt_text ? ` ${image.alt_text}` : ''}`} title="Delete image" onClick={(e) => setConfirmImageDelete({ x: e.clientX, y: e.clientY, message: `Delete this image${image.alt_text ? ` ("${image.alt_text}")` : ''}? The file is removed from storage.`, run: async () => {
                 if (await deleteProductImage(image.image_url)) {
                   const { error: rowError } = await supabase.from('gw_product_images').delete().eq('id', image.id);
                   // Keep the storefront's images[] column in sync too. If the
@@ -980,7 +982,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
                   }
                   onSave(); // Refresh
                 }
-              }}>
+              } })}>
                       <Trash2 className="w-3 h-3" />
                     </Button>
                   </div>)}
@@ -992,7 +994,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-2">
                 {pendingImages.map((p, idx) => <div key={p.preview} className="relative group">
                     <img src={p.preview} alt={p.file.name} className="w-full aspect-square object-cover rounded border" />
-                    <Button type="button" variant="destructive" size="sm" className="absolute top-1 right-1" onClick={() => {
+                    <Button type="button" variant="destructive" size="sm" className="absolute top-1 right-1" aria-label={`Remove ${p.file.name}`} title={`Remove ${p.file.name}`} onClick={() => {
                       URL.revokeObjectURL(p.preview);
                       setPendingImages(pendingImages.filter((_, i) => i !== idx));
                     }}>
@@ -1025,5 +1027,14 @@ const ProductForm: React.FC<ProductFormProps> = ({
           {saving ? 'Saving...' : product ? 'Update Product' : 'Create Product'}
         </Button>
       </div>
+      <ConfirmPill
+        request={confirmImageDelete}
+        onConfirm={async () => {
+          const run = confirmImageDelete?.run;
+          setConfirmImageDelete(null);
+          if (run) await run();
+        }}
+        onCancel={() => setConfirmImageDelete(null)}
+      />
     </form>;
 };

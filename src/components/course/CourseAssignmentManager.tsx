@@ -593,7 +593,7 @@ export const CourseAssignmentManager: React.FC<CourseAssignmentManagerProps> = (
                 </SelectContent>
               </Select>
 
-              <Button variant="outline" size="icon" className="h-10 w-10 flex-shrink-0" onClick={toggleSortOrder}>
+              <Button variant="outline" size="icon" className="h-10 w-10 flex-shrink-0" onClick={toggleSortOrder} aria-label={sortOrder === 'asc' ? 'Sort descending' : 'Sort ascending'} title={sortOrder === 'asc' ? 'Sort descending' : 'Sort ascending'}>
                 {sortOrder === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />}
               </Button>
             </div>
@@ -646,13 +646,13 @@ export const CourseAssignmentManager: React.FC<CourseAssignmentManagerProps> = (
                 </div>
               </div>
               <div className="flex items-center gap-0.5 shrink-0">
-                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => navigate(`/grading/instructor/assignment/${assignment.id}/submissions`)}>
+                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => navigate(`/grading/instructor/assignment/${assignment.id}/submissions`)} aria-label={`View submissions for ${assignment.title}`} title="View & grade submissions">
                   <Users className="h-3.5 w-3.5 text-primary" />
                 </Button>
-                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => toggleVisibilityMutation.mutate({ id: assignment.id, isPublished: !assignment.is_published })} disabled={toggleVisibilityMutation.isPending}>
+                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => toggleVisibilityMutation.mutate({ id: assignment.id, isPublished: !assignment.is_published })} disabled={toggleVisibilityMutation.isPending} aria-label={assignment.is_published ? 'Hide from students' : 'Show to students'} aria-pressed={assignment.is_published} title={assignment.is_published ? 'Hide from students' : 'Show to students'}>
                   {assignment.is_published ? <Eye className="h-3.5 w-3.5 text-green-500" /> : <EyeOff className="h-3.5 w-3.5" style={{ color: '#64748B' }} />}
                 </Button>
-                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleEdit(assignment)}>
+                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleEdit(assignment)} aria-label={`Edit ${assignment.title}`} title="Edit assignment">
                   <Edit className="h-3.5 w-3.5" />
                 </Button>
                 <ConfirmDeleteButton
@@ -691,7 +691,7 @@ export const CourseAssignmentManager: React.FC<CourseAssignmentManagerProps> = (
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => navigate(`/grading/instructor/assignment/${assignment.id}/submissions`)}>
+                      <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => navigate(`/grading/instructor/assignment/${assignment.id}/submissions`)} aria-label={`View submissions for ${assignment.title}`}>
                         <Users className="h-4 w-4 text-primary" />
                       </Button>
                     </TooltipTrigger>
@@ -701,7 +701,7 @@ export const CourseAssignmentManager: React.FC<CourseAssignmentManagerProps> = (
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => toggleVisibilityMutation.mutate({ id: assignment.id, isPublished: !assignment.is_published })} disabled={toggleVisibilityMutation.isPending}>
+                      <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => toggleVisibilityMutation.mutate({ id: assignment.id, isPublished: !assignment.is_published })} disabled={toggleVisibilityMutation.isPending} aria-label={assignment.is_published ? 'Hide from students' : 'Show to students'} aria-pressed={assignment.is_published}>
                         {assignment.is_published ? <Eye className="h-4 w-4 text-green-500" /> : <EyeOff className="h-4 w-4" style={{ color: '#64748B' }} />}
                       </Button>
                     </TooltipTrigger>
@@ -711,7 +711,7 @@ export const CourseAssignmentManager: React.FC<CourseAssignmentManagerProps> = (
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => handleEdit(assignment)}>
+                      <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => handleEdit(assignment)} aria-label={`Edit ${assignment.title}`}>
                         <Edit className="h-4 w-4" style={{ color: '#475569' }} />
                       </Button>
                     </TooltipTrigger>

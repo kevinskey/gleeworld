@@ -274,6 +274,8 @@ export const EmailTemplateBuilder = ({ onTemplateCreated }: EmailTemplateBuilder
                 size="sm"
                 onClick={() => moveBlock(block.id, 'up')}
                 disabled={index === 0}
+                aria-label="Move block up"
+                title="Move block up"
               >
                 <MoveUp className="h-4 w-4" />
               </Button>
@@ -282,6 +284,8 @@ export const EmailTemplateBuilder = ({ onTemplateCreated }: EmailTemplateBuilder
                 size="sm"
                 onClick={() => moveBlock(block.id, 'down')}
                 disabled={index === blocks.length - 1}
+                aria-label="Move block down"
+                title="Move block down"
               >
                 <MoveDown className="h-4 w-4" />
               </Button>
@@ -289,6 +293,8 @@ export const EmailTemplateBuilder = ({ onTemplateCreated }: EmailTemplateBuilder
                 variant="ghost"
                 size="sm"
                 onClick={() => deleteBlock(block.id)}
+                aria-label="Remove block"
+                title="Remove block"
               >
                 <Trash2 className="h-4 w-4 text-destructive" />
               </Button>
@@ -319,6 +325,8 @@ export const EmailTemplateBuilder = ({ onTemplateCreated }: EmailTemplateBuilder
                       size="sm"
                       onClick={() => updateBlock(block.id, '')}
                       className="absolute top-1 right-1"
+                      aria-label="Remove image"
+                      title="Remove image"
                     >
                       <Trash2 className="h-3 w-3" />
                     </Button>

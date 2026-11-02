@@ -100,6 +100,8 @@ export const SubmissionGradingView: React.FC<SubmissionGradingViewProps> = ({ su
           variant="ghost" 
           size="icon" 
           onClick={() => navigate(`/grading/instructor/assignment/${submission?.assignment_id}/submissions`)}
+          aria-label="Back to submissions"
+          title="Back to submissions"
         >
           <ArrowLeft className="h-5 w-5" />
         </Button>

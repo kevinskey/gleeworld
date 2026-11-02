@@ -208,7 +208,7 @@ export const StudentCourseView: React.FC<StudentCourseViewProps> = ({ courseId }
 
       {/* Header */}
       <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" onClick={() => {
+        <Button variant="ghost" size="icon" aria-label="Back" title="Back" onClick={() => {
           const courseConfig = ACADEMY_COURSES.find((c) => c.id === courseId);
           navigate(courseConfig?.route || '/dashboard');
         }}>

@@ -742,6 +742,8 @@ export const MessengerAdminModule: React.FC = () => {
                           size="icon"
                           onClick={() => handleRemoveMember(member.id)}
                           className="text-destructive hover:text-destructive"
+                          aria-label={`Remove ${member.full_name} from group`}
+                          title={`Remove ${member.full_name} from group`}
                         >
                           <X className="h-4 w-4" />
                         </Button>

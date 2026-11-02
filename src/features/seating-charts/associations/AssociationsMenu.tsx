@@ -10,6 +10,7 @@ import {
 } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
+import { ConfirmDeleteButton } from '@/components/shared/ConfirmDeleteButton';
 import {
   attachChart, detachChart,
 } from '../adapters/tourManagerAdapter';
@@ -176,9 +177,17 @@ export function AssociationsMenu({ chartId }: AssociationsMenuProps) {
                     <p className="truncate">{r.label ?? r.association_id.slice(0, 8)}</p>
                     <Badge variant="secondary" className="text-xs mt-0.5">{TYPE_LABEL[r.association_type]}</Badge>
                   </div>
-                  <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => onDetach(r.id)}>
+                  <ConfirmDeleteButton
+                    confirmKey="detach-seating-chart-association"
+                    title={`Detach "${r.label ?? r.association_id.slice(0, 8)}"?`}
+                    description="The chart stays; only this link is removed."
+                    confirmLabel="Detach"
+                    onConfirm={() => onDetach(r.id)}
+                    ariaLabel={`Detach ${r.label ?? TYPE_LABEL[r.association_type]}`}
+                    className="inline-flex items-center justify-center h-6 w-6 rounded-md hover:bg-muted"
+                  >
                     <Trash2 className="w-4 h-4" />
-                  </Button>
+                  </ConfirmDeleteButton>
                 </li>
               ))}
             </ul>

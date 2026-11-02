@@ -29,6 +29,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Trash2, Star, StarOff, Plus, MessageSquarePlus, Download } from 'lucide-react';
+import { ConfirmPill, type ConfirmPillRequest } from '@/components/ui/confirm-pill';
 import {
   Dialog,
   DialogContent,
@@ -124,6 +125,7 @@ function MembersTab({ ensembleId }: { ensembleId: string }) {
   const [pickProfileId, setPickProfileId] = useState<string>('');
   const [importOpen, setImportOpen] = useState(false);
   const [contactProfileId, setContactProfileId] = useState<string | null>(null);
+  const [confirmRemove, setConfirmRemove] = useState<(ConfirmPillRequest & { id: string }) | null>(null);
 
   const { data: members = [] } = useQuery({
     queryKey: ['ensemble_members', ensembleId],
@@ -290,7 +292,14 @@ function MembersTab({ ensembleId }: { ensembleId: string }) {
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={() => remove.mutate(m.id)}
+                      onClick={(e) =>
+                        setConfirmRemove({
+                          id: m.id,
+                          x: e.clientX,
+                          y: e.clientY,
+                          message: `Remove ${u?.full_name ?? u?.email ?? 'this member'} from the ensemble?`,
+                        })
+                      }
                       title="Remove from ensemble"
                     >
                       <Trash2 className="h-4 w-4 text-destructive" />
@@ -303,6 +312,15 @@ function MembersTab({ ensembleId }: { ensembleId: string }) {
         </Table>
       )}
 
+      <ConfirmPill
+        request={confirmRemove}
+        busy={remove.isPending}
+        onConfirm={() => {
+          if (!confirmRemove) return;
+          remove.mutate(confirmRemove.id, { onSettled: () => setConfirmRemove(null) });
+        }}
+        onCancel={() => setConfirmRemove(null)}
+      />
       <ImportFromCourseDialog
         ensembleId={ensembleId}
         open={importOpen}
@@ -630,6 +648,7 @@ function DirectorsTab({ ensembleId }: { ensembleId: string }) {
   const queryClient = useQueryClient();
   const { users } = useUsers();
   const [pickProfileId, setPickProfileId] = useState<string>('');
+  const [confirmRemove, setConfirmRemove] = useState<(ConfirmPillRequest & { id: string }) | null>(null);
 
   const { data: directors = [] } = useQuery({
     queryKey: ['ensemble_directors', ensembleId],
@@ -784,7 +803,16 @@ function DirectorsTab({ ensembleId }: { ensembleId: string }) {
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={() => remove.mutate(d.id)}
+                      onClick={(e) =>
+                        setConfirmRemove({
+                          id: d.id,
+                          x: e.clientX,
+                          y: e.clientY,
+                          message: `Remove ${u?.full_name ?? u?.email ?? 'this director'} as a director?`,
+                        })
+                      }
+                      aria-label={`Remove director ${u?.full_name ?? u?.email ?? ''}`.trim()}
+                      title={`Remove director ${u?.full_name ?? u?.email ?? ''}`.trim()}
                     >
                       <Trash2 className="h-4 w-4 text-destructive" />
                     </Button>
@@ -795,6 +823,15 @@ function DirectorsTab({ ensembleId }: { ensembleId: string }) {
           </TableBody>
         </Table>
       )}
+      <ConfirmPill
+        request={confirmRemove}
+        busy={remove.isPending}
+        onConfirm={() => {
+          if (!confirmRemove) return;
+          remove.mutate(confirmRemove.id, { onSettled: () => setConfirmRemove(null) });
+        }}
+        onCancel={() => setConfirmRemove(null)}
+      />
     </div>
   );
 }
@@ -805,6 +842,7 @@ function TargetsTab({ ensembleId }: { ensembleId: string }) {
   const queryClient = useQueryClient();
   const [voicePart, setVoicePart] = useState<VoicePart | ''>('');
   const [count, setCount] = useState('');
+  const [confirmRemove, setConfirmRemove] = useState<(ConfirmPillRequest & { id: string }) | null>(null);
 
   const { data: targets = [] } = useQuery({
     queryKey: ['section_targets', ensembleId],
@@ -951,7 +989,16 @@ function TargetsTab({ ensembleId }: { ensembleId: string }) {
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={() => remove.mutate(t.id)}
+                    onClick={(e) =>
+                      setConfirmRemove({
+                        id: t.id,
+                        x: e.clientX,
+                        y: e.clientY,
+                        message: `Remove the ${VOICE_PART_LABEL[t.voice_part as VoicePart] ?? t.voice_part} target?`,
+                      })
+                    }
+                    aria-label={`Remove ${VOICE_PART_LABEL[t.voice_part as VoicePart] ?? t.voice_part} target`}
+                    title={`Remove ${VOICE_PART_LABEL[t.voice_part as VoicePart] ?? t.voice_part} target`}
                   >
                     <Trash2 className="h-4 w-4 text-destructive" />
                   </Button>
@@ -961,6 +1008,15 @@ function TargetsTab({ ensembleId }: { ensembleId: string }) {
           </TableBody>
         </Table>
       )}
+      <ConfirmPill
+        request={confirmRemove}
+        busy={remove.isPending}
+        onConfirm={() => {
+          if (!confirmRemove) return;
+          remove.mutate(confirmRemove.id, { onSettled: () => setConfirmRemove(null) });
+        }}
+        onCancel={() => setConfirmRemove(null)}
+      />
     </div>
   );
 }

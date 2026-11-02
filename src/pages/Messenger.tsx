@@ -22,6 +22,10 @@ import { ActiveMeetingsSidebar } from '@/components/video/ActiveMeetingsSidebar'
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription,
+  AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { syncCourseMessengerGroup } from '@/hooks/useCourseMessengerSync';
 import { SMSHistoryPanel } from '@/components/messaging/SMSHistoryPanel';
@@ -576,6 +580,7 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
   };
 
   const [manualGroups, setManualGroups] = useState<{id: string; name: string; description: string | null; member_count: number}[]>([]);
+  const [groupToDelete, setGroupToDelete] = useState<{ id: string; name: string } | null>(null);
   
   const loadManualGroups = useCallback(async () => {
     console.log('[Messenger] Loading manual groups...');
@@ -999,7 +1004,7 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
                                       {recipients.map((r) => (
                                         <Badge key={r} variant="secondary" className="gap-1 pr-1 text-xs">
                                           {r}
-                                          <button onClick={() => removeRecipient(r)} className="hover:bg-muted-foreground/20 rounded-full p-0.5">
+                                          <button onClick={() => removeRecipient(r)} className="hover:bg-muted-foreground/20 rounded-full p-0.5" aria-label={`Remove ${r}`} title="Remove recipient">
                                             <X className="h-3 w-3" />
                                           </button>
                                         </Badge>
@@ -1012,7 +1017,7 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
                                   {recipients.map((r) => (
                                     <Badge key={r} variant="secondary" className="gap-1 pr-1 text-xs">
                                       {r}
-                                      <button onClick={() => removeRecipient(r)} className="hover:bg-muted-foreground/20 rounded-full p-0.5">
+                                      <button onClick={() => removeRecipient(r)} className="hover:bg-muted-foreground/20 rounded-full p-0.5" aria-label={`Remove ${r}`} title="Remove recipient">
                                         <X className="h-3 w-3" />
                                       </button>
                                     </Badge>
@@ -1095,7 +1100,7 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
                                       <span className="truncate text-xs font-medium text-foreground">{file.name}</span>
                                       <span className="text-sm text-muted-foreground flex-shrink-0">{(file.size / (1024 * 1024)).toFixed(1)}MB</span>
                                     </div>
-                                    <button onClick={() => removeEmailAttachment(index)} className="hover:bg-muted rounded-full p-0.5 flex-shrink-0">
+                                    <button onClick={() => removeEmailAttachment(index)} className="hover:bg-muted rounded-full p-0.5 flex-shrink-0" aria-label={`Remove ${file.name}`} title="Remove attachment">
                                       <X className="h-3 w-3 text-muted-foreground" />
                                     </button>
                                   </div>
@@ -1164,7 +1169,7 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
                                   <div className="flex flex-wrap gap-1.5">
                                     {smsRecipients.map(r => <Badge key={r.user_id} variant="secondary" className="gap-1 pr-1 text-xs shrink-0">
                                         {r.full_name}
-                                        <button onClick={() => removeSmsRecipient(r.user_id)} className="hover:bg-muted-foreground/20 rounded-full p-0.5">
+                                        <button onClick={() => removeSmsRecipient(r.user_id)} className="hover:bg-muted-foreground/20 rounded-full p-0.5" aria-label={`Remove ${r.full_name}`} title="Remove recipient">
                                           <X className="h-3 w-3" />
                                         </button>
                                       </Badge>)}
@@ -1242,7 +1247,7 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
                                       {(attachment.size / (1024 * 1024)).toFixed(2)} MB
                                     </p>
                                   </div>
-                                  <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={() => removeSmsAttachment(index)}>
+                                  <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={() => removeSmsAttachment(index)} aria-label={`Remove ${attachment.name}`} title="Remove attachment">
                                     <X className="h-3.5 w-3.5" />
                                   </Button>
                                 </div>
@@ -1313,7 +1318,7 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
                         <span className="text-xs">Add</span>
                       </Button>
                     )}
-                    <button onClick={() => setShowGroupsPanel(false)} className="p-2 hover:bg-muted rounded-lg sm:hidden">
+                    <button onClick={() => setShowGroupsPanel(false)} className="p-2 hover:bg-muted rounded-lg sm:hidden" aria-label="Close groups panel" title="Close groups panel">
                       <X className="h-5 w-5" />
                     </button>
                   </div>
@@ -1429,7 +1434,7 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
         </div>
         <DialogFooter className="gap-2">
           {editingGroup && (
-            <Button variant="destructive" onClick={() => { handleDeleteGroup(editingGroup.id); setShowGroupEditor(false); }}>
+            <Button variant="destructive" onClick={() => setGroupToDelete({ id: editingGroup.id, name: editingGroup.name })}>
               <Trash2 className="h-4 w-4 mr-2" /> Delete
             </Button>
           )}
@@ -1439,6 +1444,25 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
           </Button>
         </DialogFooter>
       </DialogContent>
+      <AlertDialog open={!!groupToDelete} onOpenChange={(o) => { if (!o) setGroupToDelete(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete "{groupToDelete?.name}"?</AlertDialogTitle>
+            <AlertDialogDescription>
+              The group and its member list will be removed. This cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => { if (groupToDelete) handleDeleteGroup(groupToDelete.id); setGroupToDelete(null); setShowGroupEditor(false); }}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Dialog>
   );
 

@@ -10,7 +10,11 @@ import { Input } from '@/components/ui/input';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
-import { Music, Plus, LayoutGrid, List as ListIcon, Search, Star } from 'lucide-react';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription,
+  AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { Music, Plus, LayoutGrid, List as ListIcon, Loader2, Search, Star } from 'lucide-react';
 import { toast } from 'sonner';
 import { usePersonalScores, type PersonalScore } from '@/hooks/usePersonalScores';
 import { useUserRole } from '@/hooks/useUserRole';
@@ -128,6 +132,15 @@ export function MyMusicTab() {
   const vault = useOfflineVault();
   const qc = useQueryClient();
   const [publishing, setPublishing] = useState<PersonalScore | null>(null);
+  // Destructive actions wait for an explicit confirmation (AlertDialog, not
+  // native confirm()). Both are hard deletes: removing a score drops the row
+  // AND its storage object; unpublishing deletes the gw_sheet_music row.
+  const [pendingDestroy, setPendingDestroy] = useState<
+    | { kind: 'remove'; score: PersonalScore; published: boolean }
+    | { kind: 'unpublish'; score: PersonalScore; publishedId: string }
+    | null
+  >(null);
+  const [destroying, setDestroying] = useState(false);
   const myPaths = useMemo(
     () => scores.map((s) => s.storage_path).filter((p): p is string => !!p),
     [scores],
@@ -159,7 +172,10 @@ export function MyMusicTab() {
       setPublishing(s);
       return;
     }
-    if (!confirm(`Unpublish "${s.title}"? Members will immediately lose access to the published copy.`)) return;
+    setPendingDestroy({ kind: 'unpublish', score: s, publishedId });
+  };
+
+  const unpublish = async (publishedId: string) => {
     // Deleting the row revokes tenant read of the file (the storage policy
     // keys on the row's existence). The owner-revoke DELETE policy
     // (20260803180000) guarantees this works for the file's owner.
@@ -204,14 +220,25 @@ export function MyMusicTab() {
     }
   };
 
-  const removeWithConfirm = async (s: PersonalScore) => {
+  const removeWithConfirm = (s: PersonalScore) => {
     const published = !!(s.storage_path && publishedByPath.get(s.storage_path));
-    const message = published
-      ? `"${s.title}" is published to your group's library — deleting the file will BREAK the published copy for every member. Remove anyway?`
-      : `Remove "${s.title}" from My Music?`;
-    if (!confirm(message)) return;
-    try { await removeScore(s); toast.success('Removed'); }
-    catch (e) { toast.error(e instanceof Error ? e.message : 'Remove failed'); }
+    setPendingDestroy({ kind: 'remove', score: s, published });
+  };
+
+  const runPendingDestroy = async () => {
+    if (!pendingDestroy) return;
+    setDestroying(true);
+    try {
+      if (pendingDestroy.kind === 'remove') {
+        try { await removeScore(pendingDestroy.score); toast.success('Removed'); }
+        catch (e) { toast.error(e instanceof Error ? e.message : 'Remove failed'); }
+      } else {
+        await unpublish(pendingDestroy.publishedId);
+      }
+    } finally {
+      setDestroying(false);
+      setPendingDestroy(null);
+    }
   };
 
   if (isLoading) {
@@ -403,6 +430,36 @@ export function MyMusicTab() {
       />
 
       <ScoreViewerDialog viewing={viewing} onClose={() => setViewing(null)} />
+
+      <AlertDialog open={!!pendingDestroy} onOpenChange={(o) => { if (!o && !destroying) setPendingDestroy(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {pendingDestroy?.kind === 'unpublish'
+                ? `Unpublish “${pendingDestroy.score.title}”?`
+                : `Remove “${pendingDestroy?.score.title ?? ''}” from My Music?`}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {pendingDestroy?.kind === 'unpublish'
+                ? 'Members will immediately lose access to the published copy. Your personal copy stays in My Music.'
+                : pendingDestroy?.published
+                  ? 'This score is published to your group’s library — deleting the file will break the published copy for every member. The PDF is deleted and cannot be recovered.'
+                  : 'The score and its PDF are deleted from your personal library. This cannot be undone.'}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={destroying}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={destroying}
+              onClick={(e) => { e.preventDefault(); void runPendingDestroy(); }}
+            >
+              {destroying && <Loader2 className="w-4 h-4 mr-1.5 animate-spin" />}
+              {pendingDestroy?.kind === 'unpublish' ? 'Unpublish' : 'Remove'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

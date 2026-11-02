@@ -120,7 +120,7 @@ export default function PrintableSyllabiPage() {
             </CardHeader>
             <CardContent>
               <div className="flex items-center gap-4">
-                <Button variant="outline" size="icon" onClick={handlePrevious}>
+                <Button variant="outline" size="icon" onClick={handlePrevious} aria-label="Previous syllabus" title="Previous syllabus">
                   <ChevronLeft className="h-4 w-4" />
                 </Button>
                 
@@ -138,7 +138,7 @@ export default function PrintableSyllabiPage() {
                   ))}
                 </div>
 
-                <Button variant="outline" size="icon" onClick={handleNext}>
+                <Button variant="outline" size="icon" onClick={handleNext} aria-label="Next syllabus" title="Next syllabus">
                   <ChevronRight className="h-4 w-4" />
                 </Button>
               </div>

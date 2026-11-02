@@ -340,7 +340,7 @@ export const NotificationCenter = ({ trigger, isOpen, onOpenChange }: Notificati
                 <Trash2 className="h-4 w-4 mr-2" />
                 Delete
               </Button>
-              <Button size="sm" variant="ghost" onClick={() => setSelectedNotifications(new Set())}>
+              <Button size="sm" variant="ghost" onClick={() => setSelectedNotifications(new Set())} aria-label="Clear selection" title="Clear selection">
                 <X className="h-4 w-4" />
               </Button>
             </div>

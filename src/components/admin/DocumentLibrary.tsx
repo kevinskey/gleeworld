@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { ConfirmPill, type ConfirmPillRequest } from "@/components/ui/confirm-pill";
 import { 
   Upload, 
   FileText, 
@@ -57,6 +58,8 @@ export const DocumentLibrary = () => {
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [selectedFile, setSelectedFile] = useState<StorageFile | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState<(ConfirmPillRequest & { fileName: string }) | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const [createData, setCreateData] = useState<CreateDocumentData>({
     name: '',
@@ -183,6 +186,7 @@ export const DocumentLibrary = () => {
   };
 
   const handleDeleteFile = async (fileName: string) => {
+    setDeleting(true);
     try {
       const { error } = await supabase.storage
         .from(selectedBucket)
@@ -203,6 +207,8 @@ export const DocumentLibrary = () => {
         description: "Failed to delete file",
         variant: "destructive",
       });
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -372,6 +378,8 @@ export const DocumentLibrary = () => {
                                 variant="ghost" 
                                 size="sm"
                                 onClick={() => window.open(file.public_url, '_blank')}
+                                aria-label={`Open ${file.metadata?.originalName || file.name}`}
+                                title={`Open ${file.metadata?.originalName || file.name}`}
                               >
                                 <Eye className="h-4 w-4" />
                               </Button>
@@ -380,6 +388,8 @@ export const DocumentLibrary = () => {
                               variant="ghost" 
                               size="sm"
                               onClick={() => handleDownloadFile(file.name)}
+                              aria-label={`Download ${file.metadata?.originalName || file.name}`}
+                              title={`Download ${file.metadata?.originalName || file.name}`}
                             >
                               <Download className="h-4 w-4" />
                             </Button>
@@ -387,7 +397,16 @@ export const DocumentLibrary = () => {
                               variant="ghost" 
                               size="sm" 
                               className="text-red-600"
-                              onClick={() => handleDeleteFile(file.name)}
+                              onClick={(e) =>
+                                setConfirmDelete({
+                                  fileName: file.name,
+                                  x: e.clientX,
+                                  y: e.clientY,
+                                  message: `Delete "${file.metadata?.originalName || file.name}"? The file is removed from storage.`,
+                                })
+                              }
+                              aria-label={`Delete ${file.metadata?.originalName || file.name}`}
+                              title={`Delete ${file.metadata?.originalName || file.name}`}
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>
@@ -484,6 +503,16 @@ export const DocumentLibrary = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      <ConfirmPill
+        request={confirmDelete}
+        busy={deleting}
+        onConfirm={async () => {
+          if (!confirmDelete) return;
+          await handleDeleteFile(confirmDelete.fileName);
+          setConfirmDelete(null);
+        }}
+        onCancel={() => setConfirmDelete(null)}
+      />
     </div>
   );
 };

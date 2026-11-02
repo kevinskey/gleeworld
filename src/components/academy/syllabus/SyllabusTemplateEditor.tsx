@@ -391,7 +391,7 @@ export const SyllabusTemplateEditor: React.FC<Props> = ({
                       <Label className="text-xs">ISBN</Label>
                       <Input className="h-8 text-sm" value={textbook.isbn || ''} onChange={e => updateTextbook(index, 'isbn', e.target.value)} placeholder="ISBN" />
                     </div>
-                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => removeTextbook(index)}>
+                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => removeTextbook(index)} aria-label="Remove textbook" title="Remove textbook">
                       <Trash2 className="h-3 w-3 text-destructive" />
                     </Button>
                   </div>

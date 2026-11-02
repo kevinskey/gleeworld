@@ -8,6 +8,10 @@ import {
   DropdownMenuSeparator, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useToast } from '@/hooks/use-toast';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription,
+  AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import type { SeatingAssignment, SeatingObject } from '@/types/seatingCharts';
 
 export interface VersionRow {
@@ -33,6 +37,7 @@ export function VersionsMenu({ arrangementId, objects, assignments, onRestore }:
   const { toast } = useToast();
   const [versions, setVersions] = useState<VersionRow[]>([]);
   const [saving, setSaving] = useState(false);
+  const [pending, setPending] = useState<{ kind: 'restore' | 'delete'; version: VersionRow } | null>(null);
 
   const refresh = useCallback(async () => {
     const { data } = await supabase
@@ -70,7 +75,6 @@ export function VersionsMenu({ arrangementId, objects, assignments, onRestore }:
   }
 
   async function restore(v: VersionRow) {
-    if (!confirm(`Restore "${v.name}"? This replaces every object and assignment in the current arrangement.`)) return;
     await onRestore(v.snapshot.objects, v.snapshot.assignments);
     toast({ title: 'Restored', description: v.name });
   }
@@ -82,6 +86,7 @@ export function VersionsMenu({ arrangementId, objects, assignments, onRestore }:
   }
 
   return (
+    <>
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="icon" title="Snapshots"><History className="w-4 h-4" /></Button>
@@ -101,12 +106,41 @@ export function VersionsMenu({ arrangementId, objects, assignments, onRestore }:
               <p className="truncate">{v.name}</p>
               <p className="text-xs text-muted-foreground">{new Date(v.created_at).toLocaleString()}</p>
             </div>
-            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => restore(v)} title="Restore"><RotateCcw className="w-4 h-4" /></Button>
-            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { if (confirm(`Delete snapshot "${v.name}"? This cannot be undone.`)) remove(v.id); }} title="Delete snapshot" aria-label="Delete snapshot"><Trash2 className="w-4 h-4" /></Button>
+            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setPending({ kind: 'restore', version: v })} title="Restore snapshot" aria-label={`Restore snapshot ${v.name}`}><RotateCcw className="w-4 h-4" /></Button>
+            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setPending({ kind: 'delete', version: v })} title="Delete snapshot" aria-label={`Delete snapshot ${v.name}`}><Trash2 className="w-4 h-4" /></Button>
           </div>
         ))}
       </DropdownMenuContent>
     </DropdownMenu>
+    <AlertDialog open={!!pending} onOpenChange={(open) => { if (!open) setPending(null); }}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>
+            {pending?.kind === 'restore' ? `Restore "${pending.version.name}"?` : `Delete snapshot "${pending?.version.name ?? ''}"?`}
+          </AlertDialogTitle>
+          <AlertDialogDescription>
+            {pending?.kind === 'restore'
+              ? 'This replaces every object and assignment in the current arrangement.'
+              : 'This cannot be undone.'}
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogAction
+            className={pending?.kind === 'delete' ? 'bg-destructive text-destructive-foreground hover:bg-destructive/90' : undefined}
+            onClick={() => {
+              if (!pending) return;
+              const { kind, version } = pending;
+              setPending(null);
+              if (kind === 'restore') void restore(version); else void remove(version.id);
+            }}
+          >
+            {pending?.kind === 'restore' ? 'Restore' : 'Delete'}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+    </>
   );
 }
 

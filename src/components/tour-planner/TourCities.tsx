@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { CityAutocomplete } from '@/components/ui/city-autocomplete';
 import { PlacePrediction } from '@/hooks/useGooglePlaces';
 import { toast } from 'sonner';
+import { ConfirmPill, type ConfirmPillRequest } from '@/components/ui/confirm-pill';
 
 interface TourCity {
   id: string;
@@ -28,6 +29,7 @@ interface TourCitiesProps {
 export const TourCities: React.FC<TourCitiesProps> = ({ tourId, tour }) => {
   const [newCityName, setNewCityName] = useState('');
   const [selectedCityData, setSelectedCityData] = useState<PlacePrediction | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<(ConfirmPillRequest & { id: string }) | null>(null);
   const [isAddingCity, setIsAddingCity] = useState(false);
   const queryClient = useQueryClient();
 
@@ -113,6 +115,7 @@ export const TourCities: React.FC<TourCitiesProps> = ({ tourId, tour }) => {
       console.error('Error removing city:', error);
       toast.error('Failed to remove city');
     },
+    onSettled: () => setConfirmDelete(null),
   });
 
   const handleAddCity = () => {
@@ -225,10 +228,12 @@ export const TourCities: React.FC<TourCitiesProps> = ({ tourId, tour }) => {
                   </div>
 
                   <Button
-                    onClick={() => deleteCityMutation.mutate(city.id)}
+                    onClick={(e) => setConfirmDelete({ x: e.clientX, y: e.clientY, message: `Remove "${city.city_name}" from the tour?`, confirmLabel: 'Remove', id: city.id })}
                     variant="ghost"
                     size="sm"
                     className="text-destructive hover:text-destructive"
+                    aria-label={`Remove ${city.city_name}`}
+                    title="Remove city"
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
@@ -253,6 +258,12 @@ export const TourCities: React.FC<TourCitiesProps> = ({ tourId, tour }) => {
           </CardContent>
         </Card>
       )}
+      <ConfirmPill
+        request={confirmDelete}
+        busy={deleteCityMutation.isPending}
+        onConfirm={() => { if (confirmDelete) deleteCityMutation.mutate(confirmDelete.id); }}
+        onCancel={() => setConfirmDelete(null)}
+      />
     </div>
   );
 };

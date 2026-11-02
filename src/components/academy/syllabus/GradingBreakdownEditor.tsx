@@ -83,7 +83,7 @@ export const GradingBreakdownEditor: React.FC<Props> = ({
                     </div>
                   </div>
                   <div className="col-span-1">
-                    <Button variant="ghost" size="icon" onClick={() => removeItem(index)} className="text-destructive">
+                    <Button variant="ghost" size="icon" onClick={() => removeItem(index)} className="text-destructive" aria-label="Remove grading item" title="Remove grading item">
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>

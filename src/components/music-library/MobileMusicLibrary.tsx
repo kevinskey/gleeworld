@@ -184,6 +184,9 @@ export const MobileMusicLibrary = ({
               size="icon" 
               className="h-9 w-9"
               onClick={() => setSearchOpen(!searchOpen)}
+              aria-label={searchOpen ? 'Hide search' : 'Search music'}
+              aria-expanded={searchOpen}
+              title={searchOpen ? 'Hide search' : 'Search music'}
             >
               <Search className="h-4 w-4" />
             </Button>
@@ -191,7 +194,7 @@ export const MobileMusicLibrary = ({
             {/* Filter Dropdown */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-9 w-9">
+                <Button variant="ghost" size="icon" className="h-9 w-9" aria-label="Filter by category" title="Filter by category">
                   <Filter className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
@@ -237,6 +240,8 @@ export const MobileMusicLibrary = ({
               size="icon" 
               className="h-9 w-9"
               onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
+              aria-label={viewMode === 'grid' ? 'Switch to list view' : 'Switch to grid view'}
+              title={viewMode === 'grid' ? 'Switch to list view' : 'Switch to grid view'}
             >
               {viewMode === 'grid' ? <LayoutList className="h-4 w-4" /> : <Grid3X3 className="h-4 w-4" />}
             </Button>
@@ -261,6 +266,8 @@ export const MobileMusicLibrary = ({
                   size="icon"
                   className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8"
                   onClick={() => setSearchQuery("")}
+                  aria-label="Clear search"
+                  title="Clear search"
                 >
                   <X className="h-4 w-4" />
                 </Button>

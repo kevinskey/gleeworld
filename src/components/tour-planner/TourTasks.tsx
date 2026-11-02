@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Plus, CheckCircle, Clock, AlertCircle, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
+import { ConfirmPill, type ConfirmPillRequest } from '@/components/ui/confirm-pill';
 
 interface TourTask {
   id: string;
@@ -30,6 +31,7 @@ interface TourTasksProps {
 
 export const TourTasks: React.FC<TourTasksProps> = ({ tourId }) => {
   const [isAddingTask, setIsAddingTask] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState<(ConfirmPillRequest & { id: string }) | null>(null);
   const [newTask, setNewTask] = useState({
     name: '',
     description: '',
@@ -126,6 +128,7 @@ export const TourTasks: React.FC<TourTasksProps> = ({ tourId }) => {
       console.error('Error deleting task:', error);
       toast.error('Failed to delete task');
     },
+    onSettled: () => setConfirmDelete(null),
   });
 
   const handleAddTask = () => {
@@ -299,10 +302,12 @@ export const TourTasks: React.FC<TourTasksProps> = ({ tourId }) => {
                   </div>
 
                   <Button
-                    onClick={() => deleteTaskMutation.mutate(task.id)}
+                    onClick={(e) => setConfirmDelete({ x: e.clientX, y: e.clientY, message: `Delete task "${task.task_name}"?`, id: task.id })}
                     variant="ghost"
                     size="sm"
                     className="text-destructive hover:text-destructive opacity-60 hover:opacity-100"
+                    aria-label={`Delete task ${task.task_name}`}
+                    title="Delete task"
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
@@ -312,6 +317,12 @@ export const TourTasks: React.FC<TourTasksProps> = ({ tourId }) => {
           )}
         </CardContent>
       </Card>
+      <ConfirmPill
+        request={confirmDelete}
+        busy={deleteTaskMutation.isPending}
+        onConfirm={() => { if (confirmDelete) deleteTaskMutation.mutate(confirmDelete.id); }}
+        onCancel={() => setConfirmDelete(null)}
+      />
     </div>
   );
 };

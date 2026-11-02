@@ -15,6 +15,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
 import { cleanDisplayTitle } from '@/lib/music-library/file-naming';
+import { ConfirmDeleteButton } from '@/components/shared/ConfirmDeleteButton';
 interface PlaylistMediaManagerProps {
   playlistId: string;
   playlistTitle: string;
@@ -345,6 +346,8 @@ export function PlaylistMediaManager({ playlistId, playlistTitle, open, onOpenCh
                           className="h-6 w-6"
                           onClick={() => moveMedia(item.id, 'up')}
                           disabled={index === 0}
+                          aria-label="Move track up"
+                          title="Move track up"
                         >
                           <ChevronUp className="h-4 w-4" />
                         </Button>
@@ -354,6 +357,8 @@ export function PlaylistMediaManager({ playlistId, playlistTitle, open, onOpenCh
                           className="h-6 w-6"
                           onClick={() => moveMedia(item.id, 'down')}
                           disabled={index === playlistMedia.length - 1}
+                          aria-label="Move track down"
+                          title="Move track down"
                         >
                           <ChevronDown className="h-4 w-4" />
                         </Button>
@@ -376,14 +381,17 @@ export function PlaylistMediaManager({ playlistId, playlistTitle, open, onOpenCh
                         )}
                       </div>
                       
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => removeFromPlaylist(item.id)}
-                        className="text-destructive hover:text-destructive"
+                      <ConfirmDeleteButton
+                        confirmKey="remove-playlist-track"
+                        title={`Remove "${item.media?.title || 'Unknown'}" from playlist?`}
+                        description="The track stays in the media library; only its place in this playlist is removed."
+                        confirmLabel="Remove"
+                        onConfirm={() => removeFromPlaylist(item.id)}
+                        ariaLabel={`Remove ${item.media?.title || 'track'} from playlist`}
+                        className="inline-flex items-center justify-center h-10 w-10 rounded-md text-destructive hover:text-destructive hover:bg-muted"
                       >
                         <Trash2 className="h-4 w-4" />
-                      </Button>
+                      </ConfirmDeleteButton>
                     </div>
                   ))}
                 </div>
@@ -458,7 +466,7 @@ export function PlaylistMediaManager({ playlistId, playlistTitle, open, onOpenCh
                         )}
                       </div>
                       
-                      <Button variant="ghost" size="icon">
+                      <Button variant="ghost" size="icon" aria-label="Add to playlist" title="Add to playlist">
                         <Plus className="h-4 w-4" />
                       </Button>
                     </div>

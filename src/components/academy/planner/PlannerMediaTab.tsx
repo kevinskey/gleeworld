@@ -176,6 +176,8 @@ export const PlannerMediaTab: React.FC<PlannerMediaTabProps> = ({ weekId, isAdmi
                           e.stopPropagation();
                           openUrl(item.url);
                         }}
+                        aria-label="Open link"
+                        title="Open link"
                       >
                         <ExternalLink className="h-4 w-4" />
                       </Button>

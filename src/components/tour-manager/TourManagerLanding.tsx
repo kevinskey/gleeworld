@@ -278,13 +278,13 @@ export const TourManagerLanding = ({
               Travel Schedule
             </CardTitle>
             <div className="flex items-center gap-1">
-              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setWeekStart(prev => subWeeks(prev, 1))}>
+              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setWeekStart(prev => subWeeks(prev, 1))} aria-label="Previous week" title="Previous week">
                 <ChevronLeft className="h-4 w-4" />
               </Button>
               <Button variant="ghost" size="sm" className="h-7 text-xs px-2" onClick={() => setWeekStart(startOfWeek(new Date(), { weekStartsOn: 0 }))}>
                 Today
               </Button>
-              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setWeekStart(prev => addWeeks(prev, 1))}>
+              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setWeekStart(prev => addWeeks(prev, 1))} aria-label="Next week" title="Next week">
                 <ChevronRight className="h-4 w-4" />
               </Button>
             </div>

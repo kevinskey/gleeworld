@@ -143,6 +143,7 @@ export function AddToCollectionDialog({
               onChange={(e) => setNewTitle(e.target.value)}
               onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); void createAndAdd(); } }}
               placeholder="New collection name…"
+              aria-label="New collection name"
               className="pl-8 h-9"
             />
           </div>

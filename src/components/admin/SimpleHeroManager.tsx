@@ -8,6 +8,7 @@ import { Switch } from '@/components/ui/switch';
 import { Card } from '@/components/ui/card';
 import { Plus, Trash2, Upload, ChevronUp, ChevronDown, Image as ImageIcon } from 'lucide-react';
 import { toast } from 'sonner';
+import { ConfirmPill, type ConfirmPillRequest } from '@/components/ui/confirm-pill';
 
 interface HeroSlide {
   id: string;
@@ -35,6 +36,8 @@ export const SimpleHeroManager: React.FC<SimpleHeroManagerProps> = ({
 }) => {
   const [sliderId, setSliderId] = useState<string | null>(null);
   const [slides, setSlides] = useState<HeroSlide[]>([]);
+  const [confirmDelete, setConfirmDelete] = useState<(ConfirmPillRequest & { id: string }) | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [uploadingId, setUploadingId] = useState<string | null>(null);
 
@@ -103,11 +106,12 @@ export const SimpleHeroManager: React.FC<SimpleHeroManagerProps> = ({
   };
 
   const deleteSlide = async (id: string) => {
-    if (!confirm('Delete this slide? This cannot be undone.')) return;
+    setDeletingId(id);
     const { error } = await supabase
       .from('gw_universal_slider_slides')
       .delete()
       .eq('id', id);
+    setDeletingId(null);
     if (error) {
       toast.error(`Delete failed: ${error.message}`);
       return;
@@ -231,7 +235,19 @@ export const SimpleHeroManager: React.FC<SimpleHeroManagerProps> = ({
                     />
                     <span className="text-xs text-muted-foreground">{slide.is_active ? 'Active' : 'Hidden'}</span>
                   </div>
-                  <Button size="icon" variant="ghost" onClick={() => deleteSlide(slide.id)} aria-label="Delete">
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    onClick={e =>
+                      setConfirmDelete({
+                        id: slide.id,
+                        x: e.clientX,
+                        y: e.clientY,
+                        message: `Delete "${slide.title || 'this slide'}"? This cannot be undone.`,
+                      })
+                    }
+                    aria-label="Delete"
+                  >
                     <Trash2 className="h-4 w-4 text-destructive" />
                   </Button>
                 </div>
@@ -265,7 +281,7 @@ export const SimpleHeroManager: React.FC<SimpleHeroManagerProps> = ({
                         e.target.value = '';
                       }}
                     />
-                    <Button asChild size="icon" variant="outline" disabled={uploadingId === slide.id}>
+                    <Button asChild size="icon" variant="outline" disabled={uploadingId === slide.id} aria-label="Upload image" title="Upload image">
                       <span><Upload className="h-4 w-4" /></span>
                     </Button>
                   </label>
@@ -291,7 +307,7 @@ export const SimpleHeroManager: React.FC<SimpleHeroManagerProps> = ({
                         e.target.value = '';
                       }}
                     />
-                    <Button asChild size="icon" variant="outline" disabled={uploadingId === slide.id}>
+                    <Button asChild size="icon" variant="outline" disabled={uploadingId === slide.id} aria-label="Upload mobile image" title="Upload mobile image">
                       <span><Upload className="h-4 w-4" /></span>
                     </Button>
                   </label>
@@ -346,6 +362,16 @@ export const SimpleHeroManager: React.FC<SimpleHeroManagerProps> = ({
           </Card>
         ))}
       </div>
+      <ConfirmPill
+        request={confirmDelete}
+        busy={deletingId !== null}
+        onConfirm={async () => {
+          if (!confirmDelete) return;
+          await deleteSlide(confirmDelete.id);
+          setConfirmDelete(null);
+        }}
+        onCancel={() => setConfirmDelete(null)}
+      />
     </div>
   );
 };

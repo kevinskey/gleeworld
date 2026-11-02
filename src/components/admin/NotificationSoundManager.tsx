@@ -7,6 +7,7 @@ import { Slider } from '@/components/ui/slider';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { Volume2, Play, RefreshCw, Trash2, Loader2, Music } from 'lucide-react';
+import { ConfirmPill, type ConfirmPillRequest } from '@/components/ui/confirm-pill';
 
 interface SoundConfig {
   type: string;
@@ -59,6 +60,8 @@ interface ExistingSound {
 export const NotificationSoundManager = () => {
   const [existingSounds, setExistingSounds] = useState<ExistingSound[]>([]);
   const [prompts, setPrompts] = useState<Record<string, string>>({});
+  const [confirmDelete, setConfirmDelete] = useState<(ConfirmPillRequest & { soundType: string }) | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const [durations, setDurations] = useState<Record<string, number>>({});
   const [generating, setGenerating] = useState<string | null>(null);
   const [previewAudio, setPreviewAudio] = useState<HTMLAudioElement | null>(null);
@@ -205,6 +208,7 @@ export const NotificationSoundManager = () => {
     const existingSound = existingSounds.find((s) => s.sound_type === soundType);
     if (!existingSound) return;
 
+    setDeleting(true);
     try {
       await supabase.storage
         .from('notification-sounds')
@@ -220,6 +224,8 @@ export const NotificationSoundManager = () => {
     } catch (error) {
       console.error('Error deleting sound:', error);
       toast.error('Failed to delete sound');
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -275,7 +281,16 @@ export const NotificationSoundManager = () => {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => deleteSound(config.type)}
+                        onClick={(e) =>
+                          setConfirmDelete({
+                            soundType: config.type,
+                            x: e.clientX,
+                            y: e.clientY,
+                            message: `Delete the "${config.label}" sound? The audio file is removed from storage.`,
+                          })
+                        }
+                        aria-label={`Delete ${config.label} sound`}
+                        title={`Delete ${config.label} sound`}
                       >
                         <Trash2 className="h-3 w-3" />
                       </Button>
@@ -337,6 +352,16 @@ export const NotificationSoundManager = () => {
             </div>
           );
         })}
+        <ConfirmPill
+          request={confirmDelete}
+          busy={deleting}
+          onConfirm={async () => {
+            if (!confirmDelete) return;
+            await deleteSound(confirmDelete.soundType);
+            setConfirmDelete(null);
+          }}
+          onCancel={() => setConfirmDelete(null)}
+        />
       </CardContent>
     </Card>
   );

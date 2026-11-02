@@ -185,6 +185,8 @@ export const NewsletterContentManager = ({ newsletterId }: NewsletterContentMana
                       variant="ghost"
                       size="sm"
                       onClick={() => setHeroSlides(heroSlides.filter((_, i) => i !== index))}
+                      aria-label={`Remove slide ${index + 1}`}
+                      title={`Remove slide ${index + 1}`}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -303,6 +305,8 @@ export const NewsletterContentManager = ({ newsletterId }: NewsletterContentMana
                       variant="ghost"
                       size="sm"
                       onClick={() => setAnnouncements(announcements.filter((_, i) => i !== index))}
+                      aria-label={`Remove announcement ${index + 1}`}
+                      title={`Remove announcement ${index + 1}`}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>

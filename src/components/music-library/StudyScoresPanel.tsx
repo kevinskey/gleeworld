@@ -7,6 +7,7 @@ import { useStudyScores } from '@/hooks/useStudyScores';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { ConfirmPill, type ConfirmPillRequest } from '@/components/ui/confirm-pill';
 
 interface StudyScoresPanelProps {
   currentSelected?: { url: string; title: string; id?: string } | null;
@@ -133,8 +134,9 @@ export const StudyScoresPanel: React.FC<StudyScoresPanelProps> = ({ currentSelec
 
   const canCreate = useMemo(() => Boolean(currentSelected?.id && currentSelected?.url), [currentSelected]);
 
+  const [confirmDelete, setConfirmDelete] = useState<(ConfirmPillRequest & { run: () => Promise<void> }) | null>(null);
+
   const deleteStudy = async (id: string, pdfUrl: string) => {
-    if (!window.confirm('Delete this Study Score? This will remove shares and the stored copy.')) return;
     setDeletingId(id);
     try {
       console.log('Starting study score deletion for:', id);
@@ -181,7 +183,6 @@ export const StudyScoresPanel: React.FC<StudyScoresPanelProps> = ({ currentSelec
   };
 
   const deleteMarked = async (id: string, fileUrl: string) => {
-    if (!window.confirm('Delete this Marked Score? This will also remove any shares.')) return;
     setDeletingId(id);
     try {
       console.log('Starting marked score deletion for:', id);
@@ -292,20 +293,23 @@ export const StudyScoresPanel: React.FC<StudyScoresPanelProps> = ({ currentSelec
                   </div>
                   <div className="flex items-center gap-1">
                     {item.type === 'study' && (
-                      <Button size="icon" variant="ghost" onClick={() => setShareOpenId(shareOpenId === item.id ? null : item.id)}>
+                      <Button size="icon" variant="ghost" onClick={() => setShareOpenId(shareOpenId === item.id ? null : item.id)} aria-label={`Share ${item.title}`} aria-expanded={shareOpenId === item.id} title={`Share ${item.title}`}>
                         <Share2 className="h-4 w-4" />
                       </Button>
                     )}
                     <Button
                       size="icon"
                       variant="ghost"
-                      onClick={() =>
-                        item.type === 'study'
-                          ? deleteStudy(item.id, item.pdf_url)
-                          : deleteMarked(item.id, item.file_url)
+                      onClick={(e) =>
+                        setConfirmDelete(
+                          item.type === 'study'
+                            ? { x: e.clientX, y: e.clientY, message: `Delete study score "${item.title}"? Also removes its shares and the stored copy.`, run: () => deleteStudy(item.id, item.pdf_url) }
+                            : { x: e.clientX, y: e.clientY, message: `Delete marked score "${item.computedTitle}"? Also removes its shares.`, run: () => deleteMarked(item.id, item.file_url) },
+                        )
                       }
                       disabled={deletingId === item.id}
-                      title="Delete"
+                      aria-label={`Delete ${item.type === 'study' ? item.title : item.computedTitle}`}
+                      title={`Delete ${item.type === 'study' ? item.title : item.computedTitle}`}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -338,6 +342,16 @@ export const StudyScoresPanel: React.FC<StudyScoresPanelProps> = ({ currentSelec
           </div>
         )}
       </CardContent>
+      <ConfirmPill
+        request={confirmDelete}
+        busy={deletingId !== null}
+        onConfirm={async () => {
+          const run = confirmDelete?.run;
+          setConfirmDelete(null);
+          if (run) await run();
+        }}
+        onCancel={() => setConfirmDelete(null)}
+      />
     </Card>
   );
 };

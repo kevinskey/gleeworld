@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Field } from '@/components/ui/field';
 import { Badge } from '@/components/ui/badge';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
@@ -83,19 +84,16 @@ export function EditPersonalScoreDialog({
           <DialogDescription>Update the title, composer, and voicing in your personal library.</DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
-          <div>
-            <Label htmlFor="mm-edit-title">Title</Label>
-            <Input id="mm-edit-title" value={title} onChange={(e) => setTitle(e.target.value)} className="mt-1" />
-          </div>
+          <Field label="Title" className="space-y-1">
+            <Input id="mm-edit-title" value={title} onChange={(e) => setTitle(e.target.value)} />
+          </Field>
           <div className="grid grid-cols-2 gap-3">
-            <div>
-              <Label htmlFor="mm-edit-composer">Composer</Label>
-              <Input id="mm-edit-composer" value={composer} onChange={(e) => setComposer(e.target.value)} className="mt-1" />
-            </div>
-            <div>
-              <Label htmlFor="mm-edit-voicing">Voicing</Label>
-              <Input id="mm-edit-voicing" value={voicing} onChange={(e) => setVoicing(e.target.value)} placeholder="SATB" className="mt-1" />
-            </div>
+            <Field label="Composer" className="space-y-1">
+              <Input id="mm-edit-composer" value={composer} onChange={(e) => setComposer(e.target.value)} />
+            </Field>
+            <Field label="Voicing" className="space-y-1">
+              <Input id="mm-edit-voicing" value={voicing} onChange={(e) => setVoicing(e.target.value)} placeholder="SATB" />
+            </Field>
           </div>
           <div>
             <Label htmlFor="mm-edit-tags">Tags</Label>

@@ -31,6 +31,7 @@ import {
 } from "lucide-react";
 import { useInvoices, type InvoiceLineItem, type CreateInvoiceData } from "@/hooks/useInvoices";
 import { InvoicePreview } from "./InvoicePreview";
+import { ConfirmPill, type ConfirmPillRequest } from "@/components/ui/confirm-pill";
 import { getOrgName } from '@/lib/orgName';
 import {
   getInvoiceOrgIdentity,
@@ -62,6 +63,8 @@ export const InvoiceMaker = () => {
   const { invoices, loading, error, createInvoice, deleteInvoice } = useInvoices();
   const [showForm, setShowForm] = useState(false);
   const [previewInvoice, setPreviewInvoice] = useState<any>(null);
+  const [confirmDelete, setConfirmDelete] = useState<(ConfirmPillRequest & { id: string }) | null>(null);
+  const [deletingInvoice, setDeletingInvoice] = useState(false);
   const [saving, setSaving] = useState(false);
 
   // From / org identity — editable, remembered per tenant (no fabricated org).
@@ -254,7 +257,8 @@ export const InvoiceMaker = () => {
                           variant="ghost"
                           size="icon"
                           onClick={() => setPreviewInvoice(inv)}
-                          title="Preview"
+                          title={`Preview invoice ${inv.invoice_number}`}
+                          aria-label={`Preview invoice ${inv.invoice_number}`}
                         >
                           <Eye className="h-4 w-4" />
                         </Button>
@@ -262,8 +266,16 @@ export const InvoiceMaker = () => {
                           variant="ghost"
                           size="icon"
                           className="text-destructive"
-                          onClick={() => deleteInvoice(inv.id)}
-                          title="Delete"
+                          onClick={(e) =>
+                            setConfirmDelete({
+                              id: inv.id,
+                              x: e.clientX,
+                              y: e.clientY,
+                              message: `Delete invoice ${inv.invoice_number}?`,
+                            })
+                          }
+                          title={`Delete invoice ${inv.invoice_number}`}
+                          aria-label={`Delete invoice ${inv.invoice_number}`}
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
@@ -420,7 +432,7 @@ export const InvoiceMaker = () => {
                     </div>
                     <div className="col-span-1">
                       {lineItems.length > 1 && (
-                        <Button variant="ghost" size="icon" onClick={() => removeLineItem(idx)} className="h-9 w-9">
+                        <Button variant="ghost" size="icon" onClick={() => removeLineItem(idx)} className="h-9 w-9" aria-label={`Remove line item ${idx + 1}`} title={`Remove line item ${idx + 1}`}>
                           <X className="h-3 w-3" />
                         </Button>
                       )}
@@ -496,6 +508,21 @@ export const InvoiceMaker = () => {
           onOpenChange={(open) => { if (!open) setPreviewInvoice(null); }}
         />
       )}
+      <ConfirmPill
+        request={confirmDelete}
+        busy={deletingInvoice}
+        onConfirm={async () => {
+          if (!confirmDelete) return;
+          setDeletingInvoice(true);
+          try {
+            await deleteInvoice(confirmDelete.id);
+          } finally {
+            setDeletingInvoice(false);
+            setConfirmDelete(null);
+          }
+        }}
+        onCancel={() => setConfirmDelete(null)}
+      />
     </div>
   );
 };

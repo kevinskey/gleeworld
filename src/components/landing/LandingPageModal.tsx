@@ -19,6 +19,8 @@ export const LandingPageModal = ({ open, onOpenChange }: LandingPageModalProps) 
             size="icon"
             onClick={() => onOpenChange(false)}
             className="absolute top-4 right-4 z-50 bg-background/80 backdrop-blur-sm hover:bg-background/90 rounded-full shadow-lg"
+            aria-label="Close"
+            title="Close"
           >
             <X className="h-5 w-5" />
           </Button>

@@ -138,6 +138,8 @@ export const UniversalSlider: React.FC<UniversalSliderProps> = ({
             size="icon"
             className="absolute left-2 top-1/2 -translate-y-1/2 opacity-70 hover:opacity-100 transition-opacity bg-black/50 hover:bg-black/70 text-white rounded-full h-10 w-10"
             onClick={goPrev}
+            aria-label="Previous slide"
+            title="Previous slide"
           >
             <ChevronLeft className="h-6 w-6" />
           </Button>
@@ -146,6 +148,8 @@ export const UniversalSlider: React.FC<UniversalSliderProps> = ({
             size="icon"
             className="absolute right-2 top-1/2 -translate-y-1/2 opacity-70 hover:opacity-100 transition-opacity bg-black/50 hover:bg-black/70 text-white rounded-full h-10 w-10"
             onClick={goNext}
+            aria-label="Next slide"
+            title="Next slide"
           >
             <ChevronRight className="h-6 w-6" />
           </Button>

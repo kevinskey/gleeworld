@@ -330,6 +330,9 @@ export const GleeCamManagerModule = () => {
                       {COLOR_OPTIONS.map((opt) => (
                         <button
                           key={opt.bg}
+                          type="button"
+                          aria-label={`${opt.label} color theme`}
+                          aria-pressed={categoryForm.icon_bg === opt.bg}
                           onClick={() => setCategoryForm({ ...categoryForm, icon_bg: opt.bg, icon_color: opt.color })}
                           className={cn(
                             "w-8 h-8 rounded-full flex items-center justify-center",
@@ -374,7 +377,7 @@ export const GleeCamManagerModule = () => {
                         </div>
                       </div>
                       <div className="flex gap-1">
-                        <Button size="icon" variant="ghost" onClick={() => openEditCategory(category)}>
+                        <Button size="icon" variant="ghost" onClick={() => openEditCategory(category)} aria-label={`Edit ${category.name}`} title={`Edit ${category.name}`}>
                           <Pencil className="h-4 w-4" />
                         </Button>
                         <ConfirmDeleteButton

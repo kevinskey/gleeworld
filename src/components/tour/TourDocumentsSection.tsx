@@ -21,6 +21,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription
 } from "@/components/ui/dialog";
 import { convertToSecureUrl, getSecureFileUrl, parseStorageUrl } from "@/utils/secureFileAccess";
+import { ConfirmPill, type ConfirmPillRequest } from "@/components/ui/confirm-pill";
 
 interface MediaDoc {
   id: string;
@@ -98,6 +99,7 @@ export const TourDocumentsSection = ({ showHeading = true }: { showHeading?: boo
   const [editingDocName, setEditingDocName] = useState("");
   const [dragOverFolderId, setDragOverFolderId] = useState<string | null>(null);
   const [draggingDocId, setDraggingDocId] = useState<string | null>(null);
+  const [confirmDeleteFolder, setConfirmDeleteFolder] = useState<(ConfirmPillRequest & { id: string }) | null>(null);
   const previewBlobUrlRef = useRef<string | null>(null);
 
   // Find the root "Tour Documents" folder
@@ -215,9 +217,10 @@ export const TourDocumentsSection = ({ showHeading = true }: { showHeading?: boo
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tour-doc-subfolders'] });
+      setConfirmDeleteFolder(null);
       toast.success('Folder deleted');
     },
-    onError: (err: any) => toast.error(err.message || 'Failed to delete folder'),
+    onError: (err: any) => { setConfirmDeleteFolder(null); toast.error(err.message || 'Failed to delete folder'); },
   });
 
   // Rename folder
@@ -295,9 +298,22 @@ export const TourDocumentsSection = ({ showHeading = true }: { showHeading?: boo
         .eq('id', doc.id);
       if (error) throw error;
     },
-    onSuccess: () => {
+    onSuccess: (_data, doc) => {
       queryClient.invalidateQueries({ queryKey: ['tour-documents-media'] });
-      toast.success('Document removed');
+      toast(`Removed "${doc.title}".`, {
+        duration: 8000,
+        action: {
+          label: 'Undo',
+          onClick: async () => {
+            const { error } = await supabase
+              .from('gw_media_library')
+              .update({ is_deleted: false })
+              .eq('id', doc.id);
+            if (error) { toast.error('Could not restore document'); return; }
+            queryClient.invalidateQueries({ queryKey: ['tour-documents-media'] });
+          },
+        },
+      });
     },
     onError: () => toast.error('Failed to delete document'),
   });
@@ -675,9 +691,11 @@ export const TourDocumentsSection = ({ showHeading = true }: { showHeading?: boo
                   className="h-7 w-7 opacity-0 group-hover:opacity-100 text-destructive/70 hover:text-destructive shrink-0"
                   onClick={(e) => {
                     e.stopPropagation();
-                    deleteFolderMutation.mutate(folder.id);
+                    setConfirmDeleteFolder({ x: e.clientX, y: e.clientY, message: `Delete folder "${folder.name}"?`, id: folder.id });
                   }}
                   disabled={deleteFolderMutation.isPending}
+                  aria-label={`Delete folder ${folder.name}`}
+                  title="Delete folder"
                 >
                   <Trash2 className="h-3.5 w-3.5" />
                 </Button>
@@ -791,11 +809,11 @@ export const TourDocumentsSection = ({ showHeading = true }: { showHeading?: boo
                     onClick={e => e.stopPropagation()}
                   >
                     {doc.file_type.includes('pdf') && (
-                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => void handlePreview(doc)}>
+                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => void handlePreview(doc)} aria-label={`Preview ${doc.title}`} title="Preview">
                         <Eye className="h-3.5 w-3.5" />
                       </Button>
                     )}
-                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => void handleDownload(doc)}>
+                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => void handleDownload(doc)} aria-label={`Download ${doc.title}`} title="Download">
                       <Download className="h-3.5 w-3.5" />
                     </Button>
                     <Button
@@ -804,6 +822,8 @@ export const TourDocumentsSection = ({ showHeading = true }: { showHeading?: boo
                       className="h-7 w-7 text-destructive"
                       onClick={() => deleteMutation.mutate(doc)}
                       disabled={deleteMutation.isPending}
+                      aria-label={`Delete ${doc.title}`}
+                      title="Delete document"
                     >
                       <Trash2 className="h-3.5 w-3.5" />
                     </Button>
@@ -856,7 +876,7 @@ export const TourDocumentsSection = ({ showHeading = true }: { showHeading?: boo
                 <Download className="h-3.5 w-3.5 mr-1.5" />
                 Download
               </Button>
-              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={closePreview}>
+              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={closePreview} aria-label="Close preview" title="Close preview">
                 <X className="h-4 w-4" />
               </Button>
             </div>
@@ -875,6 +895,12 @@ export const TourDocumentsSection = ({ showHeading = true }: { showHeading?: boo
           </div>
         </div>
       )}
+      <ConfirmPill
+        request={confirmDeleteFolder}
+        busy={deleteFolderMutation.isPending}
+        onConfirm={() => { if (confirmDeleteFolder) deleteFolderMutation.mutate(confirmDeleteFolder.id); }}
+        onCancel={() => setConfirmDeleteFolder(null)}
+      />
     </div>
   );
 };

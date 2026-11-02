@@ -35,6 +35,7 @@ import {
 import { PRImage, usePRImages } from "@/hooks/usePRImages";
 import { toast } from "sonner";
 import { ConfirmDeleteButton } from "@/components/shared/ConfirmDeleteButton";
+import { ConfirmPill, type ConfirmPillRequest } from "@/components/ui/confirm-pill";
 
 type SortField = 'uploaded_at' | 'taken_at' | 'file_size' | 'caption' | 'filename';
 type SortDirection = 'asc' | 'desc';
@@ -47,6 +48,7 @@ interface SortConfig {
 export const PRDataManager = () => {
   const { images, loading, deleteImage, getImageUrl } = usePRImages();
   const [searchQuery, setSearchQuery] = useState('');
+  const [confirmDelete, setConfirmDelete] = useState<(ConfirmPillRequest & { id: string }) | null>(null);
   const [sortConfig, setSortConfig] = useState<SortConfig>({
     field: 'uploaded_at',
     direction: 'desc'
@@ -408,14 +410,18 @@ export const PRDataManager = () => {
                           size="sm"
                           onClick={() => window.open(imageUrl, '_blank')}
                           className="h-8 w-8 p-0"
+                          aria-label="Open image"
+                          title="Open image"
                         >
                           <ExternalLink className="h-3 w-3" />
                         </Button>
                         <Button 
                           variant="ghost" 
                           size="sm"
-                          onClick={() => deleteImage(image.id)}
+                          onClick={(e) => setConfirmDelete({ id: image.id, x: e.clientX, y: e.clientY, message: `Delete "${image.caption || image.original_filename || image.filename}"?` })}
                           className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                          aria-label="Delete image"
+                          title="Delete image"
                         >
                           <Trash2 className="h-3 w-3" />
                         </Button>
@@ -468,6 +474,14 @@ export const PRDataManager = () => {
             </CardContent>
           </Card>
         </div>
+        <ConfirmPill
+          request={confirmDelete}
+          onConfirm={async () => {
+            if (confirmDelete) await deleteImage(confirmDelete.id);
+            setConfirmDelete(null);
+          }}
+          onCancel={() => setConfirmDelete(null)}
+        />
       </CardContent>
     </Card>
   );

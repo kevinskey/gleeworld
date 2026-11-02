@@ -404,6 +404,8 @@ export const CalendarFilterStrip = ({
         variant="ghost"
         size="icon"
         className="h-7 w-7 flex-shrink-0"
+        aria-label="Calendar settings"
+        title="Calendar settings"
       >
         <Settings className="h-3.5 w-3.5" />
       </Button>

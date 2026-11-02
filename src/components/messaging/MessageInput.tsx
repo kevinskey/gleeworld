@@ -114,6 +114,8 @@ export const MessageInput: React.FC<MessageInputProps> = ({
             size="icon"
             className="h-8 w-8 rounded-full flex-shrink-0"
             onClick={clearFile}
+            aria-label="Remove attachment"
+            title="Remove attachment"
           >
             <X className="h-4 w-4" />
           </Button>
@@ -137,6 +139,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
             className="h-10 w-10 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted flex-shrink-0"
             disabled={disabled}
             onClick={() => fileInputRef.current?.click()}
+            aria-label="Attach file"
           >
             <Paperclip className="h-5 w-5" />
           </Button>
@@ -161,6 +164,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
             disabled={disabled || (!message.trim() && !selectedFile)}
             size="icon"
             className="h-10 w-10 rounded-full bg-[hsl(var(--message-header))] hover:bg-[hsl(var(--message-header))]/90 flex-shrink-0"
+            aria-label="Send message"
           >
             {disabled ? (
               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>

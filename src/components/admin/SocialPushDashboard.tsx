@@ -296,7 +296,7 @@ export const SocialPushDashboard = () => {
                   value={imageUrls.join(', ')}
                   onChange={(e) => setImageUrls(e.target.value.split(',').map(url => url.trim()).filter(Boolean))}
                 />
-                <Button variant="outline" size="icon">
+                <Button variant="outline" size="icon" aria-label="Image URLs" title="Image URLs">
                   <ImageIcon className="w-4 h-4" />
                 </Button>
               </div>
@@ -312,7 +312,7 @@ export const SocialPushDashboard = () => {
                   value={eventUrl}
                   onChange={(e) => setEventUrl(e.target.value)}
                 />
-                <Button variant="outline" size="icon">
+                <Button variant="outline" size="icon" aria-label="Event link" title="Event link">
                   <LinkIcon className="w-4 h-4" />
                 </Button>
               </div>

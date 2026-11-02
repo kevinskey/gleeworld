@@ -181,6 +181,8 @@ export const ProviderDashboard = () => {
                       size="icon" 
                       className="h-6 w-6"
                       onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
+                      aria-label="Previous month"
+                      title="Previous month"
                     >
                       <ChevronLeft className="h-4 w-4" />
                     </Button>
@@ -189,6 +191,8 @@ export const ProviderDashboard = () => {
                       size="icon" 
                       className="h-6 w-6"
                       onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
+                      aria-label="Next month"
+                      title="Next month"
                     >
                       <ChevronRight className="h-4 w-4" />
                     </Button>
@@ -266,10 +270,10 @@ export const ProviderDashboard = () => {
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-lg font-semibold">Today's Appointments</h2>
                   <div className="flex gap-1">
-                    <Button variant="ghost" size="icon" className="h-8 w-8">
+                    <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Appointment settings" title="Appointment settings">
                       <Settings className="h-4 w-4" />
                     </Button>
-                    <Button variant="ghost" size="icon" className="h-8 w-8">
+                    <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="View all of today's appointments" title="View all of today's appointments">
                       <ChevronRight className="h-4 w-4" />
                     </Button>
                   </div>
@@ -324,7 +328,7 @@ export const ProviderDashboard = () => {
                                     View
                                   </Button>
                                 )}
-                                <Button variant="ghost" size="icon" className="h-8 w-8">
+                                <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Open appointment" title="Open appointment">
                                   <ArrowRight className="h-4 w-4" />
                                 </Button>
                               </div>
@@ -342,7 +346,7 @@ export const ProviderDashboard = () => {
               <CardContent className="p-4 md:p-6">
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-lg font-semibold">Upcoming Appointments</h2>
-                  <Button variant="ghost" size="icon" className="h-8 w-8">
+                  <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="View all upcoming appointments" title="View all upcoming appointments">
                     <ChevronRight className="h-4 w-4" />
                   </Button>
                 </div>
@@ -370,7 +374,7 @@ export const ProviderDashboard = () => {
                         <div className="flex items-center gap-2 text-sm text-muted-foreground">
                           <span>{format(apt.date, 'MMM d')}</span>
                           <span>{apt.duration}:00</span>
-                          <Button variant="ghost" size="icon" className="h-6 w-6">
+                          <Button variant="ghost" size="icon" className="h-6 w-6" aria-label={`Open appointment with ${apt.clientName}`} title="Open appointment">
                             <ArrowRight className="h-3 w-3" />
                           </Button>
                         </div>

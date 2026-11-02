@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import { ConfirmPill, type ConfirmPillRequest } from "@/components/ui/confirm-pill";
 import { 
   Plus, 
   DollarSign, 
@@ -43,6 +44,7 @@ export const GeneralBudgetManager = () => {
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<(ConfirmPillRequest & { id: string }) | null>(null);
   const [formData, setFormData] = useState({
     amount: '',
     description: '',
@@ -422,10 +424,10 @@ export const GeneralBudgetManager = () => {
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Button variant="outline" size="sm" onClick={() => handleEdit(transaction)}>
+                    <Button variant="outline" size="sm" onClick={() => handleEdit(transaction)} aria-label={`Edit ${transaction.description}`} title={`Edit ${transaction.description}`}>
                       <Edit3 className="h-4 w-4" />
                     </Button>
-                    <Button variant="outline" size="sm" onClick={() => handleDelete(transaction.id)}>
+                    <Button variant="outline" size="sm" onClick={(e) => setConfirmDelete({ id: transaction.id, x: e.clientX, y: e.clientY, message: `Delete transaction "${transaction.description}"?` })} aria-label={`Delete ${transaction.description}`} title={`Delete ${transaction.description}`}>
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
@@ -447,6 +449,15 @@ export const GeneralBudgetManager = () => {
           ))
         )}
       </div>
+      <ConfirmPill
+        request={confirmDelete}
+        onConfirm={async () => {
+          const id = confirmDelete?.id;
+          setConfirmDelete(null);
+          if (id) await handleDelete(id);
+        }}
+        onCancel={() => setConfirmDelete(null)}
+      />
     </div>
   );
 };

@@ -402,10 +402,10 @@ export const PressReleaseManager = () => {
                       )}
                     </div>
                     <div className="flex gap-1">
-                      <Button variant="outline" size="sm" className="flex-1">
+                      <Button variant="outline" size="sm" className="flex-1" aria-label="Edit contact" title="Edit contact">
                         <Edit className="h-3 w-3" />
                       </Button>
-                      <Button variant="outline" size="sm">
+                      <Button variant="outline" size="sm" aria-label="Delete contact" title="Delete contact">
                         <Trash2 className="h-3 w-3" />
                       </Button>
                     </div>

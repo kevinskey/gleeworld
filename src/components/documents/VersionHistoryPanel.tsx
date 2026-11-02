@@ -6,6 +6,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { History, Loader2, RotateCcw, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
+import { ConfirmPill, type ConfirmPillRequest } from '@/components/ui/confirm-pill';
 import {
   listVersions, getVersion, deleteVersion, describeVersion, type DocVersionListItem,
 } from '@/lib/documents/versionsApi';
@@ -22,6 +23,7 @@ export function VersionHistoryPanel({ docId, refreshToken, onRestore }: VersionH
   const [versions, setVersions] = useState<DocVersionListItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<(ConfirmPillRequest & { id: string }) | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -88,22 +90,38 @@ export function VersionHistoryPanel({ docId, refreshToken, onRestore }: VersionH
             size="sm" variant="ghost" className="h-7 w-7 shrink-0 p-0 text-destructive"
             title="Delete snapshot"
             disabled={busyId === version.id}
-            onClick={async () => {
-              setBusyId(version.id);
-              try {
-                await deleteVersion(version.id);
-                await load();
-              } catch (e) {
-                toast.error(e instanceof Error ? e.message : 'Could not delete that snapshot.');
-              } finally {
-                setBusyId(null);
-              }
-            }}
+            onClick={(e) =>
+              setConfirmDelete({
+                id: version.id,
+                x: e.clientX,
+                y: e.clientY,
+                message: `Delete snapshot "${describeVersion(version)}"?`,
+              })
+            }
           >
             <Trash2 className="h-3.5 w-3.5" />
           </Button>
         </div>
       ))}
+      <ConfirmPill
+        request={confirmDelete}
+        busy={confirmDelete ? busyId === confirmDelete.id : false}
+        onConfirm={async () => {
+          if (!confirmDelete) return;
+          const id = confirmDelete.id;
+          setBusyId(id);
+          try {
+            await deleteVersion(id);
+            await load();
+          } catch (e) {
+            toast.error(e instanceof Error ? e.message : 'Could not delete that snapshot.');
+          } finally {
+            setBusyId(null);
+            setConfirmDelete(null);
+          }
+        }}
+        onCancel={() => setConfirmDelete(null)}
+      />
     </div>
   );
 }

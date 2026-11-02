@@ -282,7 +282,7 @@ const SlideRow: React.FC<{
                             onChange={(e) => handleImageUpload(e, field as any)}
                             disabled={uploading}
                           />
-                          <Button variant="outline" size="icon" className="h-7 w-7" disabled={uploading} asChild>
+                          <Button variant="outline" size="icon" className="h-7 w-7" disabled={uploading} asChild aria-label="Upload image" title="Upload image">
                             <span><Upload className="h-3 w-3" /></span>
                           </Button>
                         </label>

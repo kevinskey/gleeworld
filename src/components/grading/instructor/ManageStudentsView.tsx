@@ -11,6 +11,7 @@ import { ArrowLeft, UserPlus, Trash2, RefreshCw } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { BulkEnrollmentTool } from './BulkEnrollmentTool';
+import { ConfirmPill, type ConfirmPillRequest } from '@/components/ui/confirm-pill';
 
 interface ManageStudentsViewProps {
   courseId: string;
@@ -38,6 +39,7 @@ export const ManageStudentsView: React.FC<ManageStudentsViewProps> = ({ courseId
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [emailInput, setEmailInput] = useState('');
+  const [confirmRemove, setConfirmRemove] = useState<(ConfirmPillRequest & { enrollmentId: string }) | null>(null);
 
   // Fetch course details
   const { data: course, isLoading: courseLoading, error: courseError } = useQuery({
@@ -364,8 +366,17 @@ export const ManageStudentsView: React.FC<ManageStudentsViewProps> = ({ courseId
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => removeStudentMutation.mutate(student.enrollment_id)}
+                        onClick={(e) =>
+                          setConfirmRemove({
+                            enrollmentId: student.enrollment_id,
+                            x: e.clientX,
+                            y: e.clientY,
+                            message: `Remove ${student.full_name || student.email} from this course?`,
+                          })
+                        }
                         disabled={removeStudentMutation.isPending}
+                        aria-label={`Remove ${student.full_name || student.email}`}
+                        title={`Remove ${student.full_name || student.email}`}
                       >
                         <Trash2 className="h-4 w-4 text-destructive" />
                       </Button>
@@ -377,6 +388,15 @@ export const ManageStudentsView: React.FC<ManageStudentsViewProps> = ({ courseId
           )}
         </CardContent>
       </Card>
+      <ConfirmPill
+        request={confirmRemove}
+        busy={removeStudentMutation.isPending}
+        onConfirm={() => {
+          if (!confirmRemove) return;
+          removeStudentMutation.mutate(confirmRemove.enrollmentId, { onSettled: () => setConfirmRemove(null) });
+        }}
+        onCancel={() => setConfirmRemove(null)}
+      />
     </div>
   );
 };

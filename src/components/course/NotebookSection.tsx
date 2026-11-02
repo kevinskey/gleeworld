@@ -123,10 +123,10 @@ export const NotebookSection: React.FC<NotebookSectionProps> = ({ courseId }) =>
                     </div>
                   </div>
                   <div className="flex gap-2">
-                    <Button size="sm" variant="ghost">
+                    <Button size="sm" variant="ghost" aria-label={`Edit ${note.title}`} title="Edit note">
                       <Edit className="h-4 w-4" />
                     </Button>
-                    <Button size="sm" variant="ghost">
+                    <Button size="sm" variant="ghost" aria-label={`Delete ${note.title}`} title="Delete note">
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>

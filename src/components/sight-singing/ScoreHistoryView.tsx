@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { ConfirmPill, type ConfirmPillRequest } from '@/components/ui/confirm-pill';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Trash2, TrendingUp, Calendar, Music } from 'lucide-react';
@@ -12,6 +13,7 @@ export const ScoreHistoryView: React.FC = () => {
   const { scores, loading, deleteScore, getAverageScore, getBestScore } = useUserScores();
   const [filterPeriod, setFilterPeriod] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
+  const [confirmDelete, setConfirmDelete] = useState<(ConfirmPillRequest & { id: string }) | null>(null);
 
   const getGradeColor = (score: number) => {
     if (score >= 90) return 'bg-emerald-500/20 text-emerald-700 border-emerald-200';
@@ -180,8 +182,10 @@ export const ScoreHistoryView: React.FC = () => {
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => deleteScore(score.id)}
+                    onClick={(e) => setConfirmDelete({ id: score.id, x: e.clientX, y: e.clientY, message: `Delete the ${format(new Date(score.created_at!), 'MMM d, yyyy')} score (${Math.round(score.score_value)}%)?` })}
                     className="text-muted-foreground hover:text-destructive"
+                    aria-label="Delete score"
+                    title="Delete score"
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
@@ -191,6 +195,15 @@ export const ScoreHistoryView: React.FC = () => {
           )}
         </CardContent>
       </Card>
+      <ConfirmPill
+        request={confirmDelete}
+        busy={loading}
+        onConfirm={async () => {
+          if (confirmDelete) await deleteScore(confirmDelete.id);
+          setConfirmDelete(null);
+        }}
+        onCancel={() => setConfirmDelete(null)}
+      />
     </div>
   );
 };

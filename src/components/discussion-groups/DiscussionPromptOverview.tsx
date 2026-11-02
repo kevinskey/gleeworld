@@ -105,7 +105,7 @@ export const DiscussionPromptOverview: React.FC<DiscussionPromptOverviewProps> =
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" onClick={onBack}>
+        <Button variant="ghost" size="icon" onClick={onBack} aria-label="Back" title="Back">
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <div className="flex-1">

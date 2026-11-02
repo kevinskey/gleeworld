@@ -154,6 +154,8 @@ export const GroupMembersDialog: React.FC<GroupMembersDialogProps> = ({
                 size="icon" 
                 variant="outline"
                 onClick={() => setShowAddDialog(true)}
+                aria-label="Add members"
+                title="Add members"
               >
                 <UserPlus className="h-4 w-4" />
               </Button>
@@ -209,7 +211,7 @@ export const GroupMembersDialog: React.FC<GroupMembersDialogProps> = ({
                     </div>
 
                     <div className="flex items-center gap-1 flex-shrink-0">
-                      <Button size="icon" variant="ghost" className="h-8 w-8">
+                      <Button size="icon" variant="ghost" className="h-8 w-8" aria-label={`Email ${member.full_name}`} title={`Email ${member.full_name}`}>
                         <Mail className="h-4 w-4" />
                       </Button>
                       {canManageMembers && member.role !== 'admin' && (
@@ -218,6 +220,8 @@ export const GroupMembersDialog: React.FC<GroupMembersDialogProps> = ({
                           variant="ghost"
                           className="h-8 w-8 text-destructive hover:text-destructive"
                           onClick={() => removeMember(member.user_id)}
+                          aria-label={`Remove ${member.full_name}`}
+                          title={`Remove ${member.full_name}`}
                         >
                           <UserMinus className="h-4 w-4" />
                         </Button>

@@ -12,6 +12,7 @@ import { useSeatingCharts } from '@/hooks/useSeatingCharts';
 import { getTemplate, CATEGORY_LABELS } from '@/features/seating-charts/templates';
 import { generateTemplate } from '@/features/seating-charts/templates';
 import { CreateChartDialog } from './CreateChartDialog';
+import { ConfirmPill, type ConfirmPillRequest } from '@/components/ui/confirm-pill';
 import type { SeatingChart } from '@/types/seatingCharts';
 
 type Filter = 'all' | 'choir' | 'band' | 'orchestra' | 'classroom' | 'stage_plot' | 'archived' | 'mine';
@@ -30,6 +31,7 @@ export function SeatingChartsDashboardPage() {
   const [filter, setFilter] = useState<Filter>('all');
   const [query, setQuery] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState<(ConfirmPillRequest & { id: string }) | null>(null);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -131,15 +133,15 @@ export function SeatingChartsDashboardPage() {
               <CardContent className="flex items-center justify-between text-xs text-muted-foreground">
                 <span>Updated {new Date(c.updated_at).toLocaleDateString()}</span>
                 <div className="flex gap-1 md:opacity-0 md:group-hover:opacity-100 transition">
-                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => duplicate(c.id)} title="Duplicate">
+                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => duplicate(c.id)} title="Duplicate" aria-label={`Duplicate ${c.name}`}>
                     <Copy className="w-4 h-4" />
                   </Button>
-                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => archive(c.id, c.status !== 'archived')} title="Archive">
+                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => archive(c.id, c.status !== 'archived')} title={c.status === 'archived' ? 'Unarchive' : 'Archive'} aria-label={`${c.status === 'archived' ? 'Unarchive' : 'Archive'} ${c.name}`} aria-pressed={c.status === 'archived'}>
                     <Archive className="w-4 h-4" />
                   </Button>
-                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => {
-                    if (confirm(`Delete "${c.name}"? This cannot be undone.`)) remove(c.id);
-                  }} title="Delete">
+                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => {
+                    setConfirmDelete({ id: c.id, x: e.clientX, y: e.clientY, message: `Delete "${c.name}"? This cannot be undone.` });
+                  }} title="Delete" aria-label={`Delete ${c.name}`}>
                     <Trash2 className="w-4 h-4" />
                   </Button>
                 </div>
@@ -150,6 +152,15 @@ export function SeatingChartsDashboardPage() {
       )}
 
       <CreateChartDialog open={dialogOpen} onOpenChange={setDialogOpen} onCreate={handleCreate} />
+      <ConfirmPill
+        request={confirmDelete}
+        onConfirm={async () => {
+          const id = confirmDelete?.id;
+          setConfirmDelete(null);
+          if (id) await remove(id);
+        }}
+        onCancel={() => setConfirmDelete(null)}
+      />
     </DashboardPageShell>
   );
 }

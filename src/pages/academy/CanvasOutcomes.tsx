@@ -199,7 +199,7 @@ function NewOutcomeDialog({
                 <li key={i} className="flex items-center gap-2">
                   <Input value={r.description} onChange={(e) => updateRating(i, { description: e.target.value })} className="flex-1" />
                   <Input value={r.points} onChange={(e) => updateRating(i, { points: Number(e.target.value) || 0 })} type="number" className="w-20" />
-                  <Button size="sm" variant="ghost" onClick={() => removeRating(i)} disabled={ratings.length === 1}><Trash2 className="w-3 h-3" /></Button>
+                  <Button size="sm" variant="ghost" onClick={() => removeRating(i)} disabled={ratings.length === 1} aria-label="Remove rating" title="Remove rating"><Trash2 className="w-3 h-3" /></Button>
                 </li>
               ))}
             </ul>

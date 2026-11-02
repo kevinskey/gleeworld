@@ -10,6 +10,7 @@ import { UNIFIED_MODULES } from "@/config/unified-modules";
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { ConfirmPill, type ConfirmPillRequest } from '@/components/ui/confirm-pill';
 import { Zap, Shield, Calendar, Clock, X, ChevronRight, ChevronDown, Users, BarChart3, Plus, Trash2, Settings, Music, FileText, Mail, Camera, Mic, BookOpen, Heart, Star, Globe, Home, MessageSquare, GripVertical } from "lucide-react";
 interface QuickAction {
   id: string;
@@ -70,7 +71,7 @@ interface SortableActionItemProps {
   };
   isManaging: boolean;
   onActionClick: (moduleId: string) => void;
-  onDelete: (moduleId: string) => void;
+  onDelete: (moduleId: string, e: React.MouseEvent) => void;
 }
 const SortableActionItem = ({
   action,
@@ -95,7 +96,7 @@ const SortableActionItem = ({
   };
   const IconComponent = availableIcons[action.icon as keyof typeof availableIcons] || Zap;
   return <div ref={setNodeRef} style={style} className="flex items-center gap-1.5">
-      {isManaging && <button {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing p-1 hover:bg-white/10 rounded">
+      {isManaging && <button {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing p-1 hover:bg-white/10 rounded" aria-label={`Drag to reorder ${action.title}`} title={`Drag to reorder ${action.title}`}>
           <GripVertical className="h-3 w-3 text-popover-foreground/60" />
         </button>}
       <button className="flex-1 flex items-center px-2 py-1.5 text-xs rounded-none transition-colors text-popover-foreground hover:bg-white/10" onClick={() => onActionClick(action.moduleId)}>
@@ -106,7 +107,7 @@ const SortableActionItem = ({
         </div>
         <ChevronRight className="h-3 w-3 text-popover-foreground/50" />
       </button>
-      {isManaging && <Button variant="ghost" size="sm" className="h-6 w-6 p-0 hover:bg-red-500/20 text-red-300 hover:text-red-200" onClick={() => onDelete(action.moduleId)}>
+      {isManaging && <Button variant="ghost" size="sm" className="h-6 w-6 p-0 hover:bg-red-500/20 text-red-300 hover:text-red-200" onClick={(e) => onDelete(action.moduleId, e)} aria-label={`Remove ${action.title}`} title={`Remove ${action.title}`}>
           <Trash2 className="h-3 w-3" />
         </Button>}
     </div>;
@@ -124,6 +125,8 @@ export const QuickActionsPanel = ({
   const [isManaging, setIsManaging] = useState(false);
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [selectedModuleToAdd, setSelectedModuleToAdd] = useState('');
+  const [confirmRemove, setConfirmRemove] = useState<(ConfirmPillRequest & { moduleId: string }) | null>(null);
+  const [removing, setRemoving] = useState(false);
 
   // Available modules for selection
   const availableModules = UNIFIED_MODULES.filter(module => module.isActive).map(module => ({
@@ -178,9 +181,20 @@ export const QuickActionsPanel = ({
       }
     }
   };
-  const handleDeleteAction = async (moduleId: string) => {
-    if (quickActions) {
-      await quickActions.removeQuickAction(moduleId);
+  const handleDeleteAction = (moduleId: string, e: React.MouseEvent) => {
+    const title = allActions.find(a => a.moduleId === moduleId)?.title ?? 'this quick action';
+    setConfirmRemove({ moduleId, x: e.clientX, y: e.clientY, message: `Remove "${title}" from quick actions?` });
+  };
+  const confirmDeleteAction = async () => {
+    if (!confirmRemove) return;
+    setRemoving(true);
+    try {
+      if (quickActions) {
+        await quickActions.removeQuickAction(confirmRemove.moduleId);
+      }
+    } finally {
+      setRemoving(false);
+      setConfirmRemove(null);
     }
   };
   const handleDragEnd = async (event: DragEndEvent) => {
@@ -296,5 +310,6 @@ export const QuickActionsPanel = ({
           </div>
         </div>
       </div>
+      <ConfirmPill request={confirmRemove} busy={removing} onConfirm={confirmDeleteAction} onCancel={() => setConfirmRemove(null)} />
     </>;
 };

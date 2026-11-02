@@ -132,6 +132,8 @@ const CourseAudioPage = () => {
             variant="ghost" 
             size="icon"
             onClick={handleBack}
+            aria-label="Go back"
+            title="Go back"
           >
             <ArrowLeft className="h-5 w-5" />
           </Button>

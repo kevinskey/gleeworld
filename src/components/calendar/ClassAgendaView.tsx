@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { format, isToday, isTomorrow, differenceInDays, startOfDay } from 'date-fns';
+import { ConfirmPill, type ConfirmPillRequest } from '@/components/ui/confirm-pill';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -56,7 +57,8 @@ export const ClassAgendaView: React.FC<ClassAgendaViewProps> = ({
   showPastSessions = false,
 }) => {
   const today = startOfDay(new Date());
-  
+  const [deleteConfirm, setDeleteConfirm] = useState<(ConfirmPillRequest & { sessionId: string }) | null>(null);
+
   // Filter and group sessions by date
   const filteredSessions = showPastSessions 
     ? sessions 
@@ -204,11 +206,13 @@ export const ClassAgendaView: React.FC<ClassAgendaViewProps> = ({
                             <QrCode className="h-4 w-4 mr-2" />
                             Attendance QR
                           </Button>
-                          <Button 
-                            size="sm" 
-                            variant="ghost" 
-                            onClick={() => onDelete?.(session.id)}
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={(e) => setDeleteConfirm({ x: e.clientX, y: e.clientY, message: `Delete "${session.title}"?`, sessionId: session.id })}
                             className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                            aria-label={`Delete ${session.title}`}
+                            title="Delete session"
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
@@ -222,6 +226,11 @@ export const ClassAgendaView: React.FC<ClassAgendaViewProps> = ({
           </div>
         );
       })}
+      <ConfirmPill
+        request={deleteConfirm}
+        onConfirm={() => { if (deleteConfirm) onDelete?.(deleteConfirm.sessionId); setDeleteConfirm(null); }}
+        onCancel={() => setDeleteConfirm(null)}
+      />
     </div>
   );
 };

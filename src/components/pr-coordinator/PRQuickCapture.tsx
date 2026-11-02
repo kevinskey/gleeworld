@@ -231,6 +231,8 @@ export const PRQuickCapture = ({ tags, onClose, onCapture }: PRQuickCaptureProps
                           size="icon"
                           onClick={switchCamera}
                           className="absolute top-4 right-4 bg-background/80 hover:bg-background"
+                          aria-label="Switch camera"
+                          title="Switch camera"
                         >
                           <SwitchCamera className="h-4 w-4" />
                         </Button>

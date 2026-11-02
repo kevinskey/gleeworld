@@ -8,7 +8,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { Loader2, Calendar, Download, Star, Settings, Plus, Trash2 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { ConfirmPill, type ConfirmPillRequest } from "@/components/ui/confirm-pill";
 export const GoogleCalendarSync = () => {
+  const [deleteConfirm, setDeleteConfirm] = useState<(ConfirmPillRequest & { id: string }) | null>(null);
   const [isSyncing, setIsSyncing] = useState(false);
   const [calendarId, setCalendarId] = useState("");
   const [isSyncingHolidays, setIsSyncingHolidays] = useState(false);
@@ -234,7 +236,7 @@ export const GoogleCalendarSync = () => {
                             </p>
                           </div>
                         </div>
-                        <Button variant="ghost" size="sm" onClick={() => handleDeleteAutoSync(config.id)}>
+                        <Button variant="ghost" size="sm" onClick={(e) => setDeleteConfirm({ x: e.clientX, y: e.clientY, message: `Remove auto-sync for "${config.calendar_id}"?`, confirmLabel: 'Remove', id: config.id })} aria-label={`Remove auto-sync for ${config.calendar_id}`} title="Remove auto-sync">
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>)}
@@ -269,5 +271,10 @@ export const GoogleCalendarSync = () => {
           </ol>
         </div>
       </CardContent>
+      <ConfirmPill
+        request={deleteConfirm}
+        onConfirm={() => { if (deleteConfirm) handleDeleteAutoSync(deleteConfirm.id); setDeleteConfirm(null); }}
+        onCancel={() => setDeleteConfirm(null)}
+      />
     </Card>;
 };

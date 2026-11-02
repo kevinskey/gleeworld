@@ -4,6 +4,7 @@ import { DndContext, DragEndEvent, PointerSensor, useSensor, useSensors, DragOve
 import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { toast as sonnerToast } from 'sonner';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { MediaFile, ViewMode, SortBy, SortOrder } from './types';
 import { FinderSidebar } from './FinderSidebar';
@@ -18,6 +19,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription,
+  AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { ContextMenu, ContextMenuTrigger, ContextMenuContent, ContextMenuItem, ContextMenuSeparator } from '@/components/ui/context-menu';
 import { FolderPlus, Upload, Clipboard, File, PanelLeft, Search, ArrowUpDown, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -105,6 +110,7 @@ export const FinderMediaLibrary = () => {
   const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
   const [draggingFileId, setDraggingFileId] = useState<string | null>(null);
   const [activeFilters, setActiveFilters] = useState<string[]>([]);
+  const [deleteRequest, setDeleteRequest] = useState<{ kind: 'trash' | 'permanent'; fileIds: string[] } | null>(null);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const { toast } = useToast();
   const moveToFolder = useMoveToFolder();
@@ -538,19 +544,13 @@ export const FinderMediaLibrary = () => {
   };
 
   // Soft-delete: move files to trash. quick_capture_media has no trash
-  // column, so those rows are permanently deleted (with confirm).
-  const handleDeleteFiles = useCallback(async (fileIds: string[]) => {
+  // column, so those rows are permanently deleted (after confirmation).
+  const performDeleteFiles = useCallback(async (fileIds: string[]) => {
     if (fileIds.length === 0) return;
 
     const selected = allFiles.filter(f => fileIds.includes(f.id));
     const libraryIds = selected.filter(f => f.source !== 'quick_capture').map(f => f.id);
     const captureFiles = selected.filter(f => f.source === 'quick_capture');
-
-    const label = fileIds.length === 1 ? 'this file' : `${fileIds.length} files`;
-    const warning = captureFiles.length > 0
-      ? ` (${captureFiles.length} quick-capture file(s) will be permanently deleted — they cannot go to trash)`
-      : '';
-    if (!confirm(`Move ${label} to trash?${warning}`)) return;
 
     try {
       if (libraryIds.length > 0) {
@@ -572,7 +572,27 @@ export const FinderMediaLibrary = () => {
         if (error) throw error;
       }
 
-      toast({ title: fileIds.length === 1 ? 'File deleted' : `${fileIds.length} files deleted` });
+      if (libraryIds.length > 0) {
+        const name = libraryIds.length === 1
+          ? (selected.find(f => f.id === libraryIds[0])?.title || 'Untitled')
+          : `${libraryIds.length} files`;
+        sonnerToast(`Removed "${name}".`, {
+          duration: 8000,
+          action: {
+            label: 'Undo',
+            onClick: async () => {
+              const { error } = await supabase
+                .from('gw_media_library')
+                .update({ is_deleted: false })
+                .in('id', libraryIds);
+              if (error) { sonnerToast.error('Could not restore files'); return; }
+              refreshMedia();
+            },
+          },
+        });
+      } else {
+        toast({ title: fileIds.length === 1 ? 'File deleted' : `${fileIds.length} files deleted` });
+      }
       setSelectedFiles([]);
       setShowInspector(false);
       refreshMedia();
@@ -581,6 +601,15 @@ export const FinderMediaLibrary = () => {
       toast({ title: 'Error deleting files', variant: 'destructive' });
     }
   }, [toast, refreshMedia, allFiles]);
+
+  // Entry point from the UI: library files go straight to trash (undoable);
+  // quick-capture files are irreversible, so ask first.
+  const handleDeleteFiles = useCallback((fileIds: string[]) => {
+    if (fileIds.length === 0) return;
+    const hasCapture = allFiles.some(f => fileIds.includes(f.id) && f.source === 'quick_capture');
+    if (hasCapture) setDeleteRequest({ kind: 'trash', fileIds });
+    else void performDeleteFiles(fileIds);
+  }, [allFiles, performDeleteFiles]);
 
   // Restore files from trash
   const handleRestoreFiles = useCallback(async (fileIds: string[]) => {
@@ -601,9 +630,7 @@ export const FinderMediaLibrary = () => {
   }, [toast, refreshMedia]);
 
   // Permanently delete files
-  const handlePermanentDelete = useCallback(async (fileIds: string[]) => {
-    if (!confirm('Permanently delete? This cannot be undone.')) return;
-
+  const performPermanentDelete = useCallback(async (fileIds: string[]) => {
     try {
       // Also remove from storage
       const filesToDelete = allFiles.filter(f => fileIds.includes(f.id));
@@ -638,6 +665,22 @@ export const FinderMediaLibrary = () => {
       toast({ title: 'Error deleting', variant: 'destructive' });
     }
   }, [toast, refreshMedia, allFiles]);
+
+  const handlePermanentDelete = useCallback((fileIds: string[]) => {
+    if (fileIds.length === 0) return;
+    setDeleteRequest({ kind: 'permanent', fileIds });
+  }, []);
+
+  const deleteRequestLabel = (() => {
+    if (!deleteRequest) return '';
+    if (deleteRequest.fileIds.length === 1) {
+      return `"${allFiles.find(f => f.id === deleteRequest.fileIds[0])?.title || 'Untitled'}"`;
+    }
+    return `${deleteRequest.fileIds.length} files`;
+  })();
+  const deleteRequestCaptureCount = deleteRequest
+    ? allFiles.filter(f => deleteRequest.fileIds.includes(f.id) && f.source === 'quick_capture').length
+    : 0;
 
 
   const handleFileSelect = (file: MediaFile, event: React.MouseEvent) => {
@@ -756,7 +799,7 @@ export const FinderMediaLibrary = () => {
               <div className="flex items-center gap-2 p-3">
                 <Sheet open={mobileSidebarOpen} onOpenChange={setMobileSidebarOpen}>
                   <SheetTrigger asChild>
-                    <Button variant="outline" size="icon" className="h-9 w-9 shrink-0">
+                    <Button variant="outline" size="icon" className="h-9 w-9 shrink-0" aria-label="Open sidebar" title="Open sidebar">
                       <PanelLeft className="h-4 w-4" />
                     </Button>
                   </SheetTrigger>
@@ -841,6 +884,8 @@ export const FinderMediaLibrary = () => {
                     size="icon"
                     className="h-9 w-9 shrink-0"
                     onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+                    aria-label={sortOrder === 'asc' ? 'Sort descending' : 'Sort ascending'}
+                    title={sortOrder === 'asc' ? 'Sort descending' : 'Sort ascending'}
                   >
                     <ArrowUpDown className={cn('h-4 w-4 transition-transform', sortOrder === 'desc' && 'rotate-180')} />
                   </Button>
@@ -1025,6 +1070,35 @@ export const FinderMediaLibrary = () => {
           </div>
         )}
       </DragOverlay>
+
+      <AlertDialog open={!!deleteRequest} onOpenChange={(open) => { if (!open) setDeleteRequest(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {deleteRequest?.kind === 'permanent' ? `Permanently delete ${deleteRequestLabel}?` : `Move ${deleteRequestLabel} to trash?`}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {deleteRequest?.kind === 'permanent'
+                ? 'The files and their storage objects are removed. This cannot be undone.'
+                : `${deleteRequestCaptureCount} quick-capture file${deleteRequestCaptureCount === 1 ? '' : 's'} cannot go to trash and will be permanently deleted.`}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => {
+                if (!deleteRequest) return;
+                const { kind, fileIds } = deleteRequest;
+                setDeleteRequest(null);
+                if (kind === 'permanent') void performPermanentDelete(fileIds); else void performDeleteFiles(fileIds);
+              }}
+            >
+              {deleteRequest?.kind === 'permanent' ? 'Delete forever' : 'Move to trash'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </DndContext>
   );
 };

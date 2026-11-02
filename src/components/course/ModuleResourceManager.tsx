@@ -118,7 +118,7 @@ export const ModuleResourceManager: React.FC<ModuleResourceManagerProps> = ({
     <div className="space-y-3">
       <div className="flex items-center justify-between">
         <h4 className="text-sm font-medium">Add Resource to Week {weekNumber}</h4>
-        <Button size="icon" variant="ghost" className="h-6 w-6" onClick={onClose}>
+        <Button size="icon" variant="ghost" className="h-6 w-6" onClick={onClose} aria-label="Close" title="Close">
           <X className="h-4 w-4" />
         </Button>
       </div>

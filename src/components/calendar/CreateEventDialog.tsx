@@ -558,7 +558,7 @@ export const CreateEventDialog = ({
       <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-hidden flex flex-col p-0 gap-0 z-[100000]">
         {/* Header */}
         <div className="flex items-center justify-end gap-2 p-3 pb-0">
-          <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground">
+          <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground" aria-label="Expand dialog" title="Expand dialog">
             <Maximize2 className="h-4 w-4" />
           </Button>
         </div>
@@ -884,7 +884,7 @@ export const CreateEventDialog = ({
                     return (
                       <div key={userId} className="flex items-center gap-1 bg-muted px-2 py-1 rounded-full text-sm">
                         <span>{invitee?.full_name || invitee?.email}</span>
-                        <button type="button" onClick={() => removeInvitee(userId)} className="text-muted-foreground hover:text-foreground">
+                        <button type="button" onClick={() => removeInvitee(userId)} className="text-muted-foreground hover:text-foreground" aria-label={`Remove ${invitee?.full_name || invitee?.email || 'invitee'}`} title="Remove invitee">
                           <X className="h-3 w-3" />
                         </button>
                       </div>

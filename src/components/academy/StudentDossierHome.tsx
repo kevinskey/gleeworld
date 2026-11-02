@@ -543,7 +543,7 @@ export const StudentDossierHome: React.FC<StudentDossierHomeProps> = ({ courseId
                 <FileText className={`h-4 w-4 ${glassAccent}`} />
                 Current Module / Week
               </CardTitle>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
+              <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="More options" title="More options">
                 <MoreHorizontal className="h-4 w-4" />
               </Button>
             </div>
@@ -747,6 +747,8 @@ export const StudentDossierHome: React.FC<StudentDossierHomeProps> = ({ courseId
                               onClick={() => {
                                 setDismissedAnnouncements(prev => new Set([...prev, announcement.id]));
                               }}
+                              aria-label="Dismiss announcement"
+                              title="Dismiss announcement"
                             >
                               <XCircle className="h-4 w-4 text-muted-foreground" />
                             </Button>

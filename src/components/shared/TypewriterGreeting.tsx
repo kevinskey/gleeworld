@@ -59,6 +59,8 @@ export const TypewriterGreeting = ({
             onClose?.();
           }}
           className="absolute top-3 right-3 text-white/60 hover:text-white hover:bg-white/10"
+          aria-label="Close"
+          title="Close"
         >
           <X className="h-5 w-5" />
         </Button>

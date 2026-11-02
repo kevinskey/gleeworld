@@ -179,7 +179,7 @@ export default function CourseSettingsPage() {
       <DashboardShell>
     <DashboardPageShell maxWidth="4xl" title="Settings">
       <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" onClick={() => navigate(`/academy/c/${code}`)}>
+        <Button variant="ghost" size="icon" onClick={() => navigate(`/academy/c/${code}`)} aria-label="Back to course" title="Back to course">
           <ArrowLeft className="w-5 h-5" />
         </Button>
         <div className="text-xs font-mono text-muted-foreground">{course.course_code}</div>

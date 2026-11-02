@@ -352,6 +352,8 @@ export const PointOfSale = () => {
                   size="icon"
                   className="h-7 w-7"
                   onClick={() => updateQuantity(item.product.id, -1)}
+                  aria-label={`Decrease quantity of ${item.product.title}`}
+                  title="Decrease quantity"
                 >
                   <Minus className="w-3 h-3" />
                 </Button>
@@ -363,6 +365,8 @@ export const PointOfSale = () => {
                   size="icon"
                   className="h-7 w-7"
                   onClick={() => updateQuantity(item.product.id, 1)}
+                  aria-label={`Increase quantity of ${item.product.title}`}
+                  title="Increase quantity"
                 >
                   <Plus className="w-3 h-3" />
                 </Button>
@@ -371,6 +375,8 @@ export const PointOfSale = () => {
                   size="icon"
                   className="h-7 w-7 text-destructive"
                   onClick={() => removeFromCart(item.product.id)}
+                  aria-label={`Remove ${item.product.title} from cart`}
+                  title="Remove from cart"
                 >
                   <Trash2 className="w-3 h-3" />
                 </Button>
@@ -578,6 +584,8 @@ export const PointOfSale = () => {
             size="icon"
             onClick={() => setShowCouponManager(true)}
             className="text-white/80 hover:text-white hover:bg-white/10 sm:hidden h-8 w-8"
+            aria-label="Coupons"
+            title="Coupons"
           >
             <Ticket className="w-4 h-4" />
           </Button>
@@ -586,6 +594,8 @@ export const PointOfSale = () => {
             size="icon"
             onClick={() => navigate('/admin/products')}
             className="text-white/80 hover:text-white hover:bg-white/10 sm:hidden h-8 w-8"
+            aria-label="Manage products"
+            title="Manage products"
           >
             <Settings className="w-4 h-4" />
           </Button>

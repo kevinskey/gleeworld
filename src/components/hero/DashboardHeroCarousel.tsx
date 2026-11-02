@@ -163,6 +163,8 @@ export const DashboardHeroCarousel: React.FC = () => {
                   size="icon" 
                   className="h-7 w-7 rounded-full"
                   onClick={scrollPrev}
+                  aria-label="Previous slide"
+                  title="Previous slide"
                 >
                   <ChevronLeft className="h-4 w-4" />
                 </Button>
@@ -171,6 +173,8 @@ export const DashboardHeroCarousel: React.FC = () => {
                   size="icon" 
                   className="h-7 w-7 rounded-full"
                   onClick={scrollNext}
+                  aria-label="Next slide"
+                  title="Next slide"
                 >
                   <ChevronRight className="h-4 w-4" />
                 </Button>

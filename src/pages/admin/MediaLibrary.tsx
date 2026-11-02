@@ -481,6 +481,9 @@ const MediaLibrary = () => {
                     toggleFolder(folderPath);
                   }}
                   className="p-0.5 hover:bg-muted rounded"
+                  aria-label={isExpanded ? `Collapse ${folderName}` : `Expand ${folderName}`}
+                  aria-expanded={isExpanded}
+                  title={isExpanded ? 'Collapse folder' : 'Expand folder'}
                 >
                   {isExpanded ? (
                     <ChevronDown className="h-3 w-3 text-muted-foreground" />
@@ -560,6 +563,8 @@ const MediaLibrary = () => {
                 size="icon"
                 onClick={() => categoryFilter ? navigate('/dashboard') : navigate('/control-center')}
                 className="flex-shrink-0 h-9 w-9"
+                aria-label="Back"
+                title="Back"
               >
                 <ArrowLeft className="h-5 w-5" />
               </Button>
@@ -581,10 +586,10 @@ const MediaLibrary = () => {
                 <Album className="h-4 w-4" />
                 Bulk Upload
               </Button>
-              <Button onClick={() => folderInputRef.current?.click()} disabled={uploading} variant="outline" size="sm">
+              <Button onClick={() => folderInputRef.current?.click()} disabled={uploading} variant="outline" size="sm" aria-label="Upload folder" title="Upload folder">
                 <Folder className="h-4 w-4" />
               </Button>
-              <Button onClick={onUploadClick} disabled={uploading} variant="outline" size="sm">
+              <Button onClick={onUploadClick} disabled={uploading} variant="outline" size="sm" aria-label="Upload files" title="Upload files">
                 {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
               </Button>
             </div>
@@ -595,6 +600,8 @@ const MediaLibrary = () => {
               disabled={uploading} 
               size="icon"
               className="md:hidden flex-shrink-0 h-9 w-9"
+              aria-label="Upload files"
+              title="Upload files"
             >
               {uploading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Upload className="h-5 w-5" />}
             </Button>

@@ -260,7 +260,7 @@ export default function DiscussionThreadPage() {
     <div className="px-6 py-6 max-w-3xl mx-auto space-y-4">
       {/* Header */}
       <div className="flex items-start gap-3">
-        <Button variant="ghost" size="icon" onClick={() => navigate(`/academy/c/${code}?tab=discussions`)}>
+        <Button variant="ghost" size="icon" onClick={() => navigate(`/academy/c/${code}?tab=discussions`)} aria-label="Back to discussions" title="Back to discussions">
           <ArrowLeft className="w-5 h-5" />
         </Button>
         <div className="flex-1 min-w-0">
@@ -288,10 +288,10 @@ export default function DiscussionThreadPage() {
                 <Pencil className="w-4 h-4 text-muted-foreground" />
               </Button>
             )}
-            <Button size="icon" variant="ghost" onClick={() => togglePin.mutate()} title={thread.is_pinned ? 'Unpin' : 'Pin'}>
+            <Button size="icon" variant="ghost" onClick={() => togglePin.mutate()} title={thread.is_pinned ? 'Unpin thread' : 'Pin thread'} aria-label={thread.is_pinned ? 'Unpin thread' : 'Pin thread'} aria-pressed={!!thread.is_pinned}>
               <Pin className={`w-4 h-4 ${thread.is_pinned ? 'text-amber-600' : 'text-muted-foreground'}`} />
             </Button>
-            <Button size="icon" variant="ghost" onClick={() => toggleLock.mutate()} title={thread.is_locked ? 'Unlock' : 'Lock'}>
+            <Button size="icon" variant="ghost" onClick={() => toggleLock.mutate()} title={thread.is_locked ? 'Unlock thread' : 'Lock thread'} aria-label={thread.is_locked ? 'Unlock thread' : 'Lock thread'} aria-pressed={!!thread.is_locked}>
               <Lock className={`w-4 h-4 ${thread.is_locked ? 'text-rose-600' : 'text-muted-foreground'}`} />
             </Button>
             <ConfirmDeleteButton

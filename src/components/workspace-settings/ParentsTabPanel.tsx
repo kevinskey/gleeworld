@@ -16,6 +16,7 @@ import {
   Popover, PopoverContent, PopoverTrigger,
 } from '@/components/ui/popover';
 import { toast } from 'sonner';
+import { ConfirmPill, type ConfirmPillRequest } from '@/components/ui/confirm-pill';
 import {
   Loader2, Users, CheckCircle2, AlertTriangle, Trash2, UserPlus, Search, Link2Off,
 } from 'lucide-react';
@@ -44,6 +45,8 @@ const SOFT_CARD_STYLE: React.CSSProperties = {
 
 export function ParentsTabPanel({ canManage }: { canManage: boolean }) {
   const qc = useQueryClient();
+  const [confirmDelete, setConfirmDelete] = useState<(ConfirmPillRequest & { id: string }) | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   // One query for both buckets — the panel is small enough that
   // splitting into pending vs verified queries buys nothing and each
@@ -109,13 +112,21 @@ export function ParentsTabPanel({ canManage }: { canManage: boolean }) {
   }
 
   async function del(linkId: string) {
+    setDeleting(true);
     const { error } = await supabase.from('gw_parent_children').delete().eq('id', linkId);
+    setDeleting(false);
     if (error) {
       toast.error(error.message);
       return;
     }
     qc.invalidateQueries({ queryKey: ['parent-children-admin'] });
     toast.success('Link removed.');
+  }
+
+  function requestDelete(link: ParentLink, e: React.MouseEvent) {
+    const parent = link.parent?.full_name || link.parent?.email || 'this parent';
+    const student = link.student?.full_name || link.student?.email || link.student_email;
+    setConfirmDelete({ id: link.id, x: e.clientX, y: e.clientY, message: `Remove the link between ${parent} and ${student}?` });
   }
 
   if (isLoading) {
@@ -159,7 +170,7 @@ export function ParentsTabPanel({ canManage }: { canManage: boolean }) {
           ) : (
             <div className="space-y-2">
               {pending.map((l) => (
-                <PendingRow key={l.id} link={l} canManage={canManage} onVerify={verifyWithStudent} onDelete={del} />
+                <PendingRow key={l.id} link={l} canManage={canManage} onVerify={verifyWithStudent} onDelete={requestDelete} />
               ))}
             </div>
           )}
@@ -197,7 +208,7 @@ export function ParentsTabPanel({ canManage }: { canManage: boolean }) {
                       <Button size="sm" variant="ghost" onClick={() => unverify(l.id)} title="Mark pending">
                         <Link2Off className="w-3.5 h-3.5" />
                       </Button>
-                      <Button size="sm" variant="ghost" onClick={() => del(l.id)} title="Remove link">
+                      <Button size="sm" variant="ghost" onClick={(e) => requestDelete(l, e)} title="Remove link">
                         <Trash2 className="w-3.5 h-3.5" />
                       </Button>
                     </>
@@ -208,6 +219,16 @@ export function ParentsTabPanel({ canManage }: { canManage: boolean }) {
           )}
         </CardContent>
       </Card>
+      <ConfirmPill
+        request={confirmDelete}
+        busy={deleting}
+        onConfirm={async () => {
+          if (!confirmDelete) return;
+          await del(confirmDelete.id);
+          setConfirmDelete(null);
+        }}
+        onCancel={() => setConfirmDelete(null)}
+      />
     </div>
   );
 }
@@ -218,7 +239,7 @@ function PendingRow({
   link: ParentLink;
   canManage: boolean;
   onVerify: (linkId: string, studentId: string) => void;
-  onDelete: (linkId: string) => void;
+  onDelete: (link: ParentLink, e: React.MouseEvent) => void;
 }) {
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState(link.student_email);
@@ -298,7 +319,7 @@ function PendingRow({
               </div>
             </PopoverContent>
           </Popover>
-          <Button size="sm" variant="ghost" onClick={() => onDelete(link.id)} title="Remove link">
+          <Button size="sm" variant="ghost" onClick={(e) => onDelete(link, e)} title="Remove link">
             <Trash2 className="w-3.5 h-3.5" />
           </Button>
         </>

@@ -308,7 +308,7 @@ export const GradebookView: React.FC<GradebookViewProps> = ({ courseId, embedded
       ) : (
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" onClick={() => navigate(`/grading/instructor/course/${courseId}`)}>
+            <Button variant="ghost" size="icon" onClick={() => navigate(`/grading/instructor/course/${courseId}`)} aria-label="Back to course" title="Back to course">
               <ArrowLeft className="h-5 w-5" />
             </Button>
             <div>

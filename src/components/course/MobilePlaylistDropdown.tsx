@@ -187,6 +187,8 @@ export const MobilePlaylistDropdown: React.FC<MobilePlaylistDropdownProps> = ({
                         variant="ghost"
                         size="icon"
                         className="h-9 w-9 shrink-0 rounded-full bg-primary/10 hover:bg-primary/20 text-primary touch-manipulation"
+                        aria-label={`Play ${playlist.title}`}
+                        title={`Play ${playlist.title}`}
                         onClick={(e) => {
                           e.stopPropagation();
                           if (tracks.length > 0) {

@@ -349,6 +349,8 @@ export const FastPDFViewer: React.FC<FastPDFViewerProps> = ({
                 className="h-6 w-6 rounded-full" 
                 onClick={prevPage} 
                 disabled={currentPage <= 1}
+                aria-label="Previous page"
+                title="Previous page"
               >
                 <ChevronLeft className="h-3.5 w-3.5" />
               </Button>
@@ -361,6 +363,8 @@ export const FastPDFViewer: React.FC<FastPDFViewerProps> = ({
                 className="h-6 w-6 rounded-full" 
                 onClick={nextPage} 
                 disabled={currentPage >= totalPages}
+                aria-label="Next page"
+                title="Next page"
               >
                 <ChevronRight className="h-3.5 w-3.5" />
               </Button>

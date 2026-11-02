@@ -135,7 +135,7 @@ export const SectionItemsManager = ({ sectionId }: SectionItemsManagerProps) => 
                   <span className="text-sm text-muted-foreground hidden sm:inline">{item.width_percentage}%</span>
                 </div>
                 <div className="flex gap-2">
-                  <Button size="sm" variant="outline" onClick={() => handleEditItem(item)}>
+                  <Button size="sm" variant="outline" onClick={() => handleEditItem(item)} aria-label="Edit item" title="Edit item">
                     <Edit className="h-3 w-3" />
                   </Button>
                   <ConfirmDeleteButton

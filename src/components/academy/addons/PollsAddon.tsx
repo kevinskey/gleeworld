@@ -8,6 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { ConfirmPill, type ConfirmPillRequest } from '@/components/ui/confirm-pill';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
@@ -100,7 +101,7 @@ export default function PollsAddon({ courseId, canEdit }: Props) {
                   placeholder={`Option ${i + 1}`}
                 />
                 {options.length > 2 && (
-                  <button onClick={() => setOptions((o) => o.filter((_, idx) => idx !== i))} className="text-rose-600 hover:text-rose-700">
+                  <button onClick={() => setOptions((o) => o.filter((_, idx) => idx !== i))} className="text-rose-600 hover:text-rose-700" aria-label={`Remove option ${i + 1}`} title={`Remove option ${i + 1}`}>
                     <Trash2 className="w-4 h-4" />
                   </button>
                 )}
@@ -138,6 +139,7 @@ function PollRow({ poll, canEdit, onRemove }: { poll: any; canEdit: boolean; onR
   const { user } = useAuth();
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
+  const [confirmRemove, setConfirmRemove] = useState<ConfirmPillRequest | null>(null);
 
   const { data: responses = [] } = useQuery({
     queryKey: ['poll-responses', poll.id],
@@ -177,10 +179,24 @@ function PollRow({ poll, canEdit, onRemove }: { poll: any; canEdit: boolean; onR
             </div>
           </div>
           {canEdit && (
-            <button onClick={onRemove} className="text-rose-600 hover:text-rose-700">
+            <button
+              onClick={(e) => setConfirmRemove({
+                x: e.clientX,
+                y: e.clientY,
+                message: `Delete poll "${poll.question}"?${total > 0 ? ` Also removes its ${total} vote${total === 1 ? '' : 's'}.` : ''}`,
+              })}
+              className="text-rose-600 hover:text-rose-700"
+              aria-label="Delete poll"
+              title="Delete poll"
+            >
               <Trash2 className="w-4 h-4" />
             </button>
           )}
+          <ConfirmPill
+            request={confirmRemove}
+            onConfirm={() => { onRemove(); setConfirmRemove(null); }}
+            onCancel={() => setConfirmRemove(null)}
+          />
         </div>
         <div className="space-y-1.5">
           {(poll.options as string[]).map((opt) => {

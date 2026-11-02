@@ -1025,13 +1025,13 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
                     <ToggleGroupItem value="day" size="sm" className="text-xs px-2">Day</ToggleGroupItem>
                   </ToggleGroup>
                   <div className="flex items-center gap-1">
-                    <Button variant="outline" size="icon" onClick={navigatePrev}>
+                    <Button variant="outline" size="icon" onClick={navigatePrev} aria-label={`Previous ${calendarView}`} title={`Previous ${calendarView}`}>
                       <ChevronLeft className="h-4 w-4" />
                     </Button>
                     <Button variant="outline" size="sm" onClick={() => setCurrentDate(new Date())}>
                       Today
                     </Button>
-                    <Button variant="outline" size="icon" onClick={navigateNext}>
+                    <Button variant="outline" size="icon" onClick={navigateNext} aria-label={`Next ${calendarView}`} title={`Next ${calendarView}`}>
                       <ChevronRight className="h-4 w-4" />
                     </Button>
                   </div>
@@ -1413,13 +1413,13 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
                   <ToggleGroupItem value="day" size="sm" className="text-xs px-2">Day</ToggleGroupItem>
                 </ToggleGroup>
                 <div className="flex items-center gap-1">
-                  <Button variant="outline" size="icon" onClick={navigatePrev}>
+                  <Button variant="outline" size="icon" onClick={navigatePrev} aria-label={`Previous ${calendarView}`} title={`Previous ${calendarView}`}>
                     <ChevronLeft className="h-4 w-4" />
                   </Button>
                   <Button variant="outline" size="sm" onClick={() => setCurrentDate(new Date())}>
                     Today
                   </Button>
-                  <Button variant="outline" size="icon" onClick={navigateNext}>
+                  <Button variant="outline" size="icon" onClick={navigateNext} aria-label={`Next ${calendarView}`} title={`Next ${calendarView}`}>
                     <ChevronRight className="h-4 w-4" />
                   </Button>
                 </div>

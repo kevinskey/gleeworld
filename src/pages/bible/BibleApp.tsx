@@ -3,6 +3,7 @@ import { BookOpen, ChevronDown, Loader2, Maximize2, PenLine, Play, Search, Squar
 import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { ConfirmPill, type ConfirmPillRequest } from '@/components/ui/confirm-pill';
 import { Textarea } from '@/components/ui/textarea';
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle,
@@ -48,6 +49,7 @@ export default function BibleApp() {
   const [bookId, setBookId] = useState<string | null>(null);
   const [chapter, setChapter] = useState(1);
   const [color, setColor] = useState<AnnotationColor>('yellow');
+  const [confirmDeleteNote, setConfirmDeleteNote] = useState<(ConfirmPillRequest & { id: string }) | null>(null);
   const [noteVerse, setNoteVerse] = useState<number | null>(null);
   const [draft, setDraft] = useState('');
   const [reading, setReading] = useState(false);
@@ -407,8 +409,11 @@ export default function BibleApp() {
                 <p className="text-sm whitespace-pre-wrap break-words">{n.body}</p>
               </div>
               <Button
-                variant="ghost" size="icon" aria-label="Delete note"
-                onClick={() => removeNote.mutate(n.id)}
+                variant="ghost" size="icon" aria-label="Delete note" title="Delete note"
+                onClick={(e) => setConfirmDeleteNote({
+                  x: e.clientX, y: e.clientY, id: n.id,
+                  message: `Delete note on ${book?.name ?? ''} ${n.chapter}${n.verse ? `:${n.verse}` : ''}?`,
+                })}
               >
                 <Trash2 className="w-4 h-4" />
               </Button>
@@ -503,6 +508,16 @@ export default function BibleApp() {
           </div>
         </SheetContent>
       </Sheet>
+      <ConfirmPill
+        request={confirmDeleteNote}
+        busy={removeNote.isPending}
+        onConfirm={() => {
+          if (!confirmDeleteNote) return;
+          removeNote.mutate(confirmDeleteNote.id);
+          setConfirmDeleteNote(null);
+        }}
+        onCancel={() => setConfirmDeleteNote(null)}
+      />
     </DashboardPageShell>
   );
 }

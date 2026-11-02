@@ -300,6 +300,8 @@ export const CoursePptSlider: React.FC<CoursePptSliderProps> = ({
               className="h-8 w-8 p-0"
               onClick={goPrev}
               disabled={currentSlide === 0}
+              aria-label="Previous slide"
+              title="Previous slide"
             >
               <ChevronLeft className="h-4 w-4" />
             </Button>
@@ -315,6 +317,8 @@ export const CoursePptSlider: React.FC<CoursePptSliderProps> = ({
                       : "bg-muted-foreground/30 hover:bg-muted-foreground/50"
                   )}
                   onClick={() => goToSlide(idx)}
+                  aria-label={`Go to slide ${idx + 1}`}
+                  title={`Go to slide ${idx + 1}`}
                 />
               ))}
             </div>
@@ -325,6 +329,8 @@ export const CoursePptSlider: React.FC<CoursePptSliderProps> = ({
               className="h-8 w-8 p-0"
               onClick={goNext}
               disabled={currentSlide === presentation.slides.length - 1}
+              aria-label="Next slide"
+              title="Next slide"
             >
               <ChevronRight className="h-4 w-4" />
             </Button>
@@ -350,6 +356,8 @@ export const CoursePptSlider: React.FC<CoursePptSliderProps> = ({
                   size="icon"
                   className="h-8 w-8"
                   onClick={toggleAudio}
+                  aria-label={isAudioPlaying ? 'Pause audio' : 'Play audio'}
+                  title={isAudioPlaying ? 'Pause audio' : 'Play audio'}
                 >
                   {isAudioPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
                 </Button>
@@ -361,6 +369,9 @@ export const CoursePptSlider: React.FC<CoursePptSliderProps> = ({
                   size="icon"
                   className="h-8 w-8"
                   onClick={toggleMute}
+                  aria-label={isMuted ? 'Unmute' : 'Mute'}
+                  aria-pressed={isMuted}
+                  title={isMuted ? 'Unmute' : 'Mute'}
                 >
                   {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
                 </Button>
@@ -374,6 +385,8 @@ export const CoursePptSlider: React.FC<CoursePptSliderProps> = ({
               className="absolute left-4 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full bg-background/80 backdrop-blur-sm"
               onClick={goPrev}
               disabled={currentSlide === 0}
+              aria-label="Previous slide"
+              title="Previous slide"
             >
               <ChevronLeft className="h-5 w-5" />
             </Button>
@@ -383,6 +396,8 @@ export const CoursePptSlider: React.FC<CoursePptSliderProps> = ({
               className="absolute right-4 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full bg-background/80 backdrop-blur-sm"
               onClick={goNext}
               disabled={currentSlide === presentation.slides.length - 1}
+              aria-label="Next slide"
+              title="Next slide"
             >
               <ChevronRight className="h-5 w-5" />
             </Button>

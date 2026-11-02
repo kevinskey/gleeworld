@@ -14,6 +14,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { Rss, Trash2, Plus, Newspaper, GraduationCap, Loader2, ExternalLink } from 'lucide-react';
+import { ConfirmPill, type ConfirmPillRequest } from '@/components/ui/confirm-pill';
 
 const SOFT_CARD = 'border-0 rounded-2xl bg-card';
 const SOFT_CARD_STYLE: React.CSSProperties = {
@@ -54,6 +55,8 @@ export default function FeedControl() {
   const { user } = useAuth();
   const qc = useQueryClient();
   const [tab, setTab] = useState<FeedType>('news');
+  const [confirmDelete, setConfirmDelete] = useState<(ConfirmPillRequest & { id: string }) | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const [customUrl, setCustomUrl] = useState('');
   const [customName, setCustomName] = useState('');
   const [adding, setAdding] = useState(false);
@@ -154,7 +157,10 @@ export default function FeedControl() {
   }
 
   async function deleteSource(id: string) {
+    setDeleting(true);
     const { error } = await supabase.from('gw_feed_sources').delete().eq('id', id);
+    setDeleting(false);
+    setConfirmDelete(null);
     if (error) toast({ title: 'Failed', description: error.message, variant: 'destructive' });
     else qc.invalidateQueries({ queryKey: ['feed-sources'] });
   }
@@ -263,7 +269,7 @@ export default function FeedControl() {
                         else qc.invalidateQueries({ queryKey: ['feed-sources'] });
                       }}
                     />
-                    <Button variant="ghost" size="sm" onClick={() => deleteSource(s.id)} aria-label="Delete">
+                    <Button variant="ghost" size="sm" onClick={(e) => setConfirmDelete({ x: e.clientX, y: e.clientY, message: `Delete feed "${s.name}"?`, id: s.id })} aria-label={`Delete feed ${s.name}`} title="Delete feed">
                       <Trash2 className="w-4 h-4" />
                     </Button>
                   </div>
@@ -273,6 +279,12 @@ export default function FeedControl() {
           )}
         </TabsContent>
       </Tabs>
+      <ConfirmPill
+        request={confirmDelete}
+        busy={deleting}
+        onConfirm={() => { if (confirmDelete) void deleteSource(confirmDelete.id); }}
+        onCancel={() => setConfirmDelete(null)}
+      />
     </DashboardPageShell>
     </DashboardShell>
     </UniversalLayout>

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { ConfirmPill, type ConfirmPillRequest } from '@/components/ui/confirm-pill';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -33,6 +34,7 @@ export const ClassScheduleForm: React.FC<ClassScheduleFormProps> = ({
   const { isAdmin, isSecretary } = useUserRole();
   const { schedules, loading, saving, addSchedule, deleteSchedule, hasConflicts, conflictCount } = useStudentClassSchedule(semester);
   const [isAdding, setIsAdding] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState<(ConfirmPillRequest & { id: string }) | null>(null);
   const [formData, setFormData] = useState<ClassScheduleInput>({
     course_name: '',
     course_code: '',
@@ -197,8 +199,10 @@ export const ClassScheduleForm: React.FC<ClassScheduleFormProps> = ({
                   variant="ghost"
                   size="icon"
                   className="h-8 w-8 text-muted-foreground hover:text-destructive flex-shrink-0"
-                  onClick={() => deleteSchedule(schedule.id)}
+                  onClick={(e) => setConfirmDelete({ id: schedule.id, x: e.clientX, y: e.clientY, message: `Delete "${schedule.course_name}"?` })}
                   disabled={saving}
+                  aria-label={`Delete ${schedule.course_name}`}
+                  title={`Delete ${schedule.course_name}`}
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>
@@ -323,6 +327,15 @@ export const ClassScheduleForm: React.FC<ClassScheduleFormProps> = ({
             No classes added yet. Click "Add a Class" to enter your schedule.
           </p>
         )}
+        <ConfirmPill
+          request={confirmDelete}
+          busy={saving}
+          onConfirm={async () => {
+            if (confirmDelete) await deleteSchedule(confirmDelete.id);
+            setConfirmDelete(null);
+          }}
+          onCancel={() => setConfirmDelete(null)}
+        />
       </CardContent>
     </Card>
   );

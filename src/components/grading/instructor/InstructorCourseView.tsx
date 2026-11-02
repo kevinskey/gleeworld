@@ -42,7 +42,7 @@ export const InstructorCourseView: React.FC<InstructorCourseViewProps> = ({ cour
   return (
     <div className="container mx-auto py-8 space-y-6">
       <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" onClick={() => navigate('/grading/instructor/dashboard')}>
+        <Button variant="ghost" size="icon" onClick={() => navigate('/grading/instructor/dashboard')} aria-label="Back to dashboard" title="Back to dashboard">
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <div className="flex-1">

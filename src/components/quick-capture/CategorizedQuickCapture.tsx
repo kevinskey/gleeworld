@@ -396,7 +396,7 @@ export const CategorizedQuickCapture = ({ category, onClose, onBack }: Categoriz
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" onClick={onBack} className="mr-1">
+            <Button variant="ghost" size="icon" onClick={onBack} className="mr-1" aria-label="Back" title="Back">
               <ArrowLeft className="h-4 w-4" />
             </Button>
             <Icon className="h-5 w-5" />
@@ -512,6 +512,8 @@ export const CategorizedQuickCapture = ({ category, onClose, onBack }: Categoriz
                           size="icon"
                           onClick={switchCamera}
                           className="absolute top-4 right-4 bg-background/80 hover:bg-background"
+                          aria-label="Switch camera"
+                          title="Switch camera"
                         >
                           <SwitchCamera className="h-4 w-4" />
                         </Button>

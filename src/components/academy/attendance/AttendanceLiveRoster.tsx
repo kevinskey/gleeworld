@@ -335,6 +335,8 @@ export const AttendanceLiveRoster: React.FC<AttendanceLiveRosterProps> = ({
                             variant="ghost"
                             className="h-8 w-8"
                             onClick={() => handleSaveNote(student.user_id)}
+                            aria-label="Save note"
+                            title="Save note"
                           >
                             <Save className="h-4 w-4" />
                           </Button>

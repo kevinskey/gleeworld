@@ -262,7 +262,7 @@ export function ShareScoreDialog({
                   : 'Every member of your tenant can see the score. Turn this off to share only with the specific people and classes below.'}
               </div>
             </div>
-            <Switch checked={everyone} onCheckedChange={setEveryone} />
+            <Switch checked={everyone} onCheckedChange={setEveryone} aria-label="Everyone in this workspace" />
           </div>
 
           {/* Lane 2 — specific people */}
@@ -285,6 +285,7 @@ export function ShareScoreDialog({
                 value={peopleFilter}
                 onChange={(e) => setPeopleFilter(e.target.value)}
                 placeholder="Search by name or email…"
+                aria-label="Search people by name or email"
                 className="pl-7 h-8 text-sm"
               />
             </div>

@@ -10,6 +10,7 @@ import { Calendar, Clock, MapPin, PlusCircle, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { ConfirmPill, type ConfirmPillRequest } from '@/components/ui/confirm-pill';
 
 interface RehearsalLink {
   id: string;
@@ -45,6 +46,7 @@ export const RehearsalLinks = ({ musicId, isAdmin = false }: RehearsalLinksProps
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [showLinkDialog, setShowLinkDialog] = useState(false);
+  const [unlinkConfirm, setUnlinkConfirm] = useState<(ConfirmPillRequest & { id: string }) | null>(null);
   const [newLink, setNewLink] = useState({
     event_id: '',
     notes: ''
@@ -277,7 +279,9 @@ export const RehearsalLinks = ({ musicId, isAdmin = false }: RehearsalLinksProps
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => handleUnlinkRehearsal(link.id)}
+                          onClick={(e) => setUnlinkConfirm({ x: e.clientX, y: e.clientY, message: `Unlink "${link.event.title}"?`, confirmLabel: 'Unlink', id: link.id })}
+                          aria-label={`Unlink ${link.event.title}`}
+                          title="Unlink rehearsal"
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
@@ -310,6 +314,11 @@ export const RehearsalLinks = ({ musicId, isAdmin = false }: RehearsalLinksProps
           })}
         </div>
       )}
+      <ConfirmPill
+        request={unlinkConfirm}
+        onConfirm={() => { if (unlinkConfirm) handleUnlinkRehearsal(unlinkConfirm.id); setUnlinkConfirm(null); }}
+        onCancel={() => setUnlinkConfirm(null)}
+      />
     </div>
   );
 };

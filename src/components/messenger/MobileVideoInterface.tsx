@@ -226,6 +226,8 @@ export const MobileVideoInterface = ({ onJoinSession }: MobileVideoInterfaceProp
                 size="icon"
                 className="h-8 w-8 rounded-full"
                 onClick={() => setShowCreateForm(false)}
+                aria-label="Close new call form"
+                title="Close new call form"
               >
                 <X className="h-4 w-4" />
               </Button>

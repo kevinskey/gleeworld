@@ -397,6 +397,9 @@ export const Header = ({ activeTab, onTabChange, isRadioPlaying = false, onRadio
                     variant="ghost"
                     size="icon"
                     className="text-primary hover:bg-primary/10 border border-primary/30 h-8 w-8 sm:h-10 sm:w-10"
+                    aria-label="Open navigation menu"
+                    aria-expanded={mobileMenuOpen}
+                    title="Open navigation menu"
                   >
                     <Menu className="h-4 w-4 sm:h-5 sm:w-5" />
                   </Button>

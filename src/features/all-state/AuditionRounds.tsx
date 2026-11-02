@@ -21,6 +21,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
 import { Plus, Pencil, Trash2, Mic2 } from 'lucide-react';
+import { ConfirmPill, type ConfirmPillRequest } from '@/components/ui/confirm-pill';
 import {
   useProgramVoiceParts, useSaveAttempt, useDeleteAttempt, useSetVoiceParts,
   type AttemptRow, type ParticipationRow,
@@ -42,6 +43,7 @@ export function AuditionRounds({ participation, programId, attempts }: Props) {
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<AttemptRow | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<(ConfirmPillRequest & { id: string }) | null>(null);
 
   // Form state for the round dialog.
   const [roundNumber, setRoundNumber] = useState('1');
@@ -183,7 +185,13 @@ export function AuditionRounds({ participation, programId, attempts }: Props) {
                   <Pencil className="h-3.5 w-3.5" aria-hidden />
                 </Button>
                 <Button size="icon" variant="ghost" className="h-7 w-7"
-                        onClick={() => deleteAttempt.mutate(a.id)} aria-label="Delete round">
+                        onClick={(e) => setConfirmDelete({
+                          id: a.id,
+                          x: e.clientX,
+                          y: e.clientY,
+                          message: `Delete round ${a.round_number}${a.round_label ? ` — ${a.round_label}` : ''}?`,
+                        })}
+                        aria-label="Delete round">
                   <Trash2 className="h-3.5 w-3.5 text-destructive" aria-hidden />
                 </Button>
               </span>
@@ -273,6 +281,15 @@ export function AuditionRounds({ participation, programId, attempts }: Props) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      <ConfirmPill
+        request={confirmDelete}
+        busy={deleteAttempt.isPending}
+        onConfirm={() => {
+          if (!confirmDelete) return;
+          deleteAttempt.mutate(confirmDelete.id, { onSettled: () => setConfirmDelete(null) });
+        }}
+        onCancel={() => setConfirmDelete(null)}
+      />
     </div>
   );
 }

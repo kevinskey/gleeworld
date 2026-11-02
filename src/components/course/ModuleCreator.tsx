@@ -215,6 +215,8 @@ export const ModuleCreator: React.FC<ModuleCreatorProps> = ({ courseId }) => {
                             variant="ghost"
                             size="sm"
                             onClick={() => removeModuleItem(index)}
+                            aria-label={`Remove item ${index + 1}`}
+                            title={`Remove item ${index + 1}`}
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>

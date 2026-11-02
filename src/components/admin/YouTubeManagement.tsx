@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FeaturedVideoManager } from "./FeaturedVideoManager";
 import { useToast } from "@/hooks/use-toast";
+import { ConfirmPill, type ConfirmPillRequest } from "@/components/ui/confirm-pill";
 import { useYouTubeVideos } from "@/hooks/useYouTubeVideos";
 import { supabase } from "@/integrations/supabase/client";
 import { YouTubeVideoPicker } from "@/components/youtube/YouTubeVideoPicker";
@@ -52,6 +53,8 @@ export const YouTubeManagement = () => {
   const [videos, setVideos] = useState<YouTubeVideo[]>([]);
   const [loading, setLoading] = useState(false);
   const [activeSlide, setActiveSlide] = useState(0);
+  const [confirmDelete, setConfirmDelete] = useState<(ConfirmPillRequest & { id: string }) | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const [showManualUpload, setShowManualUpload] = useState(false);
   const [channelInput, setChannelInput] = useState('');
   const [selectedVideoId, setSelectedVideoId] = useState<string | null>(null);
@@ -176,6 +179,7 @@ export const YouTubeManagement = () => {
   };
 
   const handleDeleteVideo = async (videoId: string) => {
+    setDeleting(true);
     try {
       const { error } = await supabase
         .from('youtube_videos')
@@ -195,6 +199,8 @@ export const YouTubeManagement = () => {
         description: "Failed to delete video.",
         variant: "destructive",
       });
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -550,7 +556,14 @@ export const YouTubeManagement = () => {
                                 variant="ghost"
                                 size="sm"
                                 className="h-8 w-8 p-0"
-                                onClick={() => handleDeleteVideo(video.id)}
+                                onClick={(e) =>
+                                  setConfirmDelete({
+                                    id: video.id,
+                                    x: e.clientX,
+                                    y: e.clientY,
+                                    message: `Remove "${video.title}" from the collection?`,
+                                  })
+                                }
                                 title="Remove video"
                               >
                                 <Trash2 className="h-4 w-4 text-red-500" />
@@ -588,6 +601,8 @@ export const YouTubeManagement = () => {
                     <button
                       key={index}
                       onClick={() => setActiveSlide(index)}
+                      aria-label={`Go to page ${index + 1}`}
+                      aria-pressed={activeSlide === index}
                       className={`w-2 h-2 rounded-full transition-colors ${
                         activeSlide === index ? 'bg-red-500' : 'bg-gray-300'
                       }`}
@@ -637,6 +652,16 @@ export const YouTubeManagement = () => {
         }}
         videoId={selectedVideoId || ''}
         title={selectedVideoTitle}
+      />
+      <ConfirmPill
+        request={confirmDelete}
+        busy={deleting}
+        onConfirm={async () => {
+          if (!confirmDelete) return;
+          await handleDeleteVideo(confirmDelete.id);
+          setConfirmDelete(null);
+        }}
+        onCancel={() => setConfirmDelete(null)}
       />
     </div>
   );

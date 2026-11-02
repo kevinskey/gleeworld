@@ -14,6 +14,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { DollarSign, Plus, Edit2, Trash2, Bus, Hotel, Utensils, Music, Users, FileText, TrendingUp, Calculator, CheckCircle, Clock, AlertCircle, ChevronDown } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
+import { ConfirmPill, type ConfirmPillRequest } from '@/components/ui/confirm-pill';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 
 interface BudgetCategory {
@@ -62,6 +63,7 @@ export const TourBudgetManager = () => {
   const [editingItem, setEditingItem] = useState<BudgetLineItem | null>(null);
   const [openCategories, setOpenCategories] = useState<Record<string, boolean>>({});
   const { toast } = useToast();
+  const [confirmRevenue, setConfirmRevenue] = useState<(ConfirmPillRequest & { id: string }) | null>(null);
 
   const [newItem, setNewItem] = useState({
     category: 'transportation',
@@ -515,12 +517,12 @@ export const TourBudgetManager = () => {
                                   <TableCell>{getStatusBadge(item.status)}</TableCell>
                                   <TableCell className="text-right pr-4">
                                     <div className="flex items-center justify-end gap-0.5">
-                                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setEditingItem(item)}>
+                                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setEditingItem(item)} aria-label={`Edit ${item.description}`} title={`Edit ${item.description}`}>
                                         <Edit2 className="h-3 w-3" />
                                       </Button>
                                       <AlertDialog>
                                         <AlertDialogTrigger asChild>
-                                          <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive">
+                                          <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" aria-label={`Delete ${item.description}`} title={`Delete ${item.description}`}>
                                             <Trash2 className="h-3 w-3" />
                                           </Button>
                                         </AlertDialogTrigger>
@@ -606,7 +608,7 @@ export const TourBudgetManager = () => {
                         <Badge variant="outline" className="text-xs">{rev.status}</Badge>
                       </div>
                       <p className="text-lg font-bold text-green-600">{formatCurrency(rev.amount)}</p>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => handleDeleteRevenue(rev.id)}>
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={(e) => setConfirmRevenue({ id: rev.id, x: e.clientX, y: e.clientY, message: `Delete revenue "${rev.source}"?` })} aria-label={`Delete revenue ${rev.source}`} title={`Delete revenue ${rev.source}`}>
                         <Trash2 className="h-3.5 w-3.5" />
                       </Button>
                     </div>
@@ -617,6 +619,15 @@ export const TourBudgetManager = () => {
           </Card>
         </TabsContent>
       </Tabs>
+      <ConfirmPill
+        request={confirmRevenue}
+        onConfirm={async () => {
+          const id = confirmRevenue?.id;
+          setConfirmRevenue(null);
+          if (id) await handleDeleteRevenue(id);
+        }}
+        onCancel={() => setConfirmRevenue(null)}
+      />
     </div>
   );
 };

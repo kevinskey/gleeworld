@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { CreatePracticeRecordingDialog } from './CreatePracticeRecordingDialog';
+import { ConfirmPill, type ConfirmPillRequest } from '@/components/ui/confirm-pill';
 
 interface PracticeRecordingsPanelProps {
   className?: string;
@@ -32,6 +33,7 @@ export const PracticeRecordingsPanel: React.FC<PracticeRecordingsPanelProps> = (
   const { recordings, loading, deletePracticeRecording, canCreateRecordings } = usePracticeRecordings();
   const [playingId, setPlayingId] = useState<string | null>(null);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState<(ConfirmPillRequest & { id: string }) | null>(null);
 
   const handlePlayPause = (recordingId: string, url: string) => {
     if (playingId === recordingId) {
@@ -226,8 +228,10 @@ export const PracticeRecordingsPanel: React.FC<PracticeRecordingsPanelProps> = (
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => deletePracticeRecording(recording.id)}
+                          onClick={(e) => setConfirmDelete({ id: recording.id, x: e.clientX, y: e.clientY, message: `Delete "${recording.title}"?` })}
                           className="touch-target p-1 text-destructive hover:text-destructive"
+                          aria-label={`Delete ${recording.title}`}
+                          title={`Delete ${recording.title}`}
                         >
                           <Trash2 className="h-3 w-3" />
                         </Button>
@@ -245,6 +249,15 @@ export const PracticeRecordingsPanel: React.FC<PracticeRecordingsPanelProps> = (
       <CreatePracticeRecordingDialog
         open={showCreateDialog}
         onOpenChange={setShowCreateDialog}
+      />
+      <ConfirmPill
+        request={confirmDelete}
+        onConfirm={async () => {
+          const id = confirmDelete?.id;
+          setConfirmDelete(null);
+          if (id) await deletePracticeRecording(id);
+        }}
+        onCancel={() => setConfirmDelete(null)}
       />
     </>
   );

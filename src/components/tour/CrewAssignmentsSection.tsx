@@ -17,6 +17,7 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
+import { ConfirmPill, type ConfirmPillRequest } from '@/components/ui/confirm-pill';
 
 interface Member {
   user_id: string;
@@ -71,6 +72,8 @@ export const CrewAssignmentsSection = () => {
   const [addTaskOpen, setAddTaskOpen] = useState(false);
   const [addMeetingOpen, setAddMeetingOpen] = useState(false);
   const [selectedCrewType, setSelectedCrewType] = useState<'merch' | 'setup'>('merch');
+  const [confirmDelete, setConfirmDelete] = useState<(ConfirmPillRequest & { run: () => Promise<void> }) | null>(null);
+  const [confirmBusy, setConfirmBusy] = useState(false);
   
   // Form states
   const [selectedMemberId, setSelectedMemberId] = useState('');
@@ -382,6 +385,17 @@ export const CrewAssignmentsSection = () => {
           <CrewContent />
         </TabsContent>
       </Tabs>
+      <ConfirmPill
+        request={confirmDelete}
+        busy={confirmBusy}
+        onConfirm={async () => {
+          if (!confirmDelete) return;
+          setConfirmBusy(true);
+          try { await confirmDelete.run(); }
+          finally { setConfirmBusy(false); setConfirmDelete(null); }
+        }}
+        onCancel={() => setConfirmDelete(null)}
+      />
     </div>
   );
 
@@ -456,7 +470,13 @@ export const CrewAssignmentsSection = () => {
                       <p className="font-medium truncate">{crew.member?.full_name || 'Unknown'}</p>
                       {crew.role && <p className="text-xs text-muted-foreground">{crew.role}</p>}
                     </div>
-                    <Button variant="ghost" size="icon" onClick={() => removeCrewMember(crew.id)}>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      aria-label={`Remove ${crew.member?.full_name || 'member'} from crew`}
+                      title="Remove from crew"
+                      onClick={(e) => setConfirmDelete({ x: e.clientX, y: e.clientY, message: `Remove ${crew.member?.full_name || 'this member'} from the crew?`, confirmLabel: 'Remove', run: () => removeCrewMember(crew.id) })}
+                    >
                       <Trash2 className="h-4 w-4 text-destructive" />
                     </Button>
                   </div>
@@ -593,7 +613,13 @@ export const CrewAssignmentsSection = () => {
                           <CheckCircle2 className="h-4 w-4 text-green-600" />
                         </Button>
                       )}
-                      <Button variant="ghost" size="icon" onClick={() => deleteTask(task.id)}>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        aria-label={`Delete task ${task.title}`}
+                        title="Delete task"
+                        onClick={(e) => setConfirmDelete({ x: e.clientX, y: e.clientY, message: `Delete task "${task.title}"?`, run: () => deleteTask(task.id) })}
+                      >
                         <Trash2 className="h-4 w-4 text-destructive" />
                       </Button>
                     </div>
@@ -738,7 +764,13 @@ export const CrewAssignmentsSection = () => {
                         )}
                       </div>
                     </div>
-                    <Button variant="ghost" size="icon" onClick={() => deleteMeeting(meeting.id)}>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      aria-label={`Delete meeting ${meeting.title}`}
+                      title="Delete meeting"
+                      onClick={(e) => setConfirmDelete({ x: e.clientX, y: e.clientY, message: `Delete meeting "${meeting.title}"?`, run: () => deleteMeeting(meeting.id) })}
+                    >
                       <Trash2 className="h-4 w-4 text-destructive" />
                     </Button>
                   </div>

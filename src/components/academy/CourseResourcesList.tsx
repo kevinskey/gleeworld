@@ -161,7 +161,7 @@ export const CourseResourcesList: React.FC<CourseResourcesListProps> = ({ course
                   <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{viewer.description}</p>
                 )}
               </div>
-              <Button variant="ghost" size="icon" onClick={() => setViewer(null)}>
+              <Button variant="ghost" size="icon" onClick={() => setViewer(null)} aria-label="Close viewer" title="Close viewer">
                 <X className="h-4 w-4" />
               </Button>
             </div>

@@ -1152,7 +1152,7 @@ export const MessengerModal: React.FC = () => {
                 <div className="absolute inset-y-0 right-0 w-80 bg-background border-l shadow-xl z-40 flex flex-col">
                   <div className="flex items-center justify-between p-4 border-b">
                     <h3 className="font-semibold">Quick Add Groups</h3>
-                    <Button variant="ghost" size="icon" onClick={() => setShowGroupsPanel(false)}>
+                    <Button variant="ghost" size="icon" onClick={() => setShowGroupsPanel(false)} aria-label="Close groups panel" title="Close groups panel">
                       <X className="h-4 w-4" />
                     </Button>
                   </div>

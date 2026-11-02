@@ -9,6 +9,7 @@ import { Edit, Trash2, PlusCircle, StickyNote } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { ConfirmPill, type ConfirmPillRequest } from '@/components/ui/confirm-pill';
 
 interface PersonalNote {
   id: string;
@@ -29,6 +30,7 @@ export const PersonalNotes = ({ musicId }: PersonalNotesProps) => {
   const [loading, setLoading] = useState(true);
   const [showDialog, setShowDialog] = useState(false);
   const [editingNote, setEditingNote] = useState<PersonalNote | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<(ConfirmPillRequest & { id: string }) | null>(null);
   const [noteForm, setNoteForm] = useState({
     title: '',
     content: ''
@@ -230,13 +232,17 @@ export const PersonalNotes = ({ musicId }: PersonalNotesProps) => {
                       variant="ghost"
                       size="sm"
                       onClick={() => handleEditNote(note)}
+                      aria-label={`Edit ${note.title}`}
+                      title="Edit note"
                     >
                       <Edit className="h-4 w-4" />
                     </Button>
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => handleDeleteNote(note.id)}
+                      onClick={(e) => setDeleteConfirm({ x: e.clientX, y: e.clientY, message: `Delete "${note.title}"?`, id: note.id })}
+                      aria-label={`Delete ${note.title}`}
+                      title="Delete note"
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -254,6 +260,11 @@ export const PersonalNotes = ({ musicId }: PersonalNotesProps) => {
           ))}
         </div>
       )}
+      <ConfirmPill
+        request={deleteConfirm}
+        onConfirm={() => { if (deleteConfirm) handleDeleteNote(deleteConfirm.id); setDeleteConfirm(null); }}
+        onCancel={() => setDeleteConfirm(null)}
+      />
     </div>
   );
 };

@@ -278,6 +278,8 @@ export const DirectMessaging = () => {
               disabled={sending || !messageInput.trim()}
               size="icon"
               className="h-10 w-10 flex-shrink-0"
+              aria-label="Send message"
+              title="Send message"
             >
               <Send className="h-4 w-4" />
             </Button>

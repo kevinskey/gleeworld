@@ -17,6 +17,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { useLiturgicalWorksheets, LiturgicalWorksheet } from '@/hooks/useLiturgicalWorksheets';
 import { LiturgicalWorksheetForm } from '@/components/liturgical/LiturgicalWorksheetForm';
 import { format } from 'date-fns';
+import { ConfirmPill, type ConfirmPillRequest } from '@/components/ui/confirm-pill';
 
 export const BowmanScholarsModule = () => {
   const { scholars, loading, updateScholar, getCurrentScholar } = useBowmanScholars();
@@ -36,6 +37,8 @@ export const BowmanScholarsModule = () => {
   const [showWorksheetForm, setShowWorksheetForm] = useState(false);
   const [editingWorksheet, setEditingWorksheet] = useState<LiturgicalWorksheet | undefined>();
   const [showCamera, setShowCamera] = useState(false);
+  const [confirmDeleteWorksheet, setConfirmDeleteWorksheet] = useState<(ConfirmPillRequest & { id: string }) | null>(null);
+  const [deletingWorksheet, setDeletingWorksheet] = useState(false);
   const [uploadingResume, setUploadingResume] = useState(false);
   const [uploadingHeadshot, setUploadingHeadshot] = useState(false);
   const { toast } = useToast();
@@ -733,6 +736,8 @@ export const BowmanScholarsModule = () => {
                                     e.stopPropagation();
                                     handleEditWorksheet(worksheet);
                                   }}
+                                  aria-label="Edit worksheet"
+                                  title="Edit worksheet"
                                 >
                                   <Edit2 className="h-5 w-5" />
                                 </Button>
@@ -741,9 +746,16 @@ export const BowmanScholarsModule = () => {
                                   size="sm"
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    deleteWorksheet(worksheet.id);
+                                    setConfirmDeleteWorksheet({
+                                      x: e.clientX,
+                                      y: e.clientY,
+                                      message: `Delete worksheet for ${format(new Date(worksheet.liturgical_date), 'MMMM d, yyyy')}?`,
+                                      id: worksheet.id,
+                                    });
                                   }}
                                   className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                                  aria-label="Delete worksheet"
+                                  title="Delete worksheet"
                                 >
                                   <Trash2 className="h-5 w-5" />
                                 </Button>
@@ -796,6 +808,17 @@ export const BowmanScholarsModule = () => {
         </TabsContent>
       </Tabs>
       </div>
+      <ConfirmPill
+        request={confirmDeleteWorksheet}
+        busy={deletingWorksheet}
+        onConfirm={async () => {
+          if (!confirmDeleteWorksheet) return;
+          setDeletingWorksheet(true);
+          try { await deleteWorksheet(confirmDeleteWorksheet.id); }
+          finally { setDeletingWorksheet(false); setConfirmDeleteWorksheet(null); }
+        }}
+        onCancel={() => setConfirmDeleteWorksheet(null)}
+      />
     </div>
   );
 };

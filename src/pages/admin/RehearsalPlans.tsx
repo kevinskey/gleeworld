@@ -13,6 +13,7 @@ import { useNavigate } from 'react-router-dom';
 import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
 import { DashboardShell } from '@/components/dashboard/DashboardShell';
+import { ConfirmPill, type ConfirmPillRequest } from '@/components/ui/confirm-pill';
 
 export default function RehearsalPlans() {
   const qc = useQueryClient();
@@ -23,6 +24,7 @@ export default function RehearsalPlans() {
   const [date, setDate] = useState('');
   const [duration, setDuration] = useState('60');
   const [body, setBody] = useState('');
+  const [deleteConfirm, setDeleteConfirm] = useState<(ConfirmPillRequest & { id: string }) | null>(null);
 
   const { data: plans = [] } = useQuery({
     queryKey: ['rehearsal-plans'],
@@ -140,13 +142,19 @@ export default function RehearsalPlans() {
                   {p.source === 'ai' && ' · AI-generated'}
                 </div>
               </button>
-              <Button variant="ghost" size="sm" onClick={() => del.mutate(p.id)}>
+              <Button variant="ghost" size="sm" onClick={(e) => setDeleteConfirm({ x: e.clientX, y: e.clientY, message: `Delete "${p.title}"?`, id: p.id })} aria-label={`Delete ${p.title}`} title="Delete plan">
                 <Trash2 className="w-4 h-4" />
               </Button>
             </div>
           ))}
         </CardContent>
       </Card>
+      <ConfirmPill
+        request={deleteConfirm}
+        busy={del.isPending}
+        onConfirm={() => { if (deleteConfirm) del.mutate(deleteConfirm.id, { onSettled: () => setDeleteConfirm(null) }); }}
+        onCancel={() => setDeleteConfirm(null)}
+      />
     </DashboardPageShell>
     </DashboardShell>
     </UniversalLayout>

@@ -154,14 +154,14 @@ export const DocumentManager = ({
                           </Badge>
                         </div>
                         <div className="flex items-center gap-2">
-                          <Button variant="ghost" size="sm">
+                          <Button variant="ghost" size="sm" aria-label="View document" title="View document">
                             <Eye className="h-4 w-4" />
                           </Button>
-                          <Button variant="ghost" size="sm">
+                          <Button variant="ghost" size="sm" aria-label="Download document" title="Download document">
                             <Download className="h-4 w-4" />
                           </Button>
                           {hasPermission(user?.role || 'user', 'delete_users') && (
-                            <Button variant="ghost" size="sm" className="text-red-600">
+                            <Button variant="ghost" size="sm" className="text-red-600" aria-label="Delete document" title="Delete document">
                               <Trash2 className="h-4 w-4" />
                             </Button>
                           )}

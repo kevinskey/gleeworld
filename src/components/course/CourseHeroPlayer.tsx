@@ -393,6 +393,8 @@ export const CourseHeroPlayer: React.FC<CourseHeroPlayerProps> = ({
                     className="h-5 w-5 p-0 text-white/50 hover:text-white disabled:opacity-30"
                     onClick={skipPrevious}
                     disabled={currentTrackIndex === null || currentTrackIndex === 0}
+                    aria-label="Previous track"
+                    title="Previous track"
                   >
                     <SkipBack className="h-3.5 w-3.5" />
                   </Button>
@@ -403,6 +405,9 @@ export const CourseHeroPlayer: React.FC<CourseHeroPlayerProps> = ({
                     className="h-7 w-7 p-0 text-white bg-primary hover:bg-primary/90 rounded-full shadow-lg disabled:opacity-50"
                     onClick={currentTrack ? togglePlay : handleFirstPlay}
                     disabled={tracks.length === 0}
+                    aria-label={isPlaying ? 'Pause' : 'Play'}
+                    aria-pressed={isPlaying}
+                    title={isPlaying ? 'Pause' : 'Play'}
                   >
                     {isPlaying ? (
                       <Pause className="h-3.5 w-3.5" />
@@ -417,6 +422,8 @@ export const CourseHeroPlayer: React.FC<CourseHeroPlayerProps> = ({
                     className="h-5 w-5 p-0 text-white/50 hover:text-white disabled:opacity-30"
                     onClick={skipNext}
                     disabled={currentTrackIndex === null || currentTrackIndex >= tracks.length - 1}
+                    aria-label="Next track"
+                    title="Next track"
                   >
                     <SkipForward className="h-3.5 w-3.5" />
                   </Button>
@@ -428,6 +435,9 @@ export const CourseHeroPlayer: React.FC<CourseHeroPlayerProps> = ({
                   size="icon"
                   className="hidden md:flex h-8 w-8 text-white/70 hover:text-white hover:bg-white/10"
                   onClick={() => setIsMuted(!isMuted)}
+                  aria-label={isMuted ? 'Unmute' : 'Mute'}
+                  aria-pressed={isMuted}
+                  title={isMuted ? 'Unmute' : 'Mute'}
                 >
                   {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
                 </Button>
@@ -467,6 +477,9 @@ export const CourseHeroPlayer: React.FC<CourseHeroPlayerProps> = ({
                     size="icon"
                     className="h-8 w-8 text-white/70 hover:text-white hover:bg-white/10"
                     onClick={() => setIsExpanded(!isExpanded)}
+                    aria-label={isExpanded ? 'Collapse track list' : 'Expand track list'}
+                    aria-expanded={isExpanded}
+                    title={isExpanded ? 'Collapse track list' : 'Expand track list'}
                   >
                     {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                   </Button>
@@ -498,6 +511,8 @@ export const CourseHeroPlayer: React.FC<CourseHeroPlayerProps> = ({
                         variant="ghost"
                         size="icon"
                         className="h-10 w-10 text-white/70 hover:text-white hover:bg-white/10 touch-manipulation"
+                        aria-label="Choose playlist"
+                        title="Choose playlist"
                       >
                         <Music className="h-5 w-5" />
                       </Button>
@@ -525,6 +540,9 @@ export const CourseHeroPlayer: React.FC<CourseHeroPlayerProps> = ({
                       className="h-10 w-10 text-white/70 hover:text-white hover:bg-white/10 touch-manipulation"
                       onClick={() => setIsExpanded(!isExpanded)}
                       onTouchEnd={(e) => { e.preventDefault(); setIsExpanded(!isExpanded); }}
+                      aria-label={isExpanded ? 'Collapse track list' : 'Expand track list'}
+                      aria-expanded={isExpanded}
+                      title={isExpanded ? 'Collapse track list' : 'Expand track list'}
                     >
                       {isExpanded ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
                     </Button>
@@ -555,6 +573,8 @@ export const CourseHeroPlayer: React.FC<CourseHeroPlayerProps> = ({
                   onClick={skipPrevious}
                   onTouchEnd={(e) => { e.preventDefault(); skipPrevious(); }}
                   disabled={currentTrackIndex === null || currentTrackIndex === 0}
+                  aria-label="Previous track"
+                  title="Previous track"
                 >
                   <SkipBack className="h-5 w-5" />
                 </Button>
@@ -567,6 +587,9 @@ export const CourseHeroPlayer: React.FC<CourseHeroPlayerProps> = ({
                   onTouchEnd={(e) => { e.preventDefault(); currentTrack ? togglePlay() : handleFirstPlay(); }}
                   onPointerDown={() => forceUnlockAudio()}
                   disabled={tracks.length === 0}
+                  aria-label={isPlaying ? 'Pause' : 'Play'}
+                  aria-pressed={isPlaying}
+                  title={isPlaying ? 'Pause' : 'Play'}
                 >
                   {isPlaying ? (
                     <Pause className="h-5 w-5" />
@@ -582,6 +605,8 @@ export const CourseHeroPlayer: React.FC<CourseHeroPlayerProps> = ({
                   onClick={skipNext}
                   onTouchEnd={(e) => { e.preventDefault(); skipNext(); }}
                   disabled={currentTrackIndex === null || currentTrackIndex >= tracks.length - 1}
+                  aria-label="Next track"
+                  title="Next track"
                 >
                   <SkipForward className="h-5 w-5" />
                 </Button>

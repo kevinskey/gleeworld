@@ -1,4 +1,15 @@
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import SendBucketOfLove from "@/components/buckets-of-love/SendBucketOfLove";
@@ -8,6 +19,7 @@ import { useToast } from "@/hooks/use-toast";
 
 export const BucketsOfLoveWidget = () => {
   const { toast } = useToast();
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   const handleCleanupDuplicates = async () => {
     const result = await cleanupDuplicateBuckets();
@@ -36,7 +48,7 @@ export const BucketsOfLoveWidget = () => {
           <Button
             variant="outline"
             size="sm"
-            onClick={handleCleanupDuplicates}
+            onClick={() => setConfirmOpen(true)}
             className="gap-1"
           >
             <Trash2 className="h-3 w-3" />
@@ -47,6 +59,25 @@ export const BucketsOfLoveWidget = () => {
       <CardContent>
         <SendBucketOfLove />
       </CardContent>
+      <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete duplicate Buckets of Love?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Duplicate entries are permanently deleted. This cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={handleCleanupDuplicates}
+            >
+              Delete duplicates
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   );
 };

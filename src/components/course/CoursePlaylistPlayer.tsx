@@ -279,11 +279,14 @@ export const CoursePlaylistPlayer: React.FC<CoursePlaylistPlayerProps> = ({
                 size="icon"
                 onClick={() => setIsShuffled(!isShuffled)}
                 className={cn(isShuffled && 'text-primary')}
+                aria-label={isShuffled ? 'Turn shuffle off' : 'Turn shuffle on'}
+                aria-pressed={isShuffled}
+                title={isShuffled ? 'Turn shuffle off' : 'Turn shuffle on'}
               >
                 <Shuffle className="h-4 w-4" />
               </Button>
 
-              <Button variant="ghost" size="icon" onClick={handlePrevious}>
+              <Button variant="ghost" size="icon" onClick={handlePrevious} aria-label="Previous track" title="Previous track">
                 <SkipBack className="h-5 w-5" />
               </Button>
 
@@ -292,6 +295,9 @@ export const CoursePlaylistPlayer: React.FC<CoursePlaylistPlayerProps> = ({
                 className="h-12 w-12 rounded-full"
                 onClick={handlePlayPause}
                 disabled={!currentTrack?.track_data || isAudioLoading}
+                aria-label={isPlaying ? 'Pause' : 'Play'}
+                aria-pressed={isPlaying}
+                title={isPlaying ? 'Pause' : 'Play'}
               >
                 {isAudioLoading ? (
                   <Loader2 className="h-6 w-6 animate-spin" />
@@ -302,7 +308,7 @@ export const CoursePlaylistPlayer: React.FC<CoursePlaylistPlayerProps> = ({
                 )}
               </Button>
 
-              <Button variant="ghost" size="icon" onClick={handleNext}>
+              <Button variant="ghost" size="icon" onClick={handleNext} aria-label="Next track" title="Next track">
                 <SkipForward className="h-5 w-5" />
               </Button>
 
@@ -311,6 +317,9 @@ export const CoursePlaylistPlayer: React.FC<CoursePlaylistPlayerProps> = ({
                 size="icon"
                 onClick={cycleRepeatMode}
                 className={cn(repeatMode !== 'none' && 'text-primary')}
+                aria-label={repeatMode === 'none' ? 'Repeat one' : repeatMode === 'one' ? 'Repeat all' : 'Turn repeat off'}
+                aria-pressed={repeatMode !== 'none'}
+                title={repeatMode === 'none' ? 'Repeat one' : repeatMode === 'one' ? 'Repeat all' : 'Turn repeat off'}
               >
                 <Repeat className="h-4 w-4" />
                 {repeatMode === 'one' && (
@@ -326,6 +335,9 @@ export const CoursePlaylistPlayer: React.FC<CoursePlaylistPlayerProps> = ({
                 size="icon"
                 className="h-8 w-8"
                 onClick={() => setIsMuted(!isMuted)}
+                aria-label={isMuted ? 'Unmute' : 'Mute'}
+                aria-pressed={isMuted}
+                title={isMuted ? 'Unmute' : 'Mute'}
               >
                 {isMuted || volume === 0 ? (
                   <VolumeX className="h-4 w-4" />

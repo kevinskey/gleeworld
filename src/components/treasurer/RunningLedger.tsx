@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
+import { ConfirmPill, type ConfirmPillRequest } from "@/components/ui/confirm-pill";
 import { 
   Plus, 
   DollarSign, 
@@ -40,6 +41,7 @@ export const RunningLedger = () => {
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingEntry, setEditingEntry] = useState<LedgerEntry | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<(ConfirmPillRequest & { id: string }) | null>(null);
   const [currentBalance, setCurrentBalance] = useState(0);
   const [hasBeginningBalance, setHasBeginningBalance] = useState(false);
   const [formData, setFormData] = useState({
@@ -428,10 +430,10 @@ export const RunningLedger = () => {
                         </p>
                       </div>
                       <div className="flex items-center gap-2">
-                        <Button variant="outline" size="sm" onClick={() => handleEdit(entry)}>
+                        <Button variant="outline" size="sm" onClick={() => handleEdit(entry)} aria-label={`Edit ${entry.description}`} title={`Edit ${entry.description}`}>
                           <Edit3 className="h-4 w-4" />
                         </Button>
-                        <Button variant="outline" size="sm" onClick={() => handleDelete(entry.id)}>
+                        <Button variant="outline" size="sm" onClick={(e) => setConfirmDelete({ id: entry.id, x: e.clientX, y: e.clientY, message: `Delete ledger entry "${entry.description}"?` })} aria-label={`Delete ${entry.description}`} title={`Delete ${entry.description}`}>
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
@@ -443,6 +445,15 @@ export const RunningLedger = () => {
           </Card>
         )}
       </div>
+      <ConfirmPill
+        request={confirmDelete}
+        onConfirm={async () => {
+          const id = confirmDelete?.id;
+          setConfirmDelete(null);
+          if (id) await handleDelete(id);
+        }}
+        onCancel={() => setConfirmDelete(null)}
+      />
     </div>
   );
 };

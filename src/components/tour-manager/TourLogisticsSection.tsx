@@ -21,6 +21,7 @@ import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { ConfirmPill, type ConfirmPillRequest } from '@/components/ui/confirm-pill';
 import { format, parseISO } from 'date-fns';
 import { publishTourToCalendar } from '@/utils/publishTourToCalendar';
 
@@ -93,6 +94,7 @@ const CollapsibleDateGroup = ({
   handleDeleteEvent: (id: string) => Promise<void>;
   muted?: boolean;
 }) => {
+  const [confirmDelete, setConfirmDelete] = useState<(ConfirmPillRequest & { id: string }) | null>(null);
   return (
     <Collapsible defaultOpen={defaultOpen}>
       <CollapsibleTrigger className="flex items-center gap-2 w-full group cursor-pointer">
@@ -186,7 +188,7 @@ const CollapsibleDateGroup = ({
                           <CheckCircle2 className="h-3 w-3 mr-1" />
                           Status
                         </Button>
-                        <Button variant="ghost" size="sm" className="h-7 px-2 text-xs text-destructive" onClick={() => handleDeleteEvent(event.id)}>
+                        <Button variant="ghost" size="sm" className="h-7 px-2 text-xs text-destructive" onClick={(e) => setConfirmDelete({ id: event.id, x: e.clientX, y: e.clientY, message: `Delete "${event.label}"?` })} aria-label={`Delete ${event.label}`} title={`Delete ${event.label}`}>
                           <Trash2 className="h-3 w-3" />
                         </Button>
                       </div>
@@ -198,6 +200,15 @@ const CollapsibleDateGroup = ({
           </div>
         </div>
       </CollapsibleContent>
+      <ConfirmPill
+        request={confirmDelete}
+        onConfirm={async () => {
+          const id = confirmDelete?.id;
+          setConfirmDelete(null);
+          if (id) await handleDeleteEvent(id);
+        }}
+        onCancel={() => setConfirmDelete(null)}
+      />
     </Collapsible>
   );
 };

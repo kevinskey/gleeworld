@@ -640,6 +640,8 @@ export const DocumentScanner = ({ onClose, onComplete }: DocumentScannerProps) =
                             size="sm"
                             onClick={() => deletePage(page.id)}
                             className="text-destructive hover:text-destructive/90 h-8 w-8 p-0"
+                            aria-label={`Remove page ${page.pageNumber}`}
+                            title={`Remove page ${page.pageNumber}`}
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>

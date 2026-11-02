@@ -260,12 +260,12 @@ export default function LH100BowmanScholars() {
                     </Avatar>
                     {editMode && (
                       <div className="absolute -bottom-2 -right-2 flex gap-1">
-                        <Button size="icon" variant="secondary" className="h-8 w-8" onClick={() => setShowCamera(true)}>
+                        <Button size="icon" variant="secondary" className="h-8 w-8" onClick={() => setShowCamera(true)} aria-label="Take photo" title="Take photo">
                           <Camera className="h-4 w-4" />
                         </Button>
                         <label>
                           <Button size="icon" variant="secondary" className="h-8 w-8" asChild>
-                            <span><Upload className="h-4 w-4" /></span>
+                            <span role="button" aria-label="Upload photo" title="Upload photo"><Upload className="h-4 w-4" /></span>
                           </Button>
                           <input type="file" accept="image/*" className="hidden" onChange={handleHeadshotUpload} />
                         </label>
@@ -579,7 +579,7 @@ export default function LH100BowmanScholars() {
             <Card className="w-full max-w-2xl my-4">
               <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle>{editingWorksheet ? 'Edit Worksheet' : 'New Liturgical Worksheet'}</CardTitle>
-                <Button variant="ghost" size="icon" onClick={() => { setShowWorksheetForm(false); setEditingWorksheet(undefined); }}>
+                <Button variant="ghost" size="icon" onClick={() => { setShowWorksheetForm(false); setEditingWorksheet(undefined); }} aria-label="Close" title="Close">
                   <X className="h-4 w-4" />
                 </Button>
               </CardHeader>

@@ -63,15 +63,18 @@ export const DashboardHeader = ({ user, onToggleMessages, showMessages }: Dashbo
           size="icon"
           onClick={onToggleMessages}
           className={`relative h-10 w-10 p-0 ${showMessages ? 'bg-muted' : ''}`}
+          aria-label={showMessages ? 'Hide messages' : 'Show messages'}
+          title={showMessages ? 'Hide messages' : 'Show messages'}
+          aria-pressed={showMessages}
         >
           <MessageCircle className="h-5 w-5" />
         </Button>
 
-        <Button variant="ghost" size="icon" className="h-10 w-10 p-0">
+        <Button variant="ghost" size="icon" className="h-10 w-10 p-0" aria-label="Notifications" title="Notifications">
           <Bell className="h-5 w-5" />
         </Button>
 
-        <Button variant="ghost" size="icon" className="h-10 w-10 p-0">
+        <Button variant="ghost" size="icon" className="h-10 w-10 p-0" aria-label="Settings" title="Settings">
           <Settings className="h-5 w-5" />
         </Button>
 
@@ -97,6 +100,8 @@ export const DashboardHeader = ({ user, onToggleMessages, showMessages }: Dashbo
             size="icon"
             onClick={handleSignOut}
             className="h-9 w-9 p-0 text-muted-foreground hover:text-destructive"
+            aria-label="Sign out"
+            title="Sign out"
           >
             <LogOut className="h-4 w-4" />
           </Button>

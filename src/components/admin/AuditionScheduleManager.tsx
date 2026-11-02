@@ -22,6 +22,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
+import { ConfirmPill, type ConfirmPillRequest } from '@/components/ui/confirm-pill';
 import {
   buildBlockRange,
   describeBlock,
@@ -49,6 +50,7 @@ export function AuditionScheduleManager() {
   const { toast } = useToast();
   const qc = useQueryClient();
   const [draft, setDraft] = useState<ScheduleDraft>(EMPTY_DRAFT);
+  const [confirmRemove, setConfirmRemove] = useState<(ConfirmPillRequest & { id: string }) | null>(null);
 
   const { data: blocks = [], isLoading } = useQuery<Block[]>({
     queryKey: ['audition_time_blocks_admin'],
@@ -251,8 +253,16 @@ export function AuditionScheduleManager() {
                         variant="ghost"
                         size="icon"
                         className="h-11 w-11 text-muted-foreground hover:text-destructive"
-                        onClick={() => removeBlock.mutate(b.id)}
+                        onClick={(e) =>
+                          setConfirmRemove({
+                            id: b.id,
+                            x: e.clientX,
+                            y: e.clientY,
+                            message: `Remove ${d.day}? Also removes its ${d.slots} slot${d.slots === 1 ? '' : 's'}.`,
+                          })
+                        }
                         aria-label={`Remove ${d.day}`}
+                        title={`Remove ${d.day}`}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -264,6 +274,15 @@ export function AuditionScheduleManager() {
           )}
         </CardContent>
       </Card>
+      <ConfirmPill
+        request={confirmRemove}
+        busy={removeBlock.isPending}
+        onConfirm={() => {
+          if (!confirmRemove) return;
+          removeBlock.mutate(confirmRemove.id, { onSettled: () => setConfirmRemove(null) });
+        }}
+        onCancel={() => setConfirmRemove(null)}
+      />
     </div>
   );
 }

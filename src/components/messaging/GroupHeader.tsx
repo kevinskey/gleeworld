@@ -112,6 +112,7 @@ export const GroupHeader: React.FC<GroupHeaderProps> = ({
               size="icon"
               onClick={onBack}
               className="h-7 w-7 md:h-9 md:w-9 text-primary-foreground hover:bg-white/20 flex-shrink-0"
+              aria-label="Go back"
             >
               <ArrowLeft className="h-4 w-4 md:h-5 md:w-5" />
             </Button>
@@ -151,6 +152,7 @@ export const GroupHeader: React.FC<GroupHeaderProps> = ({
             variant="ghost"
             size="icon"
             className="h-8 w-8 md:h-9 md:w-9 text-primary-foreground hover:bg-white/20"
+            aria-label="Search messages"
           >
             <Search className="h-4 w-4 md:h-5 md:w-5" />
           </Button>
@@ -163,6 +165,7 @@ export const GroupHeader: React.FC<GroupHeaderProps> = ({
                 variant="ghost"
                 size="icon"
                 className="h-8 w-8 md:h-9 md:w-9 text-primary-foreground hover:bg-white/20"
+                aria-label="More options"
               >
                 <MoreVertical className="h-4 w-4 md:h-5 md:w-5" />
               </Button>

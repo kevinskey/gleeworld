@@ -492,6 +492,8 @@ export const TourStipends = () => {
                 className="h-9 w-9 text-destructive/70 hover:text-destructive flex-shrink-0"
                 onClick={() => removeLineItem(item.id)}
                 disabled={lineItems.length === 1}
+                aria-label={`Remove line item${item.description ? ` ${item.description}` : ''}`}
+                title="Remove line item"
               >
                 <Trash2 className="h-4 w-4" />
               </Button>

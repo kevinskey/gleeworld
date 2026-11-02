@@ -287,6 +287,8 @@ export const WeeklyModuleEditor: React.FC<WeeklyModuleEditorProps> = ({
                         variant="ghost"
                         onClick={() => removeObjective(idx)}
                         className="text-destructive hover:text-destructive shrink-0"
+                        aria-label={`Remove objective ${idx + 1}`}
+                        title={`Remove objective ${idx + 1}`}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>

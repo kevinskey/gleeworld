@@ -449,6 +449,8 @@ export const CoursePlaylistManager: React.FC<CoursePlaylistManagerProps> = ({
                           size="icon"
                           onClick={() => toggleVisibility(playlist, 'is_public')}
                           title={playlist.is_public ? 'Make private' : 'Make public'}
+                          aria-label={playlist.is_public ? 'Make private' : 'Make public'}
+                          aria-pressed={!!playlist.is_public}
                         >
                           <Eye className={`h-4 w-4 ${playlist.is_public ? 'text-green-500' : 'opacity-50'}`} />
                         </Button>
@@ -457,6 +459,8 @@ export const CoursePlaylistManager: React.FC<CoursePlaylistManagerProps> = ({
                           size="icon"
                           onClick={() => toggleVisibility(playlist, 'is_featured')}
                           title={playlist.is_featured ? 'Remove from featured' : 'Add to featured'}
+                          aria-label={playlist.is_featured ? 'Remove from featured' : 'Add to featured'}
+                          aria-pressed={!!playlist.is_featured}
                         >
                           <Star className={`h-4 w-4 ${playlist.is_featured ? 'fill-yellow-500 text-yellow-500' : ''}`} />
                         </Button>
@@ -464,6 +468,8 @@ export const CoursePlaylistManager: React.FC<CoursePlaylistManagerProps> = ({
                           variant="ghost"
                           size="icon"
                           onClick={() => openEditDialog(playlist)}
+                          aria-label="Edit playlist"
+                          title="Edit playlist"
                         >
                           <Edit className="h-4 w-4" />
                         </Button>

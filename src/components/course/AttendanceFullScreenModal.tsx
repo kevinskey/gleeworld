@@ -39,6 +39,8 @@ export const AttendanceFullScreenModal: React.FC<AttendanceFullScreenModalProps>
             size="icon"
             onClick={onClose}
             className="absolute top-4 right-4 h-12 w-12 rounded-full"
+            aria-label="Close"
+            title="Close"
           >
             <X className="h-6 w-6" />
           </Button>

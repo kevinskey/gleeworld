@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { ConfirmPill, type ConfirmPillRequest } from '@/components/ui/confirm-pill';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Trash2, Plus, Save, GripVertical, Scale, AlertCircle, CheckCircle } from 'lucide-react';
@@ -30,6 +31,7 @@ export const RequirementsEditor: React.FC<Props> = ({
   const [requirements, setRequirements] = useState<Requirement[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [confirmRemove, setConfirmRemove] = useState<(ConfirmPillRequest & { index: number }) | null>(null);
 
   useEffect(() => {
     if (syllabusId) {
@@ -228,8 +230,14 @@ export const RequirementsEditor: React.FC<Props> = ({
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={() => removeRequirement(index)}
+                      onClick={(e) => {
+                        if (!req.id) { removeRequirement(index); return; }
+                        const label = req.requirement_text.length > 60 ? req.requirement_text.slice(0, 57) + '...' : req.requirement_text;
+                        setConfirmRemove({ index, x: e.clientX, y: e.clientY, message: `Delete requirement "${label}"?` });
+                      }}
                       className="text-destructive"
+                      aria-label="Delete requirement"
+                      title="Delete requirement"
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -296,6 +304,14 @@ export const RequirementsEditor: React.FC<Props> = ({
           </div>
         </CardContent>
       </Card>
+      <ConfirmPill
+        request={confirmRemove}
+        onConfirm={async () => {
+          if (confirmRemove) await removeRequirement(confirmRemove.index);
+          setConfirmRemove(null);
+        }}
+        onCancel={() => setConfirmRemove(null)}
+      />
     </div>
   );
 };

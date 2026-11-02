@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { ConfirmPill, type ConfirmPillRequest } from '@/components/ui/confirm-pill';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { MeetingInviteDialog } from './MeetingInviteDialog';
 
@@ -32,6 +33,7 @@ export const ScheduledMeetingsList: React.FC<ScheduledMeetingsListProps> = ({
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [inviteMeeting, setInviteMeeting] = useState<ScheduledMeeting | null>(null);
+  const [confirmCancel, setConfirmCancel] = useState<(ConfirmPillRequest & { id: string }) | null>(null);
 
   const { data: meetings = [], isLoading } = useQuery({
     queryKey: ['scheduled-meetings'],
@@ -193,7 +195,9 @@ export const ScheduledMeetingsList: React.FC<ScheduledMeetingsListProps> = ({
                   <Button
                     size="sm"
                     variant="ghost"
-                    onClick={() => handleDelete(meeting.id)}
+                    onClick={(e) => setConfirmCancel({ id: meeting.id, x: e.clientX, y: e.clientY, message: `Cancel meeting "${meeting.title}"?`, confirmLabel: 'Cancel meeting' })}
+                    aria-label={`Cancel meeting ${meeting.title}`}
+                    title={`Cancel meeting ${meeting.title}`}
                   >
                     <Trash2 className="h-4 w-4 text-destructive" />
                   </Button>
@@ -211,6 +215,15 @@ export const ScheduledMeetingsList: React.FC<ScheduledMeetingsListProps> = ({
           meeting={inviteMeeting}
         />
       )}
+      <ConfirmPill
+        request={confirmCancel}
+        onConfirm={async () => {
+          const id = confirmCancel?.id;
+          setConfirmCancel(null);
+          if (id) await handleDelete(id);
+        }}
+        onCancel={() => setConfirmCancel(null)}
+      />
     </Card>
   );
 };

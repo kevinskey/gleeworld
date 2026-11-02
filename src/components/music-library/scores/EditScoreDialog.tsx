@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { Field } from '@/components/ui/field';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
 } from '@/components/ui/dialog';
@@ -90,21 +90,17 @@ export function EditScoreDialog({
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
-          <div>
-            <Label className="text-sm">Title</Label>
+          <Field label="Title">
             <Input value={title} onChange={(e) => setTitle(e.target.value)} />
-          </div>
-          <div>
-            <Label className="text-sm">Composer</Label>
+          </Field>
+          <Field label="Composer">
             <Input value={composer} onChange={(e) => setComposer(e.target.value)} />
-          </div>
-          <div>
-            <Label className="text-sm">Voicing</Label>
+          </Field>
+          <Field label="Voicing">
             <Input value={voicing} onChange={(e) => setVoicing(e.target.value)} placeholder="SATB" />
-          </div>
+          </Field>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <Label className="text-sm">Physical copies</Label>
+            <Field label="Physical copies">
               <Input
                 type="number"
                 min={0}
@@ -112,15 +108,14 @@ export function EditScoreDialog({
                 onChange={(e) => setPhysicalCopies(e.target.value)}
                 placeholder="0"
               />
-            </div>
-            <div>
-              <Label className="text-sm">Library location</Label>
+            </Field>
+            <Field label="Library location">
               <Input
                 value={physicalLocation}
                 onChange={(e) => setPhysicalLocation(e.target.value)}
                 placeholder="Folder B-12"
               />
-            </div>
+            </Field>
           </div>
 
           {/* Rights model — see /copyright-policy. */}
@@ -128,29 +123,31 @@ export function EditScoreDialog({
             <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Rights &amp; licensing
             </div>
-            <div>
-              <Label className="text-sm">Rights status</Label>
+            <Field
+              label="Rights status"
+              hint={
+                <>
+                  {rightsStatus === 'public_domain' && 'No seat limit. Modern editions may still be copyrighted — verify the editor.'}
+                  {rightsStatus === 'licensed' && 'One active member per seat. Reduce roster or buy more copies if you grow past the count.'}
+                  {rightsStatus === 'all_rights_reserved' && 'Private use only — do NOT share with members or move to the shared library.'}
+                  {rightsStatus === 'unknown' && 'Tag this work before adding it to a course library.'}
+                </>
+              }
+            >
               <select
                 value={rightsStatus}
                 onChange={(e) => setRightsStatus(e.target.value as typeof rightsStatus)}
-                className="w-full mt-1 h-9 border border-border rounded-md bg-background px-2 text-sm"
+                className="w-full h-9 border border-border rounded-md bg-background px-2 text-sm"
               >
                 <option value="unknown">Not yet tagged</option>
                 <option value="public_domain">Public domain (free to distribute)</option>
                 <option value="licensed">Licensed (limited seats)</option>
                 <option value="all_rights_reserved">All rights reserved (private use only)</option>
               </select>
-              <p className="text-xs text-muted-foreground mt-1">
-                {rightsStatus === 'public_domain' && 'No seat limit. Modern editions may still be copyrighted — verify the editor.'}
-                {rightsStatus === 'licensed' && 'One active member per seat. Reduce roster or buy more copies if you grow past the count.'}
-                {rightsStatus === 'all_rights_reserved' && 'Private use only — do NOT share with members or move to the shared library.'}
-                {rightsStatus === 'unknown' && 'Tag this work before adding it to a course library.'}
-              </p>
-            </div>
+            </Field>
             {rightsStatus === 'licensed' && (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <Label className="text-sm">Seat count</Label>
+                <Field label="Seat count">
                   <Input
                     type="number"
                     min={1}
@@ -158,15 +155,14 @@ export function EditScoreDialog({
                     onChange={(e) => setLicenseSeatCount(e.target.value)}
                     placeholder="40"
                   />
-                </div>
-                <div>
-                  <Label className="text-sm">Copyright holder</Label>
+                </Field>
+                <Field label="Copyright holder">
                   <Input
                     value={copyrightHolder}
                     onChange={(e) => setCopyrightHolder(e.target.value)}
                     placeholder="Hal Leonard"
                   />
-                </div>
+                </Field>
               </div>
             )}
           </div>

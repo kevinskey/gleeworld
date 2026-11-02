@@ -13,6 +13,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useSliderByPlacementAdmin, useCreateSlider, useCreateSlide, useUpdateSlide, useDeleteSlide, useReorderSlides } from '@/hooks/useUniversalSlider';
 import { cn } from '@/lib/utils';
 import { extractYouTubeVideoId } from '@/utils/youtubeUtils';
+import { ConfirmPill, type ConfirmPillRequest } from '@/components/ui/confirm-pill';
 
 // Local-state text input that saves on blur to prevent re-render focus loss
 const SlideTextInput: React.FC<{
@@ -62,6 +63,7 @@ export const CourseSliderManager: React.FC<CourseSliderManagerProps> = ({
   const reorderSlides = useReorderSlides();
 
   const [expandedSlide, setExpandedSlide] = useState<string | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<(ConfirmPillRequest & { id: string }) | null>(null);
 
   const handleMoveSlide = async (index: number, direction: 'up' | 'down') => {
     if (!slider?.slides) return;
@@ -110,7 +112,6 @@ export const CourseSliderManager: React.FC<CourseSliderManagerProps> = ({
   };
 
   const handleDeleteSlide = async (id: string) => {
-    if (!confirm('Delete this slide?')) return;
     try {
       await deleteSlide.mutateAsync(id);
       toast.success('Slide deleted');
@@ -346,6 +347,8 @@ export const CourseSliderManager: React.FC<CourseSliderManagerProps> = ({
                             e.stopPropagation();
                             handleMoveSlide(index, 'up');
                           }}
+                          aria-label="Move slide up"
+                          title="Move slide up"
                         >
                           <ArrowUp className="h-3.5 w-3.5" />
                         </Button>
@@ -358,6 +361,8 @@ export const CourseSliderManager: React.FC<CourseSliderManagerProps> = ({
                             e.stopPropagation();
                             handleMoveSlide(index, 'down');
                           }}
+                          aria-label="Move slide down"
+                          title="Move slide down"
                         >
                           <ArrowDown className="h-3.5 w-3.5" />
                         </Button>
@@ -619,7 +624,14 @@ export const CourseSliderManager: React.FC<CourseSliderManagerProps> = ({
                         variant="destructive"
                         size="sm"
                         className="w-full sm:w-auto"
-                        onClick={() => handleDeleteSlide(slide.id)}
+                        onClick={(e) =>
+                          setConfirmDelete({
+                            id: slide.id,
+                            x: e.clientX,
+                            y: e.clientY,
+                            message: `Delete "${slide.title || `Slide ${index + 1}`}"?`,
+                          })
+                        }
                       >
                         <Trash2 className="mr-1 h-4 w-4" />
                         Delete
@@ -632,6 +644,16 @@ export const CourseSliderManager: React.FC<CourseSliderManagerProps> = ({
           ))}
         </CardContent>
       </Card>
+      <ConfirmPill
+        request={confirmDelete}
+        busy={deleteSlide.isPending}
+        onConfirm={async () => {
+          if (!confirmDelete) return;
+          await handleDeleteSlide(confirmDelete.id);
+          setConfirmDelete(null);
+        }}
+        onCancel={() => setConfirmDelete(null)}
+      />
     </div>
   );
 };

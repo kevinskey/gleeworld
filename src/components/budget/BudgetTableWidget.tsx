@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Plus, Trash2 } from "lucide-react";
+import { ConfirmPill, type ConfirmPillRequest } from "@/components/ui/confirm-pill";
 
 interface Column {
   key: string;
@@ -35,6 +36,7 @@ export const BudgetTableWidget = ({
   columns 
 }: BudgetTableWidgetProps) => {
   const [newItem, setNewItem] = useState<any>({});
+  const [confirmDelete, setConfirmDelete] = useState<(ConfirmPillRequest & { id: string }) | null>(null);
 
   const handleAddItem = () => {
     const itemData = columns.reduce((acc, col) => {
@@ -96,7 +98,9 @@ export const BudgetTableWidget = ({
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => onDeleteItem(item.id)}
+                    onClick={(e) => setConfirmDelete({ id: item.id, x: e.clientX, y: e.clientY, message: `Delete "${item[columns[0]?.key] || 'this item'}" from ${title}?` })}
+                    aria-label={`Delete ${item[columns[0]?.key] || 'item'}`}
+                    title={`Delete ${item[columns[0]?.key] || 'item'}`}
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
@@ -121,7 +125,7 @@ export const BudgetTableWidget = ({
                 </TableCell>
               ))}
               <TableCell>
-                <Button variant="ghost" size="sm" onClick={handleAddItem}>
+                <Button variant="ghost" size="sm" onClick={handleAddItem} aria-label={`Add item to ${title}`} title={`Add item to ${title}`}>
                   <Plus className="h-4 w-4" />
                 </Button>
               </TableCell>
@@ -129,6 +133,15 @@ export const BudgetTableWidget = ({
           </TableBody>
         </Table>
       </CardContent>
+      <ConfirmPill
+        request={confirmDelete}
+        onConfirm={() => {
+          const id = confirmDelete?.id;
+          setConfirmDelete(null);
+          if (id) onDeleteItem(id);
+        }}
+        onCancel={() => setConfirmDelete(null)}
+      />
     </Card>
   );
 };

@@ -232,6 +232,8 @@ export const GraduatesFormBuilder = () => {
                           const schema = formData.form_schema.filter((_, i) => i !== index);
                           setFormData({ ...formData, form_schema: schema });
                         }}
+                        aria-label="Remove field"
+                        title="Remove field"
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>

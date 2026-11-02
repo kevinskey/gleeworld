@@ -17,6 +17,7 @@ import {
 import { Skeleton } from '@/components/ui/skeleton';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { Plus, Pencil, Trash2, Inbox } from 'lucide-react';
+import { ConfirmPill, type ConfirmPillRequest } from '@/components/ui/confirm-pill';
 import type { EntityDef, FieldDef } from './fieldSchemas';
 import { useAdminRows, useSaveRow, useDeleteRow } from './useAllStateAdmin';
 
@@ -75,6 +76,7 @@ export function RecordEditor({ entity, programId, fixed }: Props) {
 
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Row | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<(ConfirmPillRequest & { id: string }) | null>(null);
   const [form, setForm] = useState<Record<string, string | boolean>>({});
   const [formError, setFormError] = useState<string | null>(null);
 
@@ -157,11 +159,16 @@ export function RecordEditor({ entity, programId, fixed }: Props) {
                     <Button
                       size="icon" variant="ghost"
                       aria-label={`Delete ${entity.label}`}
-                      onClick={() => {
+                      onClick={(e) => {
                         // Deliberately not a browser confirm(): a modal dialog
-                        // blocks the whole page and these rows are cheap to
-                        // re-add. The toast reports an RLS rejection.
-                        remove.mutate(String(row.id));
+                        // blocks the whole page. The cursor-anchored pill asks
+                        // without blocking. The toast reports an RLS rejection.
+                        setConfirmDelete({
+                          id: String(row.id),
+                          x: e.clientX,
+                          y: e.clientY,
+                          message: `Delete this ${entity.label.toLowerCase()}?`,
+                        });
                       }}
                     >
                       <Trash2 className="h-4 w-4 text-destructive" aria-hidden />
@@ -251,6 +258,15 @@ export function RecordEditor({ entity, programId, fixed }: Props) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      <ConfirmPill
+        request={confirmDelete}
+        busy={remove.isPending}
+        onConfirm={() => {
+          if (!confirmDelete) return;
+          remove.mutate(confirmDelete.id, { onSettled: () => setConfirmDelete(null) });
+        }}
+        onCancel={() => setConfirmDelete(null)}
+      />
     </div>
   );
 }

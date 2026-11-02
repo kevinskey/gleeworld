@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { ConfirmPill, type ConfirmPillRequest } from '@/components/ui/confirm-pill';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
@@ -67,6 +68,7 @@ export const ExcuseRequestManager = () => {
   const [messageDialogOpen, setMessageDialogOpen] = useState(false);
   const [messageToUser, setMessageToUser] = useState('');
   const [sendingMessage, setSendingMessage] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState<(ConfirmPillRequest & { id: string }) | null>(null);
 
   const isSecretary = gwProfile?.exec_board_role === 'secretary' || 
                      (gwProfile?.special_roles && gwProfile.special_roles.includes('secretary'));
@@ -528,7 +530,7 @@ export const ExcuseRequestManager = () => {
                         <Button
                           size="sm"
                           variant="destructive"
-                          onClick={() => deleteRequest(request.id)}
+                          onClick={(e) => setConfirmDelete({ id: request.id, x: e.clientX, y: e.clientY, message: `Delete ${request.user_profile?.full_name || 'this student'}'s excuse request for "${request.event_title}"?` })}
                           className="flex items-center gap-1"
                         >
                           <Trash2 className="h-3 w-3" />
@@ -606,7 +608,7 @@ export const ExcuseRequestManager = () => {
                         <Button
                           size="sm"
                           variant="destructive"
-                          onClick={() => deleteRequest(request.id)}
+                          onClick={(e) => setConfirmDelete({ id: request.id, x: e.clientX, y: e.clientY, message: `Delete ${request.user_profile?.full_name || 'this student'}'s excuse request for "${request.event_title}"?` })}
                           className="ml-2 flex items-center gap-1"
                         >
                           <Trash2 className="h-3 w-3" />
@@ -691,7 +693,7 @@ export const ExcuseRequestManager = () => {
                         <Button
                           size="sm"
                           variant="destructive"
-                          onClick={() => deleteRequest(request.id)}
+                          onClick={(e) => setConfirmDelete({ id: request.id, x: e.clientX, y: e.clientY, message: `Delete ${request.user_profile?.full_name || 'this student'}'s excuse request for "${request.event_title}"?` })}
                           className="flex items-center gap-1"
                         >
                           <Trash2 className="h-3 w-3" />
@@ -762,7 +764,7 @@ export const ExcuseRequestManager = () => {
                         <Button
                           size="sm"
                           variant="destructive"
-                          onClick={() => deleteRequest(request.id)}
+                          onClick={(e) => setConfirmDelete({ id: request.id, x: e.clientX, y: e.clientY, message: `Delete ${request.user_profile?.full_name || 'this student'}'s excuse request for "${request.event_title}"?` })}
                           className="flex items-center gap-1"
                         >
                           <Trash2 className="h-3 w-3" />
@@ -899,6 +901,14 @@ export const ExcuseRequestManager = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      <ConfirmPill
+        request={confirmDelete}
+        onConfirm={async () => {
+          if (confirmDelete) await deleteRequest(confirmDelete.id);
+          setConfirmDelete(null);
+        }}
+        onCancel={() => setConfirmDelete(null)}
+      />
     </div>
   );
 };

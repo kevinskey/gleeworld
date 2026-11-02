@@ -8,6 +8,7 @@ import { Upload, File, Trash2, ExternalLink, Plus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import { ConfirmPill, type ConfirmPillRequest } from "@/components/ui/confirm-pill";
 
 interface BudgetAttachment {
   id: string;
@@ -33,6 +34,7 @@ export const BudgetFileUpload: React.FC<BudgetFileUploadProps> = ({
   const [uploading, setUploading] = useState(false);
   const [googleDocUrl, setGoogleDocUrl] = useState("");
   const [showGoogleDocInput, setShowGoogleDocInput] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState<(ConfirmPillRequest & { id: string; filename: string }) | null>(null);
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
     if (!user) return;
@@ -279,7 +281,9 @@ export const BudgetFileUpload: React.FC<BudgetFileUploadProps> = ({
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => handleDeleteAttachment(attachment.id, attachment.filename)}
+                      onClick={(e) => setConfirmDelete({ id: attachment.id, filename: attachment.filename, x: e.clientX, y: e.clientY, message: `Delete "${attachment.filename}"? The file is removed from storage.` })}
+                      aria-label={`Delete ${attachment.filename}`}
+                      title={`Delete ${attachment.filename}`}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -290,6 +294,15 @@ export const BudgetFileUpload: React.FC<BudgetFileUploadProps> = ({
           </CardContent>
         </Card>
       )}
+      <ConfirmPill
+        request={confirmDelete}
+        onConfirm={async () => {
+          const req = confirmDelete;
+          setConfirmDelete(null);
+          if (req) await handleDeleteAttachment(req.id, req.filename);
+        }}
+        onCancel={() => setConfirmDelete(null)}
+      />
     </div>
   );
 };

@@ -222,10 +222,10 @@ export const CalendarManager = () => {
                   {calendar.is_default && <Badge variant="secondary">Default</Badge>}
                 </div>
                 <div className="flex shrink-0 items-center gap-1">
-                  <Button size="sm" variant="ghost" onClick={() => toggleVisibility(calendar)}>
+                  <Button size="sm" variant="ghost" onClick={() => toggleVisibility(calendar)} aria-label={calendar.is_visible ? `Hide ${calendar.name}` : `Show ${calendar.name}`} aria-pressed={calendar.is_visible} title={calendar.is_visible ? 'Hide calendar' : 'Show calendar'}>
                     {calendar.is_visible ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
                   </Button>
-                  <Button size="sm" variant="ghost" onClick={() => openEditDialog(calendar)}>
+                  <Button size="sm" variant="ghost" onClick={() => openEditDialog(calendar)} aria-label={`Edit ${calendar.name}`} title="Edit calendar">
                     <Edit className="h-4 w-4" />
                   </Button>
                   {!calendar.is_default && <ConfirmDeleteButton

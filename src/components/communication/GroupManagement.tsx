@@ -245,6 +245,8 @@ export const GroupManagement = ({
                   size="sm"
                   onClick={() => handleDelete(group.id)}
                   className="text-destructive hover:text-destructive"
+                  aria-label={`Delete ${group.label}`}
+                  title="Delete group"
                 >
                   <Trash2 className="h-3 w-3" />
                 </Button>

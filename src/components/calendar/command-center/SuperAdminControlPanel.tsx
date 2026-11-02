@@ -17,6 +17,7 @@ import { toast as sonnerToast } from "sonner";
 import { cn } from "@/lib/utils";
 import { format, parseISO } from "date-fns";
 import { ConfirmDeleteButton } from "@/components/shared/ConfirmDeleteButton";
+import { ConfirmPill, type ConfirmPillRequest } from "@/components/ui/confirm-pill";
 
 type ActiveTab = "availability" | "services";
 type AvailMode = "weekly" | "specific";
@@ -40,6 +41,7 @@ const CompactAvailabilityPanel = () => {
   const { toast } = useToast();
 
   const [availMode, setAvailMode] = useState<AvailMode>("weekly");
+  const [slotDeleteConfirm, setSlotDeleteConfirm] = useState<(ConfirmPillRequest & { id: string }) | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingSlot, setEditingSlot] = useState<ProviderAvailability | null>(null);
   const [formData, setFormData] = useState({
@@ -230,7 +232,7 @@ const CompactAvailabilityPanel = () => {
                       <span style={{ color: '#94a3b8' }}>{slot.slot_duration_minutes}m</span>
                     </div>
                     <div className="flex gap-1">
-                      <button onClick={() => handleEdit(slot)} className="p-1 rounded hover:bg-slate-100"><Edit2 className="h-3 w-3" style={{ color: '#64748b' }} /></button>
+                      <button onClick={() => handleEdit(slot)} className="p-1 rounded hover:bg-slate-100" aria-label={`Edit slot ${slot.start_time} – ${slot.end_time}`} title="Edit slot"><Edit2 className="h-3 w-3" style={{ color: '#64748b' }} /></button>
                       <ConfirmDeleteButton
                         confirmKey="delete-availability-slot"
                         title="Delete this slot?"
@@ -264,14 +266,20 @@ const CompactAvailabilityPanel = () => {
                   <span className="text-xs" style={{ color: '#94a3b8' }}>{slot.slot_duration_minutes}m</span>
                 </div>
                 <div className="flex gap-1">
-                  <button onClick={() => handleEdit(slot)} className="p-1 rounded hover:bg-slate-100"><Edit2 className="h-3 w-3" style={{ color: '#64748b' }} /></button>
-                  <button onClick={() => handleDelete(slot.id)} className="p-1 rounded hover:bg-slate-100"><Trash2 className="h-3 w-3" style={{ color: '#64748b' }} /></button>
+                  <button onClick={() => handleEdit(slot)} className="p-1 rounded hover:bg-slate-100" aria-label={`Edit slot ${slot.start_time} – ${slot.end_time}`} title="Edit slot"><Edit2 className="h-3 w-3" style={{ color: '#64748b' }} /></button>
+                  <button onClick={(e) => setSlotDeleteConfirm({ x: e.clientX, y: e.clientY, message: `Delete the ${slot.specific_date ? format(parseISO(slot.specific_date), 'MMM d') + ' ' : ''}${slot.start_time} – ${slot.end_time} slot?`, id: slot.id })} className="p-1 rounded hover:bg-slate-100" aria-label={`Delete slot ${slot.start_time} – ${slot.end_time}`} title="Delete slot"><Trash2 className="h-3 w-3" style={{ color: '#64748b' }} /></button>
                 </div>
               </div>
             ))}
           </div>
         )
       )}
+      <ConfirmPill
+        request={slotDeleteConfirm}
+        busy={deleteMutation.isPending}
+        onConfirm={async () => { if (slotDeleteConfirm) await handleDelete(slotDeleteConfirm.id); setSlotDeleteConfirm(null); }}
+        onCancel={() => setSlotDeleteConfirm(null)}
+      />
     </div>
   );
 };
@@ -386,7 +394,7 @@ const CompactServicesPanel = () => {
                 </div>
               </div>
               <div className="flex gap-0.5 flex-shrink-0">
-                <button onClick={() => handleEdit(s)} className="p-1 rounded hover:bg-slate-100"><Edit className="h-3 w-3" style={{ color: '#64748b' }} /></button>
+                <button onClick={() => handleEdit(s)} className="p-1 rounded hover:bg-slate-100" aria-label={`Edit ${s.name}`} title="Edit service"><Edit className="h-3 w-3" style={{ color: '#64748b' }} /></button>
                 <ConfirmDeleteButton
                   confirmKey="deactivate-appointment-service"
                   title={`Deactivate "${s.name}"?`}

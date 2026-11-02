@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
+import { ConfirmPill, type ConfirmPillRequest } from '@/components/ui/confirm-pill';
 import {
   X, Send, Loader2, Plus, Trash2, ArrowUp, ArrowDown, Save, Clock, Newspaper,
   ChevronLeft, ChevronRight, Copy, Eye, Pencil, CheckCircle2, FileEdit, Users, LayoutTemplate,
@@ -150,6 +151,7 @@ export function NewsletterStudio({ onClose, inline = false }: { onClose: () => v
   const { toast } = useToast();
   const [filter, setFilter] = useState<StatusFilter>('all');
   const [editing, setEditing] = useState<string | 'new' | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<(ConfirmPillRequest & { id: string }) | null>(null);
 
   const { data: campaigns = [] } = useQuery<Campaign[]>({
     queryKey: ['newsletters'],
@@ -300,7 +302,7 @@ export function NewsletterStudio({ onClose, inline = false }: { onClose: () => v
                     <Button variant="ghost" size="sm" onClick={() => copyAs(c.id, c.status === 'template' ? 'template' : 'draft', ' (copy)')} title="Duplicate">
                       <Copy className="w-3.5 h-3.5" />
                     </Button>
-                    <Button variant="ghost" size="sm" onClick={() => del(c.id)} title="Delete">
+                    <Button variant="ghost" size="sm" onClick={(e) => setConfirmDelete({ id: c.id, x: e.clientX, y: e.clientY, message: `Delete "${c.title}"?` })} title={`Delete ${c.title}`} aria-label={`Delete ${c.title}`}>
                       <Trash2 className="w-3.5 h-3.5" />
                     </Button>
                   </div>
@@ -310,6 +312,15 @@ export function NewsletterStudio({ onClose, inline = false }: { onClose: () => v
           </div>
         )}
       </div>
+      <ConfirmPill
+        request={confirmDelete}
+        onConfirm={async () => {
+          const id = confirmDelete?.id;
+          setConfirmDelete(null);
+          if (id) await del(id);
+        }}
+        onCancel={() => setConfirmDelete(null)}
+      />
     </div>
   );
 }
@@ -893,9 +904,9 @@ function CampaignEditor({ newsletterId, templates, onBack }: { newsletterId?: st
                     <div className="flex items-center justify-between text-xs text-muted-foreground">
                       <span className="font-medium">Block {i + 1}</span>
                       <div className="flex gap-1">
-                        <Button variant="ghost" size="sm" onClick={() => moveSection(i, -1)} disabled={i === 0}><ArrowUp className="w-3 h-3" /></Button>
-                        <Button variant="ghost" size="sm" onClick={() => moveSection(i, 1)} disabled={i === sections.length - 1}><ArrowDown className="w-3 h-3" /></Button>
-                        <Button variant="ghost" size="sm" onClick={() => removeSection(i)} disabled={sections.length === 1}><Trash2 className="w-3 h-3" /></Button>
+                        <Button variant="ghost" size="sm" onClick={() => moveSection(i, -1)} disabled={i === 0} aria-label={`Move block ${i + 1} up`} title={`Move block ${i + 1} up`}><ArrowUp className="w-3 h-3" /></Button>
+                        <Button variant="ghost" size="sm" onClick={() => moveSection(i, 1)} disabled={i === sections.length - 1} aria-label={`Move block ${i + 1} down`} title={`Move block ${i + 1} down`}><ArrowDown className="w-3 h-3" /></Button>
+                        <Button variant="ghost" size="sm" onClick={() => removeSection(i)} disabled={sections.length === 1} aria-label={`Remove block ${i + 1}`} title={`Remove block ${i + 1}`}><Trash2 className="w-3 h-3" /></Button>
                       </div>
                     </div>
                     <Input value={s.heading} onChange={(e) => updateSection(i, { heading: e.target.value })} placeholder="Heading" />

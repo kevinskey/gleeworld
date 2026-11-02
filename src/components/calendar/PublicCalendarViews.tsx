@@ -71,6 +71,8 @@ export const PublicCalendarViews = () => {
               size="icon"
               onClick={() => navigateMonth('prev')}
               className="h-10 w-10 rounded-full border-neutral-300"
+              aria-label="Previous month"
+              title="Previous month"
             >
               <ChevronLeft className="h-5 w-5" />
             </Button>
@@ -86,6 +88,8 @@ export const PublicCalendarViews = () => {
               size="icon"
               onClick={() => navigateMonth('next')}
               className="h-10 w-10 rounded-full border-neutral-300"
+              aria-label="Next month"
+              title="Next month"
             >
               <ChevronRight className="h-5 w-5" />
             </Button>

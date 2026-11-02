@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Trash2, Plus, UserPlus } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { toast as sonnerToast } from 'sonner';
 
 interface UserModuleAssignment {
   id: string;
@@ -180,7 +181,8 @@ export function SimpleModuleManager() {
     }
   };
 
-  const removeAssignment = async (assignmentId: string) => {
+  const removeAssignment = async (assignment: UserModuleAssignment) => {
+    const assignmentId = assignment.id;
     try {
       const { error } = await supabase
         .from('gw_module_permissions')
@@ -189,9 +191,22 @@ export function SimpleModuleManager() {
 
       if (error) throw error;
 
-      toast({
-        title: "Success",
-        description: "Module assignment removed"
+      sonnerToast(`Removed "${assignment.module_name}" from ${assignment.user_name}.`, {
+        duration: 8000,
+        action: {
+          label: 'Undo',
+          onClick: async () => {
+            const { error: undoError } = await supabase
+              .from('gw_module_permissions')
+              .update({ is_active: true })
+              .eq('id', assignmentId);
+            if (undoError) {
+              sonnerToast.error(undoError.message);
+              return;
+            }
+            fetchData();
+          },
+        },
       });
 
       fetchData();
@@ -293,7 +308,9 @@ export function SimpleModuleManager() {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => removeAssignment(assignment.id)}
+                    onClick={() => removeAssignment(assignment)}
+                    aria-label={`Remove ${assignment.module_name} from ${assignment.user_name}`}
+                    title={`Remove ${assignment.module_name} from ${assignment.user_name}`}
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>

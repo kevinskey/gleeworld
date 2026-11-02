@@ -7,6 +7,7 @@ import { Check, Loader2, MessageSquare, RotateCcw, Trash2, Unlink } from 'lucide
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { ConfirmPill, type ConfirmPillRequest } from '@/components/ui/confirm-pill';
 import {
   listComments, setCommentResolved, deleteComment, updateCommentBody, orphanedComments,
   sortComments, type DocComment,
@@ -26,6 +27,7 @@ export function CommentsPanel({ docId, editor, refreshToken }: CommentsPanelProp
   const [editingId, setEditingId] = useState<string | null>(null);
   const [draft, setDraft] = useState('');
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<(ConfirmPillRequest & { comment: DocComment }) | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -171,11 +173,10 @@ export function CommentsPanel({ docId, editor, refreshToken }: CommentsPanelProp
                   <Button
                     size="sm" variant="ghost" className="h-7 px-2 text-xs text-destructive" disabled={busy}
                     title="Delete comment"
-                    onClick={() => withBusy(comment.id, async () => {
-                      await deleteComment(comment.id);
-                      // Drop the anchor too, or the highlight outlives the thread.
-                      editor?.commands.unsetComment(comment.anchor_id);
-                    })}
+                    onClick={(e) => {
+                      const excerpt = comment.body.length > 40 ? `${comment.body.slice(0, 40)}…` : comment.body;
+                      setConfirmDelete({ comment, x: e.clientX, y: e.clientY, message: `Delete comment "${excerpt}"?` });
+                    }}
                   >
                     <Trash2 className="h-3.5 w-3.5" />
                   </Button>
@@ -185,6 +186,21 @@ export function CommentsPanel({ docId, editor, refreshToken }: CommentsPanelProp
           </div>
         );
       })}
+      <ConfirmPill
+        request={confirmDelete}
+        busy={confirmDelete ? busyId === confirmDelete.comment.id : false}
+        onConfirm={async () => {
+          if (!confirmDelete) return;
+          const { comment } = confirmDelete;
+          await withBusy(comment.id, async () => {
+            await deleteComment(comment.id);
+            // Drop the anchor too, or the highlight outlives the thread.
+            editor?.commands.unsetComment(comment.anchor_id);
+          });
+          setConfirmDelete(null);
+        }}
+        onCancel={() => setConfirmDelete(null)}
+      />
     </div>
   );
 }

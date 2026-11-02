@@ -279,7 +279,7 @@ export const DiscussionGradingPanel: React.FC<DiscussionGradingPanelProps> = ({ 
     <div className="space-y-4">
       {/* Header */}
       <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" onClick={() => { setSelectedDiscussionId(null); setGrades({}); }}>
+        <Button variant="ghost" size="icon" onClick={() => { setSelectedDiscussionId(null); setGrades({}); }} aria-label="Back to discussions" title="Back to discussions">
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div className="flex-1">

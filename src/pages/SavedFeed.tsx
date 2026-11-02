@@ -85,11 +85,14 @@ const SavedFeed = () => {
                         size="sm"
                         className="h-7 px-2"
                         onClick={() => toggleLike(item.feed_type, { title: item.title, link: item.link, description: item.description || '', source: item.source || '', sourceIcon: item.source_icon || '', imageUrl: item.image_url, pubDate: item.pub_date || '' })}
+                        aria-label={isLiked(item.link) ? `Unlike ${item.title}` : `Like ${item.title}`}
+                        aria-pressed={isLiked(item.link)}
+                        title={isLiked(item.link) ? 'Unlike' : 'Like'}
                       >
                         <Heart className={`h-3.5 w-3.5 ${isLiked(item.link) ? 'fill-red-500 text-red-500' : ''}`} />
                       </Button>
                       <a href={item.link} target="_blank" rel="noopener noreferrer" className="ml-auto">
-                        <Button variant="ghost" size="sm" className="h-7 px-2"><ExternalLink className="h-3.5 w-3.5" /></Button>
+                        <Button variant="ghost" size="sm" className="h-7 px-2" aria-label={`Open ${item.title}`} title="Open in new tab"><ExternalLink className="h-3.5 w-3.5" /></Button>
                       </a>
                       <Button variant="ghost" size="sm" className="h-7 px-2 text-destructive hover:text-destructive" onClick={() => removeSave(item.link)}>
                         <Trash2 className="h-3.5 w-3.5" />

@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/table';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { ConfirmPill, type ConfirmPillRequest } from '@/components/ui/confirm-pill';
 import * as api from './api';
 import type { ListenRollupRow, PartTrackAssignment, TenantSinger } from './api';
 import type { PartTrackPart } from './types';
@@ -44,6 +45,7 @@ export function AssignmentsPanel({ scoreId, parts }: Props) {
   const [rollup, setRollup] = useState<ListenRollupRow[]>([]);
   const [singers, setSingers] = useState<TenantSinger[]>([]);
   const [newPart, setNewPart] = useState<string>('all');
+  const [confirmRemove, setConfirmRemove] = useState<(ConfirmPillRequest & { id: string }) | null>(null);
   const [dueDate, setDueDate] = useState('');
   const [busy, setBusy] = useState(false);
 
@@ -143,8 +145,9 @@ export function AssignmentsPanel({ scoreId, parts }: Props) {
                 {a.due_date && ` · due ${a.due_date}`}
                 <button
                   type="button"
-                  aria-label="Remove assignment"
-                  onClick={() => void removeAssignment(a.id)}
+                  aria-label={`Remove assignment for ${a.voice_part ?? 'all parts'}`}
+                  title={`Remove assignment for ${a.voice_part ?? 'all parts'}`}
+                  onClick={(e) => setConfirmRemove({ id: a.id, x: e.clientX, y: e.clientY, message: `Remove the ${a.voice_part ?? 'all parts'} assignment?`, confirmLabel: 'Remove' })}
                   className="ml-0.5 hover:text-destructive"
                 >
                   <Trash2 className="w-3 h-3" />
@@ -193,6 +196,16 @@ export function AssignmentsPanel({ scoreId, parts }: Props) {
           </Table>
         )}
       </div>
+      <ConfirmPill
+        request={confirmRemove}
+        busy={busy}
+        onConfirm={async () => {
+          const id = confirmRemove?.id;
+          setConfirmRemove(null);
+          if (id) await removeAssignment(id);
+        }}
+        onCancel={() => setConfirmRemove(null)}
+      />
     </div>
   );
 }

@@ -82,7 +82,7 @@ export function JukeboxShareDialog({
     }
   };
 
-  const revoke = async (id: string) => {
+  const revoke = async (id: string, label: string) => {
     setBusy(true);
     try {
       // revoked_at rather than DELETE: the row stays as a record of what was
@@ -93,6 +93,20 @@ export function JukeboxShareDialog({
         .eq('id', id);
       if (error) { toast.error(error.message); return; }
       await refresh();
+      toast(`Stopped sharing with ${label}.`, {
+        duration: 8000,
+        action: {
+          label: 'Undo',
+          onClick: async () => {
+            const { error: undoError } = await supabase
+              .from('gw_jukebox_playlist_shares')
+              .update({ revoked_at: null } as never)
+              .eq('id', id);
+            if (undoError) { toast.error(undoError.message); return; }
+            await refresh();
+          },
+        },
+      });
     } finally {
       setBusy(false);
     }
@@ -134,7 +148,7 @@ export function JukeboxShareDialog({
                   <button
                     type="button"
                     disabled={busy}
-                    onClick={() => revoke(s.id)}
+                    onClick={() => revoke(s.id, describeShare(s, courseNames))}
                     className="text-muted-foreground hover:text-destructive shrink-0 disabled:opacity-50"
                     aria-label={`Stop sharing with ${describeShare(s, courseNames)}`}
                   >

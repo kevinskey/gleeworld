@@ -19,6 +19,7 @@ import {
 } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
+import { ConfirmPill, type ConfirmPillRequest } from '@/components/ui/confirm-pill';
 import { Loader2, Plus, Star, Pencil, Trash2 } from 'lucide-react';
 
 type Relationship = Guardian['relationship'];
@@ -163,6 +164,7 @@ export function GuardianList({ studentUserId }: GuardianListProps) {
 
   const [addOpen, setAddOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<Guardian | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<(ConfirmPillRequest & { guardian: Guardian }) | null>(null);
 
   const handleAdd = async (fields: GuardianInput) => {
     await add(fields);
@@ -251,7 +253,8 @@ export function GuardianList({ studentUserId }: GuardianListProps) {
               <Button
                 variant="ghost"
                 size="sm"
-                title="Edit"
+                title={`Edit ${g.name}`}
+                aria-label={`Edit ${g.name}`}
                 onClick={() => setEditTarget(g)}
               >
                 <Pencil className="w-3.5 h-3.5" />
@@ -259,8 +262,9 @@ export function GuardianList({ studentUserId }: GuardianListProps) {
               <Button
                 variant="ghost"
                 size="sm"
-                title="Delete"
-                onClick={() => handleDelete(g)}
+                title={`Delete ${g.name}`}
+                aria-label={`Delete ${g.name}`}
+                onClick={(e) => setConfirmDelete({ guardian: g, x: e.clientX, y: e.clientY, message: `Delete guardian "${g.name}"?` })}
               >
                 <Trash2 className="w-3.5 h-3.5 text-destructive" />
               </Button>
@@ -288,6 +292,15 @@ export function GuardianList({ studentUserId }: GuardianListProps) {
           onSave={handleEdit}
         />
       )}
+      <ConfirmPill
+        request={confirmDelete}
+        onConfirm={async () => {
+          const g = confirmDelete?.guardian;
+          setConfirmDelete(null);
+          if (g) await handleDelete(g);
+        }}
+        onCancel={() => setConfirmDelete(null)}
+      />
     </Card>
   );
 }

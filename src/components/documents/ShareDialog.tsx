@@ -252,6 +252,21 @@ export function ShareDialog({ docId, userId, open, onOpenChange }: ShareDialogPr
                         try {
                           await revokeShare(share.id);
                           await load();
+                          toast(`Stopped sharing with ${label}.`, {
+                            duration: 8000,
+                            action: {
+                              label: 'Undo',
+                              onClick: async () => {
+                                try {
+                                  // setSharePermission reinstates a revoked share.
+                                  await setSharePermission(share.id, share.permission as GrantablePermission);
+                                  await load();
+                                } catch (err) {
+                                  toast.error(err instanceof Error ? err.message : 'Could not restore that.');
+                                }
+                              },
+                            },
+                          });
                         } catch (err) {
                           toast.error(err instanceof Error ? err.message : 'Could not revoke that.');
                         }

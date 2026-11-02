@@ -177,10 +177,10 @@ export const DashboardHeroCarousel = ({ className }: DashboardHeroCarouselProps)
           </CardTitle>
           {slides.length > 3 && (
             <div className="flex gap-1">
-              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={scrollPrev}>
+              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={scrollPrev} aria-label="Previous slide" title="Previous slide">
                 <ChevronLeft className="h-4 w-4" />
               </Button>
-              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={scrollNext}>
+              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={scrollNext} aria-label="Next slide" title="Next slide">
                 <ChevronRight className="h-4 w-4" />
               </Button>
             </div>
@@ -210,6 +210,8 @@ export const DashboardHeroCarousel = ({ className }: DashboardHeroCarouselProps)
                 size="icon"
                 className="absolute top-2 right-2 z-50 bg-black/50 hover:bg-black/70 text-white rounded-full"
                 onClick={() => setExpandedSlide(null)}
+                aria-label="Close"
+                title="Close"
               >
                 <X className="h-5 w-5" />
               </Button>

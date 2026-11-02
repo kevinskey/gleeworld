@@ -7,7 +7,7 @@
 // The frame ALSO participates in dnd-kit sortable, so grabbing the toolbar's
 // drag handle reorders blocks on the canvas (in addition to the sidebar's
 // Layers panel). Must be rendered inside a SortableContext ancestor.
-import { forwardRef, type ReactNode } from 'react';
+import { forwardRef, useState, type MouseEvent, type ReactNode } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import {
@@ -21,6 +21,7 @@ import {
   Settings2,
   Trash2,
 } from 'lucide-react';
+import { ConfirmPill, type ConfirmPillRequest } from '@/components/ui/confirm-pill';
 
 export interface BlockFrameProps {
   /** dnd-kit sortable id — must be unique across the SortableContext. */
@@ -51,7 +52,7 @@ function TB({
   danger,
   children,
 }: {
-  onClick: () => void;
+  onClick: (e: MouseEvent<HTMLButtonElement>) => void;
   title: string;
   disabled?: boolean;
   danger?: boolean;
@@ -62,7 +63,7 @@ function TB({
       type="button"
       onClick={(e) => {
         e.stopPropagation();
-        if (!disabled) onClick();
+        if (!disabled) onClick(e);
       }}
       disabled={disabled}
       title={title}
@@ -98,6 +99,7 @@ export const BlockFrame = forwardRef<HTMLDivElement, BlockFrameProps>(function B
   ref,
 ) {
   const showChrome = selected || hovered;
+  const [confirmDelete, setConfirmDelete] = useState<ConfirmPillRequest | null>(null);
   const {
     attributes,
     listeners,
@@ -215,12 +217,21 @@ export const BlockFrame = forwardRef<HTMLDivElement, BlockFrameProps>(function B
             <Settings2 className="w-6 h-6" />
           </TB>
           {!locked && (
-            <TB onClick={onDelete} title="Delete block" danger>
+            <TB
+              onClick={(e) => setConfirmDelete({ x: e.clientX, y: e.clientY, message: `Delete "${blockName}" block?` })}
+              title="Delete block"
+              danger
+            >
               <Trash2 className="w-6 h-6" />
             </TB>
           )}
         </div>
       )}
+      <ConfirmPill
+        request={confirmDelete}
+        onConfirm={() => { setConfirmDelete(null); onDelete(); }}
+        onCancel={() => setConfirmDelete(null)}
+      />
 
       {/* Hidden blocks stay in the preview but dim so tenants can still see
           what they've toggled off. The public site skips them entirely. */}

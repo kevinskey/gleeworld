@@ -271,6 +271,8 @@ export const GroupSMSInterface: React.FC<GroupSMSInterfaceProps> = ({
               onClick={handleSendMessage}
               disabled={!message.trim() || sendGroupSMS.isPending}
               size="icon"
+              aria-label="Send message"
+              title="Send message"
             >
               <Send className="h-4 w-4" />
             </Button>

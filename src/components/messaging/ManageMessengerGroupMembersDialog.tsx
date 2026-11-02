@@ -370,6 +370,8 @@ export const ManageMessengerGroupMembersDialog: React.FC<ManageMessengerGroupMem
                           className="h-9 w-9 text-destructive hover:text-destructive"
                           disabled={updatingMemberId === member.id}
                           onClick={() => handleRemoveMember(member)}
+                          aria-label={`Remove ${member.full_name}`}
+                          title={`Remove ${member.full_name}`}
                         >
                           {updatingMemberId === member.id ? (
                             <Loader2 className="h-4 w-4 animate-spin" />

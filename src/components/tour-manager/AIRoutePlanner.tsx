@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { MapPin, Route, Plus, Zap, Clock, DollarSign, Navigation, AlertCircle, CheckCircle, Trash2, Loader2, Pencil, GripVertical } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { ConfirmPill, type ConfirmPillRequest } from '@/components/ui/confirm-pill';
 import { TourStopLogisticsEditor } from './TourStopLogisticsEditor';
 import { DndContext, closestCenter, PointerSensor, KeyboardSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
@@ -95,6 +96,7 @@ export const AIRoutePlanner = ({
   });
   const [multipleCities, setMultipleCities] = useState<string[]>(['']);
   const [isOptimizing, setIsOptimizing] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState<(ConfirmPillRequest & { id: string }) | null>(null);
   const {
     toast
   } = useToast();
@@ -807,10 +809,10 @@ export const AIRoutePlanner = ({
                     {getStatusIcon(route.status)}
                     {route.status.charAt(0).toUpperCase() + route.status.slice(1)}
                   </Badge>
-                  <Button variant="ghost" size="icon" onClick={() => startEditing(route)}>
+                  <Button variant="ghost" size="icon" onClick={() => startEditing(route)} aria-label={`Edit route ${route.name}`} title={`Edit route ${route.name}`}>
                     <Pencil className="h-4 w-4" />
                   </Button>
-                  <Button variant="ghost" size="icon" onClick={() => deleteTourMutation.mutate(route.id)} disabled={deleteTourMutation.isPending}>
+                  <Button variant="ghost" size="icon" onClick={(e) => setConfirmDelete({ id: route.id, x: e.clientX, y: e.clientY, message: `Delete route "${route.name}"? Also removes its stops.` })} disabled={deleteTourMutation.isPending} aria-label={`Delete route ${route.name}`} title={`Delete route ${route.name}`}>
                     <Trash2 className="h-4 w-4 text-destructive" />
                   </Button>
                 </div>
@@ -876,5 +878,13 @@ export const AIRoutePlanner = ({
             </CardContent>
           </Card>)}
       </div>
+      <ConfirmPill
+        request={confirmDelete}
+        busy={deleteTourMutation.isPending}
+        onConfirm={() => {
+          if (confirmDelete) deleteTourMutation.mutate(confirmDelete.id, { onSettled: () => setConfirmDelete(null) });
+        }}
+        onCancel={() => setConfirmDelete(null)}
+      />
     </div>;
 };

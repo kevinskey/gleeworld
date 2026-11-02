@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
+import { ConfirmPill, type ConfirmPillRequest } from "@/components/ui/confirm-pill";
 import { supabase } from "@/integrations/supabase/client";
 import { Plus, Edit, Trash2, Package, Save, X, Upload, Image as ImageIcon, Search, Filter, ArrowUpDown, Grid3X3, List, Ruler } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -92,6 +93,8 @@ export const ProductManager = () => {
   const [sortBy, setSortBy] = useState("title");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [confirmDelete, setConfirmDelete] = useState<(ConfirmPillRequest & { id: string }) | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -324,8 +327,17 @@ export const ProductManager = () => {
     }
   };
 
+  const requestDelete = (e: React.MouseEvent, product: Product) => {
+    setConfirmDelete({
+      id: product.id,
+      x: e.clientX,
+      y: e.clientY,
+      message: `Delete "${product.title}"? Also removes its size variants.`,
+    });
+  };
+
   const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this product?")) return;
+    setDeleting(true);
     try {
       const {
         error
@@ -342,6 +354,8 @@ export const ProductManager = () => {
         description: "Failed to delete product",
         variant: "destructive"
       });
+    } finally {
+      setDeleting(false);
     }
   };
   if (loading) {
@@ -564,17 +578,17 @@ export const ProductManager = () => {
                 </SelectContent>
               </Select>
               
-              <Button variant="outline" size="icon" onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")} title={sortOrder === "asc" ? "Ascending" : "Descending"}>
+              <Button variant="outline" size="icon" onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")} title={sortOrder === "asc" ? "Ascending" : "Descending"} aria-label={sortOrder === "asc" ? "Sort ascending" : "Sort descending"}>
                 {sortOrder === "asc" ? "↑" : "↓"}
               </Button>
             </div>
             
             {/* View Toggle */}
             <div className="flex border rounded-md">
-              <Button variant={viewMode === "grid" ? "secondary" : "ghost"} size="icon" onClick={() => setViewMode("grid")} className="rounded-r-none">
+              <Button variant={viewMode === "grid" ? "secondary" : "ghost"} size="icon" onClick={() => setViewMode("grid")} className="rounded-r-none" aria-label="Grid view" title="Grid view" aria-pressed={viewMode === "grid"}>
                 <Grid3X3 className="h-4 w-4" />
               </Button>
-              <Button variant={viewMode === "list" ? "secondary" : "ghost"} size="icon" onClick={() => setViewMode("list")} className="rounded-l-none">
+              <Button variant={viewMode === "list" ? "secondary" : "ghost"} size="icon" onClick={() => setViewMode("list")} className="rounded-l-none" aria-label="List view" title="List view" aria-pressed={viewMode === "list"}>
                 <List className="h-4 w-4" />
               </Button>
             </div>
@@ -604,10 +618,10 @@ export const ProductManager = () => {
                 </button>
                 {/* Action buttons on hover */}
                 <div className="gw-card-overlay absolute top-2 right-2 flex gap-1 transition-opacity">
-                  <Button size="icon" variant="secondary" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); handleEdit(product); }}>
+                  <Button size="icon" variant="secondary" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); handleEdit(product); }} aria-label={`Edit ${product.title}`} title={`Edit ${product.title}`}>
                     <Edit className="h-4 w-4" />
                   </Button>
-                  <Button size="icon" variant="destructive" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); handleDelete(product.id); }}>
+                  <Button size="icon" variant="destructive" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); requestDelete(e, product); }} aria-label={`Delete ${product.title}`} title={`Delete ${product.title}`}>
                     <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>
@@ -678,10 +692,10 @@ export const ProductManager = () => {
                   
                   {/* Actions */}
                   <div className="flex gap-1 flex-shrink-0">
-                    <Button size="icon" variant="ghost" onClick={(e) => { e.stopPropagation(); handleEdit(product); }}>
+                    <Button size="icon" variant="ghost" onClick={(e) => { e.stopPropagation(); handleEdit(product); }} aria-label={`Edit ${product.title}`} title={`Edit ${product.title}`}>
                       <Edit className="h-4 w-4" />
                     </Button>
-                    <Button size="icon" variant="ghost" onClick={(e) => { e.stopPropagation(); handleDelete(product.id); }}>
+                    <Button size="icon" variant="ghost" onClick={(e) => { e.stopPropagation(); requestDelete(e, product); }} aria-label={`Delete ${product.title}`} title={`Delete ${product.title}`}>
                       <Trash2 className="h-4 w-4 text-destructive" />
                     </Button>
                   </div>
@@ -707,5 +721,15 @@ export const ProductManager = () => {
               Add Your First Product
             </Button>}
         </div>}
+      <ConfirmPill
+        request={confirmDelete}
+        busy={deleting}
+        onConfirm={async () => {
+          if (!confirmDelete) return;
+          await handleDelete(confirmDelete.id);
+          setConfirmDelete(null);
+        }}
+        onCancel={() => setConfirmDelete(null)}
+      />
     </div>;
 };

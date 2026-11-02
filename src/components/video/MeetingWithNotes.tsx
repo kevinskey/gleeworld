@@ -57,6 +57,9 @@ export const MeetingWithNotes: React.FC<MeetingWithNotesProps> = ({
         variant="secondary"
         size="icon"
         onClick={() => setShowNotes(!showNotes)}
+        aria-label={showNotes ? 'Hide notes' : 'Show notes'}
+        aria-expanded={showNotes}
+        title={showNotes ? 'Hide notes' : 'Show notes'}
         className={cn(
           "absolute top-1/2 -translate-y-1/2 z-20 rounded-full shadow-lg transition-all duration-300",
           showNotes ? "right-[40%] -mr-4" : "right-2"

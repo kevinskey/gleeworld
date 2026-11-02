@@ -11,6 +11,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useSheetMusicLibrary, SheetMusic } from '@/hooks/useSheetMusicLibrary';
 import { Upload, Download, Music, Plus, Search, Edit, Trash2, FileMusic, Eye } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { toast as sonnerToast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 import { BulkXMLUpload } from './BulkXMLUpload';
 import { OSMDViewer } from '@/components/OSMDViewer';
 
@@ -23,7 +25,7 @@ export const ScoreLibraryManager: React.FC<ScoreLibraryManagerProps> = ({
   onScoreSelect,
   selectedScoreId
 }) => {
-  const { scores, loading, addScore, updateScore, deleteScore, uploadXML, downloadXML } = useSheetMusicLibrary();
+  const { scores, loading, fetchScores, addScore, updateScore, deleteScore, uploadXML, downloadXML } = useSheetMusicLibrary();
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
   const [editingScore, setEditingScore] = useState<SheetMusic | null>(null);
@@ -123,10 +125,24 @@ export const ScoreLibraryManager: React.FC<ScoreLibraryManagerProps> = ({
 
   const handleDeleteScore = async (scoreId: string) => {
     try {
+      const archived = scores.find((s) => s.id === scoreId);
       await deleteScore(scoreId);
-      toast({
-        title: "Success",
-        description: "Score archived successfully.",
+      sonnerToast(`Removed "${archived?.title ?? 'score'}".`, {
+        duration: 8000,
+        action: {
+          label: 'Undo',
+          onClick: async () => {
+            const { error } = await supabase
+              .from('gw_sheet_music')
+              .update({ is_archived: false })
+              .eq('id', scoreId);
+            if (error) {
+              sonnerToast.error('Could not restore the score.');
+              return;
+            }
+            await fetchScores();
+          },
+        },
       });
     } catch (error) {
       toast({
@@ -335,6 +351,8 @@ export const ScoreLibraryManager: React.FC<ScoreLibraryManagerProps> = ({
                           e.stopPropagation();
                           handleDeleteScore(score.id);
                         }}
+                        aria-label={`Archive "${score.title}"`}
+                        title={`Archive "${score.title}"`}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>

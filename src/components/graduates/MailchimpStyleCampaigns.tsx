@@ -12,6 +12,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { ConfirmPill, type ConfirmPillRequest } from "@/components/ui/confirm-pill";
 import { getOrgName } from '@/lib/orgName';
 import { 
   Mail, Send, Loader2, Users, CheckCircle2, Search, Calendar,
@@ -147,6 +148,8 @@ export const MailchimpStyleCampaigns = () => {
   const [loading, setLoading] = useState(false);
   const [templates, setTemplates] = useState<any[]>([]);
   const [loadingTemplates, setLoadingTemplates] = useState(true);
+  const [deleteTemplateConfirm, setDeleteTemplateConfirm] = useState<(ConfirmPillRequest & { templateId: string }) | null>(null);
+  const [deletingTemplate, setDeletingTemplate] = useState(false);
 
   // Campaign builder state
   const [campaignName, setCampaignName] = useState("");
@@ -175,6 +178,7 @@ export const MailchimpStyleCampaigns = () => {
   };
 
   const handleDeleteTemplate = async (templateId: string) => {
+    setDeletingTemplate(true);
     try {
       const { error } = await supabase
         .from('email_templates')
@@ -188,6 +192,9 @@ export const MailchimpStyleCampaigns = () => {
     } catch (error) {
       console.error('Error deleting template:', error);
       toast.error("Failed to delete template");
+    } finally {
+      setDeletingTemplate(false);
+      setDeleteTemplateConfirm(null);
     }
   };
 
@@ -760,7 +767,9 @@ export const MailchimpStyleCampaigns = () => {
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => handleDeleteTemplate(template.id)}
+                            onClick={(e) => setDeleteTemplateConfirm({ x: e.clientX, y: e.clientY, message: `Delete template "${template.name}"?`, templateId: template.id })}
+                            aria-label={`Delete template ${template.name}`}
+                            title="Delete template"
                           >
                             <Trash2 className="h-4 w-4 text-destructive" />
                           </Button>
@@ -867,6 +876,12 @@ export const MailchimpStyleCampaigns = () => {
           </Card>
         </TabsContent>
       </Tabs>
+      <ConfirmPill
+        request={deleteTemplateConfirm}
+        busy={deletingTemplate}
+        onConfirm={() => { if (deleteTemplateConfirm) void handleDeleteTemplate(deleteTemplateConfirm.templateId); }}
+        onCancel={() => setDeleteTemplateConfirm(null)}
+      />
     </div>
   );
 };

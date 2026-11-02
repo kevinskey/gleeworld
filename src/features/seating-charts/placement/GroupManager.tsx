@@ -58,6 +58,8 @@ export function GroupManager({ open, onOpenChange, chart, people, onPatchChart }
                 />
                 <Button
                   size="sm" disabled={!newName.trim()}
+                  aria-label="Create group"
+                  title="Create group"
                   onClick={() => {
                     const { patch } = createGroup(chart, newName.trim(), k);
                     onPatchChart(patch);
@@ -82,6 +84,8 @@ export function GroupManager({ open, onOpenChange, chart, people, onPatchChart }
                         className="h-7 text-xs"
                       />
                       <Button variant="ghost" size="icon" className="h-7 w-7"
+                        aria-label={`Delete group ${g.name}`}
+                        title="Delete group"
                         onClick={() => onPatchChart(deleteGroup(chart, g.id))}>
                         <Trash2 className="w-4 h-4" />
                       </Button>
@@ -94,6 +98,8 @@ export function GroupManager({ open, onOpenChange, chart, people, onPatchChart }
                             {p?.full_name ?? uid.slice(0, 8)}
                             <button
                               type="button" className="hover:text-red-600"
+                              aria-label={`Remove ${p?.full_name ?? 'person'} from group`}
+                              title="Remove from group"
                               onClick={() => onPatchChart(removeMember(chart, g.id, uid))}
                             >
                               <X className="w-3 h-3" />

@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Plus, Calendar, Users, FileMusic, Trash2, Edit, Eye } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { toast as sonnerToast } from 'sonner';
 import { SightReadingSubmissionsDialog } from './SightReadingSubmissionsDialog';
 
 interface Assignment {
@@ -148,10 +149,24 @@ export const SightReadingAssignmentManager = ({ user }: SightReadingAssignmentMa
 
       if (error) throw error;
 
+      const removed = assignments.find(a => a.id === id);
       setAssignments(assignments.filter(a => a.id !== id));
-      toast({
-        title: "Success",
-        description: "Assignment deleted successfully",
+      sonnerToast(`Removed "${removed?.title ?? 'assignment'}".`, {
+        duration: 8000,
+        action: {
+          label: 'Undo',
+          onClick: async () => {
+            const { error: restoreError } = await supabase
+              .from('gw_sight_reading_assignments')
+              .update({ is_active: true })
+              .eq('id', id);
+            if (restoreError) {
+              sonnerToast.error('Could not restore the assignment.');
+              return;
+            }
+            await fetchAssignments();
+          },
+        },
       });
     } catch (error) {
       console.error('Error deleting assignment:', error);
@@ -356,13 +371,15 @@ export const SightReadingAssignmentManager = ({ user }: SightReadingAssignmentMa
                     )}
                   </div>
                   <div className="flex gap-2">
-                    <Button variant="ghost" size="sm">
+                    <Button variant="ghost" size="sm" aria-label={`Edit "${assignment.title}"`} title={`Edit "${assignment.title}"`}>
                       <Edit className="h-4 w-4" />
                     </Button>
                     <Button 
                       variant="ghost" 
                       size="sm"
                       onClick={() => handleDeleteAssignment(assignment.id)}
+                      aria-label={`Remove "${assignment.title}"`}
+                      title={`Remove "${assignment.title}"`}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>

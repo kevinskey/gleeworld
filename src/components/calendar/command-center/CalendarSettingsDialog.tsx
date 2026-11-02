@@ -16,6 +16,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
+import { ConfirmPill, type ConfirmPillRequest } from '@/components/ui/confirm-pill';
 import { Plus, Trash2, Eye, EyeOff, Loader2, Copy, RefreshCw, Apple, ExternalLink, Link2, Link2Off } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import {
@@ -94,6 +95,7 @@ function CalendarsTab() {
   const [newName, setNewName] = useState('');
   const [newColor, setNewColor] = useState('#0891b2');
   const [busy, setBusy] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState<(ConfirmPillRequest & { id: string; name: string }) | null>(null);
 
   // Pull every calendar (hidden + visible) so admins can manage them all.
   // RLS already scopes to the caller's tenant; tenant_id is set by the
@@ -213,9 +215,10 @@ function CalendarsTab() {
               </button>
               {!c.is_default && (
                 <button
-                  onClick={() => removeCalendar(c.id, c.name)}
+                  onClick={(e) => setDeleteConfirm({ x: e.clientX, y: e.clientY, message: `Delete "${c.name}"?`, id: c.id, name: c.name })}
                   className="text-rose-600 hover:text-rose-700 p-1.5 rounded hover:bg-rose-50"
                   title="Delete calendar"
+                  aria-label={`Delete ${c.name}`}
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>
@@ -224,6 +227,11 @@ function CalendarsTab() {
           ))}
         </ul>
       )}
+      <ConfirmPill
+        request={deleteConfirm}
+        onConfirm={() => { if (deleteConfirm) removeCalendar(deleteConfirm.id, deleteConfirm.name); setDeleteConfirm(null); }}
+        onCancel={() => setDeleteConfirm(null)}
+      />
     </div>
   );
 }
@@ -240,6 +248,7 @@ function CategoriesTab() {
 
   const [newLabel, setNewLabel] = useState('');
   const [newColor, setNewColor] = useState('#0891b2');
+  const [deleteConfirm, setDeleteConfirm] = useState<(ConfirmPillRequest & { id: string; label: string }) | null>(null);
 
   async function create() {
     if (!newLabel.trim()) return;
@@ -314,9 +323,10 @@ function CategoriesTab() {
                 <div className="text-sm text-muted-foreground">{c.color}</div>
               </div>
               <button
-                onClick={() => remove(c.id, c.label)}
+                onClick={(e) => setDeleteConfirm({ x: e.clientX, y: e.clientY, message: `Delete "${c.label}"?`, id: c.id, label: c.label })}
                 className="text-rose-600 hover:text-rose-700 p-1.5 rounded hover:bg-rose-50"
                 title="Delete category"
+                aria-label={`Delete ${c.label}`}
               >
                 <Trash2 className="w-4 h-4" />
               </button>
@@ -324,6 +334,12 @@ function CategoriesTab() {
           ))}
         </ul>
       )}
+      <ConfirmPill
+        request={deleteConfirm}
+        busy={deleteMut.isPending}
+        onConfirm={async () => { if (deleteConfirm) await remove(deleteConfirm.id, deleteConfirm.label); setDeleteConfirm(null); }}
+        onCancel={() => setDeleteConfirm(null)}
+      />
     </div>
   );
 }

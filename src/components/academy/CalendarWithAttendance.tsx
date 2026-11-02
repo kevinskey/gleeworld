@@ -533,6 +533,8 @@ export const CalendarWithAttendance: React.FC<CalendarWithAttendanceProps> = ({
               size="icon" 
               onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
               className="h-9 w-9"
+              aria-label="Previous month"
+              title="Previous month"
             >
               <ChevronLeft className="h-5 w-5" />
             </Button>
@@ -544,6 +546,8 @@ export const CalendarWithAttendance: React.FC<CalendarWithAttendanceProps> = ({
               size="icon" 
               onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
               className="h-9 w-9"
+              aria-label="Next month"
+              title="Next month"
             >
               <ChevronRight className="h-5 w-5" />
             </Button>
@@ -930,6 +934,8 @@ export const CalendarWithAttendance: React.FC<CalendarWithAttendanceProps> = ({
                         size="icon" 
                         className="absolute top-1 right-1 h-7 w-7"
                         onClick={() => { setExcuseDocument(null); setExcuseDocumentPreview(null); }}
+                        aria-label="Remove document"
+                        title="Remove document"
                       >
                         <X className="h-4 w-4" />
                       </Button>
@@ -945,6 +951,8 @@ export const CalendarWithAttendance: React.FC<CalendarWithAttendanceProps> = ({
                         size="icon" 
                         className="h-7 w-7"
                         onClick={() => setExcuseDocument(null)}
+                        aria-label="Remove document"
+                        title="Remove document"
                       >
                         <X className="h-4 w-4" />
                       </Button>

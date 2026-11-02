@@ -269,7 +269,7 @@ export const VideoRecordingSubmission: React.FC<VideoRecordingSubmissionProps> =
           
           {isStreaming && !isRecording && (
             <>
-              <Button onClick={switchCamera} variant="outline" size="icon">
+              <Button onClick={switchCamera} variant="outline" size="icon" aria-label="Switch camera" title="Switch camera">
                 <FlipHorizontal2 className="h-4 w-4" />
               </Button>
               <Button onClick={startRecording} variant="destructive">

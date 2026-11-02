@@ -519,6 +519,8 @@ Laptop stand`}
                              variant="outline"
                              size="sm"
                              onClick={() => removeItem(item.id)}
+                             aria-label={`Remove ${item.name}`}
+                             title="Remove item"
                            >
                              <Trash2 className="w-4 h-4" />
                            </Button>

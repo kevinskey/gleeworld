@@ -339,6 +339,8 @@ export const CourseAssignments: React.FC<CourseAssignmentsProps> = ({ courseId, 
                       size="icon"
                       className="h-8 w-8 text-destructive hover:bg-destructive/10"
                       onClick={() => setDeleteTarget(assignment)}
+                      aria-label={`Delete assignment "${assignment.title}"`}
+                      title={`Delete assignment "${assignment.title}"`}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>

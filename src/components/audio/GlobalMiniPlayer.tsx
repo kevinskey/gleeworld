@@ -61,6 +61,9 @@ export const GlobalMiniPlayer: React.FC<GlobalMiniPlayerProps> = ({ onExpand }) 
           size="icon"
           onClick={togglePlay}
           className="h-10 w-10 rounded-full bg-primary/20 hover:bg-primary/30 text-primary"
+          aria-label={isPlaying ? 'Pause' : 'Play'}
+          aria-pressed={isPlaying}
+          title={isPlaying ? 'Pause' : 'Play'}
         >
           {isPlaying ? (
             <Pause className="h-5 w-5" />
@@ -90,6 +93,8 @@ export const GlobalMiniPlayer: React.FC<GlobalMiniPlayerProps> = ({ onExpand }) 
           size="icon"
           onClick={handleExpand}
           className="h-8 w-8 text-slate-400 hover:text-white"
+          aria-label="Expand player"
+          title="Expand player"
         >
           <ChevronUp className="h-4 w-4" />
         </Button>
@@ -100,6 +105,8 @@ export const GlobalMiniPlayer: React.FC<GlobalMiniPlayerProps> = ({ onExpand }) 
           size="icon"
           onClick={stop}
           className="h-8 w-8 text-slate-400 hover:text-white"
+          aria-label="Stop and close player"
+          title="Stop and close player"
         >
           <X className="h-4 w-4" />
         </Button>

@@ -12,6 +12,7 @@ import { UserPlus, Trash2 } from 'lucide-react';
 import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
 import { DashboardShell } from '@/components/dashboard/DashboardShell';
+import { ConfirmPill, type ConfirmPillRequest } from '@/components/ui/confirm-pill';
 
 const STATUSES = ['new', 'contacted', 'auditioned', 'enrolled', 'declined'] as const;
 
@@ -19,6 +20,7 @@ export default function Prospects() {
   const qc = useQueryClient();
   const { toast } = useToast();
   const [form, setForm] = useState<Record<string, string>>({});
+  const [deleteConfirm, setDeleteConfirm] = useState<(ConfirmPillRequest & { id: string }) | null>(null);
 
   const { data: prospects = [] } = useQuery({
     queryKey: ['prospects'],
@@ -121,7 +123,7 @@ export default function Prospects() {
                     {STATUSES.map((s) => <SelectItem key={s} value={s} className="capitalize">{s}</SelectItem>)}
                   </SelectContent>
                 </Select>
-                <Button variant="ghost" size="sm" onClick={() => del.mutate(p.id)}>
+                <Button variant="ghost" size="sm" onClick={(e) => setDeleteConfirm({ x: e.clientX, y: e.clientY, message: `Delete "${p.full_name}"?`, id: p.id })} aria-label={`Delete ${p.full_name}`} title="Delete prospect">
                   <Trash2 className="w-4 h-4" />
                 </Button>
               </div>
@@ -129,6 +131,12 @@ export default function Prospects() {
           </CardContent>
         </Card>
       ))}
+      <ConfirmPill
+        request={deleteConfirm}
+        busy={del.isPending}
+        onConfirm={() => { if (deleteConfirm) del.mutate(deleteConfirm.id, { onSettled: () => setDeleteConfirm(null) }); }}
+        onCancel={() => setDeleteConfirm(null)}
+      />
     </DashboardPageShell>
     </DashboardShell>
     </UniversalLayout>

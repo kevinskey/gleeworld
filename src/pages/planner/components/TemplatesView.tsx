@@ -12,6 +12,7 @@ import { createNote } from '@/lib/planner/notesApi';
 import { deleteTemplate } from '@/lib/planner/templatesApi';
 import { defaultTemplateContext, substituteDoc } from '@/lib/planner/templates';
 import type { PlannerTemplate } from '@/lib/planner/types';
+import { ConfirmPill, type ConfirmPillRequest } from '@/components/ui/confirm-pill';
 import { useTemplates } from '../hooks';
 import { EmptyState } from './TasksView';
 
@@ -20,6 +21,7 @@ export default function TemplatesView({ onOpenNote }: { onOpenNote: (noteId: str
   const { profile } = useProfile();
   const qc = useQueryClient();
   const [applyingId, setApplyingId] = useState<string | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<(ConfirmPillRequest & { id: string }) | null>(null);
 
   const apply = useMutation({
     mutationFn: async (tpl: PlannerTemplate) => {
@@ -41,6 +43,7 @@ export default function TemplatesView({ onOpenNote }: { onOpenNote: (noteId: str
     mutationFn: (id: string) => deleteTemplate(id),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['planner', 'templates'] }),
     onError: () => toast.error('Could not delete the template'),
+    onSettled: () => setConfirmDelete(null),
   });
 
   return (
@@ -70,7 +73,7 @@ export default function TemplatesView({ onOpenNote }: { onOpenNote: (noteId: str
                     <Button
                       variant="ghost" size="sm" className="h-7 w-7 shrink-0 p-0 text-muted-foreground"
                       aria-label={`Delete template ${tpl.name}`}
-                      onClick={() => remove.mutate(tpl.id)}
+                      onClick={(e) => setConfirmDelete({ x: e.clientX, y: e.clientY, message: `Delete template "${tpl.name}"?`, id: tpl.id })}
                     >
                       <Trash2 className="h-3.5 w-3.5" />
                     </Button>
@@ -88,6 +91,12 @@ export default function TemplatesView({ onOpenNote }: { onOpenNote: (noteId: str
           ))}
         </div>
       )}
+      <ConfirmPill
+        request={confirmDelete}
+        busy={remove.isPending}
+        onConfirm={() => { if (confirmDelete) remove.mutate(confirmDelete.id); }}
+        onCancel={() => setConfirmDelete(null)}
+      />
     </div>
   );
 }

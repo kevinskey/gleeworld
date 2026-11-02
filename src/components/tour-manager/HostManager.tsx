@@ -439,6 +439,8 @@ export const HostManager = ({
                   size="icon"
                   className="h-8 w-8"
                   onClick={(e) => handleEditHost(host, e)}
+                  aria-label={`Edit ${host.organization_name || host.venue_name || 'host'}`}
+                  title={`Edit ${host.organization_name || host.venue_name || 'host'}`}
                 >
                   <Pencil className="h-4 w-4" />
                 </Button>

@@ -67,6 +67,8 @@ export const MessagingInterface: React.FC<MessagingInterfaceProps> = ({ embedded
                     size="icon" 
                     className="text-primary-foreground hover:bg-white/20 -ml-2"
                     onClick={() => navigate(-1)}
+                    aria-label="Go back"
+                    title="Go back"
                   >
                     <ArrowLeft className="h-5 w-5" />
                   </Button>

@@ -940,6 +940,8 @@ export const ExcuseGenerator = ({ onRequestEdited }: ExcuseGeneratorProps) => {
                         variant="ghost"
                         size="sm"
                         onClick={() => removeScheduleEntry(schedule.id)}
+                        aria-label={`Remove ${schedule.courseName}`}
+                        title={`Remove ${schedule.courseName}`}
                       >
                         <Trash2 className="w-4 h-4" />
                       </Button>

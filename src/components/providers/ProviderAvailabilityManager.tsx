@@ -365,6 +365,8 @@ export const ProviderAvailabilityManager: React.FC<ProviderAvailabilityManagerPr
                           variant="outline"
                           size="sm"
                           onClick={() => handleEdit(slot)}
+                          aria-label={`Edit slot ${slot.start_time} – ${slot.end_time}`}
+                          title="Edit slot"
                         >
                           <Edit2 className="h-4 w-4" />
                         </Button>

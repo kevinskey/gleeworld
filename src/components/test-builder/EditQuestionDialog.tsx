@@ -237,6 +237,8 @@ export const EditQuestionDialog = ({ open, onOpenChange, testId, question, exist
                           size="icon"
                           variant="ghost"
                           onClick={() => handleRemoveOption(index)}
+                          aria-label={`Remove option ${index + 1}`}
+                          title={`Remove option ${index + 1}`}
                         >
                           <X className="h-4 w-4" />
                         </Button>

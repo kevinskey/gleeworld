@@ -91,16 +91,16 @@ export function HalfPageView({
   return (
     <div className="fixed inset-x-0 bottom-0 bg-background z-[60] flex flex-col" style={{ top: 'var(--gw-demo-bar-h, 0px)' }}>
       <div className="h-10 flex items-center gap-2 px-2 border-b bg-background/95 backdrop-blur shrink-0">
-        <Button size="icon" variant="ghost" className="h-8 w-8" onClick={onClose}>
+        <Button size="icon" variant="ghost" className="h-8 w-8" onClick={onClose} aria-label="Close half-page view" title="Close half-page view">
           <X className="w-4 h-4" />
         </Button>
         <div className="text-xs text-muted-foreground flex-1 text-center">
           Half-page · viewing {currentPage}–{Math.min(currentPage + 1, totalPages)} of {totalPages}
         </div>
-        <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => turn(-1)} disabled={currentPage <= 1}>
+        <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => turn(-1)} disabled={currentPage <= 1} aria-label="Previous page" title="Previous page">
           <ChevronLeft className="w-4 h-4" />
         </Button>
-        <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => turn(1)} disabled={currentPage >= totalPages}>
+        <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => turn(1)} disabled={currentPage >= totalPages} aria-label="Next page" title="Next page">
           <ChevronRight className="w-4 h-4" />
         </Button>
       </div>

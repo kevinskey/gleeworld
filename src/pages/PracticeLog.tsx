@@ -13,6 +13,7 @@ import { Timer, Flame, Trash2 } from 'lucide-react';
 import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
 import { DashboardShell } from '@/components/dashboard/DashboardShell';
+import { ConfirmPill, type ConfirmPillRequest } from '@/components/ui/confirm-pill';
 
 export default function PracticeLog() {
   const { user } = useAuth();
@@ -21,6 +22,7 @@ export default function PracticeLog() {
   const [minutes, setMinutes] = useState('20');
   const [what, setWhat] = useState('');
   const [reflection, setReflection] = useState('');
+  const [deleteConfirm, setDeleteConfirm] = useState<(ConfirmPillRequest & { id: string }) | null>(null);
 
   const { data: logs = [] } = useQuery({
     queryKey: ['my-practice-logs', user?.id],
@@ -122,13 +124,19 @@ export default function PracticeLog() {
                 {l.what_practiced && <div className="text-muted-foreground">{l.what_practiced}</div>}
                 {l.reflection && <div className="text-xs text-muted-foreground italic mt-1">"{l.reflection}"</div>}
               </div>
-              <Button variant="ghost" size="sm" onClick={() => del.mutate(l.id)}>
+              <Button variant="ghost" size="sm" onClick={(e) => setDeleteConfirm({ x: e.clientX, y: e.clientY, message: `Delete the ${l.minutes} min entry from ${new Date(l.practice_date).toLocaleDateString()}?`, id: l.id })} aria-label={`Delete practice entry from ${new Date(l.practice_date).toLocaleDateString()}`} title="Delete entry">
                 <Trash2 className="w-3 h-3" />
               </Button>
             </div>
           ))}
         </CardContent>
       </Card>
+      <ConfirmPill
+        request={deleteConfirm}
+        busy={del.isPending}
+        onConfirm={() => { if (deleteConfirm) del.mutate(deleteConfirm.id, { onSettled: () => setDeleteConfirm(null) }); }}
+        onCancel={() => setDeleteConfirm(null)}
+      />
     </DashboardPageShell>
     </DashboardShell>
     </UniversalLayout>

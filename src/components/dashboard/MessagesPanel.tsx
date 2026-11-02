@@ -35,6 +35,8 @@ export const MessagesPanel = ({ onClose }: MessagesPanelProps) => {
             size="icon"
             onClick={handleClose}
             className="h-10 w-10 rounded-full text-primary-foreground hover:bg-white/20"
+            aria-label="Close messenger"
+            title="Close messenger"
           >
             <X className="h-5 w-5" />
           </Button>

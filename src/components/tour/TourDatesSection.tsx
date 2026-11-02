@@ -13,6 +13,7 @@ import { Calendar, MapPin, Clock, Music, Loader2, Plus, Trash2, Edit, FileText, 
 import { supabase } from "@/integrations/supabase/client";
 import { useActiveTrip } from "@/components/tour-manager/ActiveTripContext";
 import { useToast } from "@/hooks/use-toast";
+import { ConfirmPill, type ConfirmPillRequest } from "@/components/ui/confirm-pill";
 
 interface TourEvent {
   id: string;
@@ -511,6 +512,8 @@ export const TourDatesSection = ({ onGenerateContract }: TourDatesSectionProps) 
   const [loading, setLoading] = useState(true);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [editingEvent, setEditingEvent] = useState<TourEvent | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<(ConfirmPillRequest & { id: string }) | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -540,8 +543,7 @@ export const TourDatesSection = ({ onGenerateContract }: TourDatesSectionProps) 
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this tour date?')) return;
-
+    setDeleting(true);
     try {
       const { error } = await supabase
         .from('gw_tour_events')
@@ -558,6 +560,9 @@ export const TourDatesSection = ({ onGenerateContract }: TourDatesSectionProps) 
         description: "Failed to delete tour date",
         variant: "destructive"
       });
+    } finally {
+      setDeleting(false);
+      setConfirmDelete(null);
     }
   };
 
@@ -710,6 +715,8 @@ export const TourDatesSection = ({ onGenerateContract }: TourDatesSectionProps) 
                           size="icon"
                           className="opacity-0 group-hover:opacity-100 transition-opacity"
                           onClick={() => handleEdit(event)}
+                          aria-label={`Edit ${event.title}`}
+                          title="Edit tour date"
                         >
                           <Edit className="h-4 w-4" />
                         </Button>
@@ -717,7 +724,9 @@ export const TourDatesSection = ({ onGenerateContract }: TourDatesSectionProps) 
                           variant="ghost"
                           size="icon"
                           className="opacity-0 group-hover:opacity-100 transition-opacity text-destructive hover:text-destructive"
-                          onClick={() => handleDelete(event.id)}
+                          onClick={(e) => setConfirmDelete({ x: e.clientX, y: e.clientY, message: `Delete "${event.title}"?`, id: event.id })}
+                          aria-label={`Delete ${event.title}`}
+                          title="Delete tour date"
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
@@ -730,6 +739,12 @@ export const TourDatesSection = ({ onGenerateContract }: TourDatesSectionProps) 
           })
         )}
       </div>
+      <ConfirmPill
+        request={confirmDelete}
+        busy={deleting}
+        onConfirm={() => { if (confirmDelete) void handleDelete(confirmDelete.id); }}
+        onCancel={() => setConfirmDelete(null)}
+      />
     </div>
   );
 };

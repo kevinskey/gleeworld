@@ -167,6 +167,8 @@ export const CourseMiniPlayer: React.FC<CourseMiniPlayerProps> = ({
             onClick={skipPrevious}
             onTouchEnd={(e) => { e.preventDefault(); skipPrevious(); }}
             disabled={currentTrackIndex === null || currentTrackIndex === 0}
+            aria-label="Previous track"
+            title="Previous track"
           >
             <SkipBack className="h-3.5 w-3.5" />
           </Button>
@@ -178,6 +180,9 @@ export const CourseMiniPlayer: React.FC<CourseMiniPlayerProps> = ({
             onTouchEnd={(e) => { e.preventDefault(); currentTrack ? togglePlay() : handleFirstPlay(); }}
             onPointerDown={() => forceUnlockAudio()}
             disabled={tracks.length === 0}
+            aria-label={isPlaying ? 'Pause' : 'Play'}
+            aria-pressed={isPlaying}
+            title={isPlaying ? 'Pause' : 'Play'}
           >
             {isPlaying ? (
               <Pause className="h-3 w-3" />
@@ -192,6 +197,8 @@ export const CourseMiniPlayer: React.FC<CourseMiniPlayerProps> = ({
             onClick={skipNext}
             onTouchEnd={(e) => { e.preventDefault(); skipNext(); }}
             disabled={currentTrackIndex === null || currentTrackIndex >= tracks.length - 1}
+            aria-label="Next track"
+            title="Next track"
           >
             <SkipForward className="h-3.5 w-3.5" />
           </Button>
@@ -204,6 +211,9 @@ export const CourseMiniPlayer: React.FC<CourseMiniPlayerProps> = ({
           className="hidden sm:flex h-8 w-8 text-white/70 hover:text-white hover:bg-white/10 touch-manipulation"
           onClick={() => setIsMuted(!isMuted)}
           onTouchEnd={(e) => { e.preventDefault(); setIsMuted(!isMuted); }}
+          aria-label={isMuted ? 'Unmute' : 'Mute'}
+          aria-pressed={isMuted}
+          title={isMuted ? 'Unmute' : 'Mute'}
         >
           {isMuted ? (
             <VolumeX className="h-4 w-4" />
@@ -248,6 +258,9 @@ export const CourseMiniPlayer: React.FC<CourseMiniPlayerProps> = ({
             className="h-10 w-10 sm:h-8 sm:w-8 text-white/70 hover:text-white hover:bg-white/10 touch-manipulation"
             onClick={() => setIsExpanded(!isExpanded)}
             onTouchEnd={(e) => { e.preventDefault(); setIsExpanded(!isExpanded); }}
+            aria-label={isExpanded ? 'Collapse track list' : 'Expand track list'}
+            aria-expanded={isExpanded}
+            title={isExpanded ? 'Collapse track list' : 'Expand track list'}
           >
             {isExpanded ? (
               <ChevronUp className="h-5 w-5 sm:h-4 sm:w-4" />

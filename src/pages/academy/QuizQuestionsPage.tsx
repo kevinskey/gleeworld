@@ -130,7 +130,7 @@ export default function QuizQuestionsPage() {
       subtitle={`${questions.length} question${questions.length === 1 ? '' : 's'} · ${totalPoints} pts total`}
     >
       <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" onClick={() => navigate(`/academy/c/${code}?tab=quizzes`)}>
+        <Button variant="ghost" size="icon" onClick={() => navigate(`/academy/c/${code}?tab=quizzes`)} aria-label="Back to quizzes" title="Back to quizzes">
           <ArrowLeft className="w-5 h-5" />
         </Button>
         <div className="text-xs text-muted-foreground">Question builder</div>
@@ -245,8 +245,8 @@ function QuestionEditor({
           <Badge variant="outline" className="text-xs">Q{index + 1}</Badge>
           <Badge variant="outline" className="text-xs capitalize">{form.question_type.replace('_', ' ')}</Badge>
           <div className="flex-1" />
-          <Button size="icon" variant="ghost" disabled={isFirst} onClick={() => move('up')}><ChevronUp className="w-4 h-4" /></Button>
-          <Button size="icon" variant="ghost" disabled={isLast} onClick={() => move('down')}><ChevronDown className="w-4 h-4" /></Button>
+          <Button size="icon" variant="ghost" disabled={isFirst} onClick={() => move('up')} aria-label="Move question up" title="Move question up"><ChevronUp className="w-4 h-4" /></Button>
+          <Button size="icon" variant="ghost" disabled={isLast} onClick={() => move('down')} aria-label="Move question down" title="Move question down"><ChevronDown className="w-4 h-4" /></Button>
           <ConfirmDeleteButton
             confirmKey="delete-quiz-question"
             title="Delete this question?"
@@ -318,6 +318,8 @@ function QuestionEditor({
                         : ((form.correct_answer ?? []) as string[]).filter((x) => x !== opt.id);
                       update({ options: next, correct_answer: newCorrect });
                     }}
+                    aria-label={`Remove option ${opt.id.toUpperCase()}`}
+                    title={`Remove option ${opt.id.toUpperCase()}`}
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                   </Button>
@@ -383,6 +385,8 @@ function QuestionEditor({
                     const next = ((form.correct_answer ?? []) as string[]).filter((_, idx) => idx !== i);
                     update({ correct_answer: next });
                   }}
+                  aria-label="Remove acceptable response"
+                  title="Remove acceptable response"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
                 </Button>

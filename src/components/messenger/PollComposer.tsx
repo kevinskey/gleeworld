@@ -78,7 +78,7 @@ export function PollComposer({ groupId, userId, onClose }: { groupId: string; us
                 <div key={i} className="flex gap-1">
                   <Input value={o} onChange={(e) => update(i, e.target.value)} placeholder={`Option ${i + 1}`} />
                   {options.length > 2 && (
-                    <Button variant="ghost" size="sm" onClick={() => removeOpt(i)}><Trash2 className="w-3 h-3" /></Button>
+                    <Button variant="ghost" size="sm" onClick={() => removeOpt(i)} aria-label={`Remove option ${i + 1}`} title={`Remove option ${i + 1}`}><Trash2 className="w-3 h-3" /></Button>
                   )}
                 </div>
               ))}

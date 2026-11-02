@@ -221,6 +221,8 @@ export const CoursePracticeBar: React.FC<CoursePracticeBarProps> = ({
             className="h-8 w-8 rounded-md shrink-0"
             onClick={currentTrack ? togglePlay : handleFirstPlay}
             disabled={tracks.length === 0}
+            aria-label={isPlaying ? 'Pause' : 'Play'}
+            title={isPlaying ? 'Pause' : 'Play'}
           >
             {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4 ml-0.5" />}
           </Button>
@@ -255,6 +257,8 @@ export const CoursePracticeBar: React.FC<CoursePracticeBarProps> = ({
             size="icon-sm"
             className="h-7 w-7 shrink-0"
             onClick={() => setDrawerOpen(true)}
+            aria-label="Open queue"
+            title="Open queue"
           >
             <ListMusic className="h-4 w-4" />
           </Button>
@@ -313,6 +317,8 @@ export const CoursePracticeBar: React.FC<CoursePracticeBarProps> = ({
               size="icon-sm"
               className="shrink-0"
               onClick={() => setDrawerOpen(true)}
+              aria-label="Expand player"
+              title="Expand player"
             >
               <Maximize2 className="h-4 w-4" />
             </Button>
@@ -326,15 +332,18 @@ export const CoursePracticeBar: React.FC<CoursePracticeBarProps> = ({
 
             <div className="flex items-center gap-1">
               <Button variant="ghost" size="icon-sm" className="h-8 w-8" onClick={skipPrevious}
-                disabled={currentTrackIndex === null || currentTrackIndex === 0}>
+                disabled={currentTrackIndex === null || currentTrackIndex === 0}
+                aria-label="Previous track" title="Previous track">
                 <SkipBack className="h-4 w-4" />
               </Button>
               <Button variant="default" size="icon" className="h-10 w-10 rounded-md shadow-sm"
-                onClick={currentTrack ? togglePlay : handleFirstPlay} disabled={tracks.length === 0}>
+                onClick={currentTrack ? togglePlay : handleFirstPlay} disabled={tracks.length === 0}
+                aria-label={isPlaying ? 'Pause' : 'Play'} title={isPlaying ? 'Pause' : 'Play'}>
                 {isPlaying ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5 ml-0.5" />}
               </Button>
               <Button variant="ghost" size="icon-sm" className="h-8 w-8" onClick={skipNext}
-                disabled={currentTrackIndex === null || currentTrackIndex >= tracks.length - 1}>
+                disabled={currentTrackIndex === null || currentTrackIndex >= tracks.length - 1}
+                aria-label="Next track" title="Next track">
                 <SkipForward className="h-4 w-4" />
               </Button>
             </div>
@@ -355,7 +364,7 @@ export const CoursePracticeBar: React.FC<CoursePracticeBarProps> = ({
             <div className="flex items-center gap-1 border-l border-border pl-2 ml-1">
               <Button variant="ghost" size="icon-sm"
                 className={cn("h-7 w-7", isLooping && "text-primary bg-primary/10")}
-                onClick={() => setIsLooping(!isLooping)} title="Loop">
+                onClick={() => setIsLooping(!isLooping)} title="Loop" aria-label="Loop" aria-pressed={isLooping}>
                 <Repeat className="h-3.5 w-3.5" />
               </Button>
               <Button variant="ghost" size="sm"
@@ -364,7 +373,8 @@ export const CoursePracticeBar: React.FC<CoursePracticeBarProps> = ({
                 {playbackRate}x
               </Button>
               <div className="flex items-center gap-1 group">
-                <Button variant="ghost" size="icon-sm" className="h-7 w-7" onClick={toggleMute}>
+                <Button variant="ghost" size="icon-sm" className="h-7 w-7" onClick={toggleMute}
+                  aria-label={isMuted || volume === 0 ? 'Unmute' : 'Mute'} aria-pressed={isMuted} title={isMuted || volume === 0 ? 'Unmute' : 'Mute'}>
                   {isMuted || volume === 0 ? <VolumeX className="h-3.5 w-3.5" /> : <Volume2 className="h-3.5 w-3.5" />}
                 </Button>
                 <div className="w-16 hidden lg:block">
@@ -373,7 +383,7 @@ export const CoursePracticeBar: React.FC<CoursePracticeBarProps> = ({
               </div>
             </div>
 
-            <Button variant="ghost" size="icon-sm" className="h-8 w-8 shrink-0" onClick={() => setDrawerOpen(true)}>
+            <Button variant="ghost" size="icon-sm" className="h-8 w-8 shrink-0" onClick={() => setDrawerOpen(true)} aria-label="Open queue" title="Open queue">
               <ListMusic className="h-4 w-4" />
             </Button>
           </div>

@@ -9,6 +9,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { ConfirmPill, type ConfirmPillRequest } from '@/components/ui/confirm-pill';
 import {
   Dialog,
   DialogContent,
@@ -42,6 +43,7 @@ export function VideoResourcesSection({ courseId }: VideoResourcesSectionProps) 
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState<(ConfirmPillRequest & { videoId: string }) | null>(null);
   const [newVideo, setNewVideo] = useState({
     title: '',
     description: '',
@@ -286,7 +288,9 @@ export function VideoResourcesSection({ courseId }: VideoResourcesSectionProps) 
                       <Button
                         size="sm"
                         variant="ghost"
-                        onClick={() => deleteVideoMutation.mutate(video.id)}
+                        aria-label={`Delete ${video.title}`}
+                        title={`Delete ${video.title}`}
+                        onClick={(e) => setDeleteConfirm({ x: e.clientX, y: e.clientY, message: `Delete "${video.title}"?`, videoId: video.id })}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -333,6 +337,14 @@ export function VideoResourcesSection({ courseId }: VideoResourcesSectionProps) 
           </div>
         )}
       </CardContent>
+      <ConfirmPill
+        request={deleteConfirm}
+        busy={deleteVideoMutation.isPending}
+        onConfirm={() => {
+          if (deleteConfirm) deleteVideoMutation.mutate(deleteConfirm.videoId, { onSettled: () => setDeleteConfirm(null) });
+        }}
+        onCancel={() => setDeleteConfirm(null)}
+      />
     </Card>
   );
 }

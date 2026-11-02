@@ -302,13 +302,13 @@ export const HistorianJournal = () => {
                         </div>
                       </div>
                       <div className="flex gap-1 ml-4">
-                        <Button variant="ghost" size="sm" onClick={() => editEntry(entry)}>
+                        <Button variant="ghost" size="sm" onClick={() => editEntry(entry)} aria-label={`Edit ${entry.title}`} title={`Edit ${entry.title}`}>
                           <Edit className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="sm">
+                        <Button variant="ghost" size="sm" aria-label={`View ${entry.title}`} title={`View ${entry.title}`}>
                           <Eye className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="sm" onClick={() => deleteEntry(entry.id)}>
+                        <Button variant="ghost" size="sm" onClick={() => deleteEntry(entry.id)} aria-label={`Delete ${entry.title}`} title={`Delete ${entry.title}`}>
                           <Trash className="h-4 w-4" />
                         </Button>
                       </div>

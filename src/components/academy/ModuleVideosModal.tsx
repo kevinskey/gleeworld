@@ -129,6 +129,8 @@ export const ModuleVideosModal: React.FC<ModuleVideosModalProps> = ({
               size="icon"
               className="absolute top-2 right-2 z-10 bg-black/50 hover:bg-black/70 text-white"
               onClick={closePlayer}
+              aria-label="Close video"
+              title="Close video"
             >
               <X className="h-5 w-5" />
             </Button>
@@ -148,6 +150,8 @@ export const ModuleVideosModal: React.FC<ModuleVideosModalProps> = ({
               size="icon"
               className="absolute top-2 right-2 z-10 bg-black/50 hover:bg-black/70 text-white"
               onClick={closePlayer}
+              aria-label="Close video"
+              title="Close video"
             >
               <X className="h-5 w-5" />
             </Button>

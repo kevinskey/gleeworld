@@ -306,6 +306,8 @@ export const AppointmentServiceManager = () => {
                       <button
                         key={color}
                         type="button"
+                        aria-label={`Color ${color}`}
+                        aria-pressed={formData.color === color}
                         className={`w-8 h-8 rounded-full border-2 ${
                           formData.color === color ? 'border-foreground' : 'border-muted'
                         }`}
@@ -354,6 +356,8 @@ export const AppointmentServiceManager = () => {
                     variant="ghost"
                     size="sm"
                     onClick={() => handleEdit(service)}
+                    aria-label={`Edit ${service.name}`}
+                    title={`Edit ${service.name}`}
                   >
                     <Edit className="h-4 w-4" />
                   </Button>

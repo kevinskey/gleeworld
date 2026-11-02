@@ -19,6 +19,7 @@ import {
   useDeleteStudentNote 
 } from '@/hooks/useDiscussionAnalytics';
 import { format, formatDistanceToNow } from 'date-fns';
+import { ConfirmPill, type ConfirmPillRequest } from '@/components/ui/confirm-pill';
 
 interface StudentDiscussionDetailProps {
   courseId: string;
@@ -35,6 +36,7 @@ export const StudentDiscussionDetail: React.FC<StudentDiscussionDetailProps> = (
   const addNoteMutation = useAddStudentNote(courseId, studentId);
   const deleteNoteMutation = useDeleteStudentNote(courseId, studentId);
   const [newNote, setNewNote] = useState('');
+  const [deleteConfirm, setDeleteConfirm] = useState<(ConfirmPillRequest & { id: string }) | null>(null);
   const [selectedDiscussion, setSelectedDiscussion] = useState<string | null>(null);
 
   const handleAddNote = () => {
@@ -79,7 +81,7 @@ export const StudentDiscussionDetail: React.FC<StudentDiscussionDetailProps> = (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" onClick={onBack}>
+        <Button variant="ghost" size="icon" onClick={onBack} aria-label="Back" title="Back">
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <div className="flex items-center gap-4 flex-1">
@@ -337,7 +339,9 @@ export const StudentDiscussionDetail: React.FC<StudentDiscussionDetailProps> = (
                           variant="ghost"
                           size="icon"
                           className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                          onClick={() => deleteNoteMutation.mutate(note.id)}
+                          onClick={(e) => setDeleteConfirm({ x: e.clientX, y: e.clientY, message: 'Delete this note?', id: note.id })}
+                          aria-label="Delete note"
+                          title="Delete note"
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
@@ -357,6 +361,12 @@ export const StudentDiscussionDetail: React.FC<StudentDiscussionDetailProps> = (
           </Card>
         </TabsContent>
       </Tabs>
+      <ConfirmPill
+        request={deleteConfirm}
+        busy={deleteNoteMutation.isPending}
+        onConfirm={() => { if (deleteConfirm) deleteNoteMutation.mutate(deleteConfirm.id, { onSettled: () => setDeleteConfirm(null) }); }}
+        onCancel={() => setDeleteConfirm(null)}
+      />
     </div>
   );
 };

@@ -210,7 +210,7 @@ export const AnnotationSharingDialog = ({ markedScoreId, musicTitle, children }:
     toast.success("Share link copied to clipboard!");
   };
 
-  const revokeShare = async (shareId: string) => {
+  const revokeShare = async (shareId: string, shareName?: string) => {
     try {
       const { error } = await supabase
         .from('gw_annotation_shares')
@@ -219,7 +219,20 @@ export const AnnotationSharingDialog = ({ markedScoreId, musicTitle, children }:
 
       if (error) throw error;
 
-      toast.success("Share revoked");
+      toast(`Removed share${shareName ? ` with "${shareName}"` : ''}.`, {
+        duration: 8000,
+        action: {
+          label: 'Undo',
+          onClick: async () => {
+            const { error: undoError } = await supabase
+              .from('gw_annotation_shares')
+              .update({ is_active: true })
+              .eq('id', shareId);
+            if (undoError) { toast.error('Could not restore share'); return; }
+            fetchShares();
+          },
+        },
+      });
       fetchShares();
     } catch (error) {
       console.error('Error revoking share:', error);
@@ -227,7 +240,7 @@ export const AnnotationSharingDialog = ({ markedScoreId, musicTitle, children }:
     }
   };
 
-  const revokePublicShare = async (shareId: string) => {
+  const revokePublicShare = async (shareId: string, shareTitle?: string) => {
     try {
       const { error } = await supabase
         .from('gw_annotation_public_shares')
@@ -236,7 +249,20 @@ export const AnnotationSharingDialog = ({ markedScoreId, musicTitle, children }:
 
       if (error) throw error;
 
-      toast.success("Public share revoked");
+      toast(`Removed share link${shareTitle ? ` "${shareTitle}"` : ''}.`, {
+        duration: 8000,
+        action: {
+          label: 'Undo',
+          onClick: async () => {
+            const { error: undoError } = await supabase
+              .from('gw_annotation_public_shares')
+              .update({ is_active: true })
+              .eq('id', shareId);
+            if (undoError) { toast.error('Could not restore share link'); return; }
+            fetchPublicShares();
+          },
+        },
+      });
       fetchPublicShares();
     } catch (error) {
       console.error('Error revoking public share:', error);
@@ -327,7 +353,9 @@ export const AnnotationSharingDialog = ({ markedScoreId, musicTitle, children }:
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => revokeShare(share.id)}
+                      onClick={() => revokeShare(share.id, share.shared_with_profile?.full_name || share.shared_with_profile?.email)}
+                      aria-label={`Revoke share with ${share.shared_with_profile?.full_name || share.shared_with_profile?.email || 'user'}`}
+                      title={`Revoke share with ${share.shared_with_profile?.full_name || share.shared_with_profile?.email || 'user'}`}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -416,13 +444,17 @@ export const AnnotationSharingDialog = ({ markedScoreId, musicTitle, children }:
                           variant="outline"
                           size="sm"
                           onClick={() => copyShareLink(share.share_token)}
+                          aria-label={`Copy link for ${share.title}`}
+                          title={`Copy link for ${share.title}`}
                         >
                           <Copy className="h-4 w-4" />
                         </Button>
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => revokePublicShare(share.id)}
+                          onClick={() => revokePublicShare(share.id, share.title)}
+                          aria-label={`Revoke share link ${share.title}`}
+                          title={`Revoke share link ${share.title}`}
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>

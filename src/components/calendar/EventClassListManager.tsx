@@ -14,6 +14,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { useUsers } from "@/hooks/useUsers";
+import { ConfirmPill, type ConfirmPillRequest } from "@/components/ui/confirm-pill";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription,
+  AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface EventClassListManagerProps {
   eventId: string;
@@ -52,6 +57,8 @@ export const EventClassListManager = ({ eventId, eventTitle }: EventClassListMan
   const [selectedListId, setSelectedListId] = useState<string>('');
   const [members, setMembers] = useState<ClassListMember[]>([]);
   const [editingMember, setEditingMember] = useState<string | null>(null);
+  const [memberRemoveConfirm, setMemberRemoveConfirm] = useState<(ConfirmPillRequest & { memberId: string }) | null>(null);
+  const [listToDelete, setListToDelete] = useState<ClassList | null>(null);
 
   // New class list form
   const [newListData, setNewListData] = useState({
@@ -418,8 +425,10 @@ export const EventClassListManager = ({ eventId, eventTitle }: EventClassListMan
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => deleteClassList(list.id)}
+                            onClick={() => setListToDelete(list)}
                             className="text-destructive hover:text-destructive"
+                            aria-label={`Delete ${list.name}`}
+                            title="Delete class list"
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
@@ -586,14 +595,19 @@ export const EventClassListManager = ({ eventId, eventTitle }: EventClassListMan
                                   variant="ghost"
                                   size="sm"
                                   onClick={() => setEditingMember(editingMember === member.id ? null : member.id)}
+                                  aria-label={editingMember === member.id ? 'Close editor' : `Edit ${member.user?.full_name || 'member'}`}
+                                  aria-expanded={editingMember === member.id}
+                                  title={editingMember === member.id ? 'Close editor' : 'Edit member'}
                                 >
                                   {editingMember === member.id ? <X className="h-4 w-4" /> : <Edit className="h-4 w-4" />}
                                 </Button>
                                 <Button
                                   variant="ghost"
                                   size="sm"
-                                  onClick={() => removeMember(member.id)}
+                                  onClick={(e) => setMemberRemoveConfirm({ x: e.clientX, y: e.clientY, message: `Remove "${member.user?.full_name || member.user?.email || 'this member'}" from the list?`, confirmLabel: 'Remove', memberId: member.id })}
                                   className="text-destructive hover:text-destructive"
+                                  aria-label={`Remove ${member.user?.full_name || 'member'}`}
+                                  title="Remove member"
                                 >
                                   <Trash2 className="h-4 w-4" />
                                 </Button>
@@ -659,6 +673,30 @@ export const EventClassListManager = ({ eventId, eventTitle }: EventClassListMan
             )}
           </TabsContent>
         </Tabs>
+        <ConfirmPill
+          request={memberRemoveConfirm}
+          onConfirm={() => { if (memberRemoveConfirm) removeMember(memberRemoveConfirm.memberId); setMemberRemoveConfirm(null); }}
+          onCancel={() => setMemberRemoveConfirm(null)}
+        />
+        <AlertDialog open={!!listToDelete} onOpenChange={(o) => { if (!o) setListToDelete(null); }}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete "{listToDelete?.name}"?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Also removes every member on this class list. This cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                onClick={() => { if (listToDelete) deleteClassList(listToDelete.id); setListToDelete(null); }}
+              >
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </DialogContent>
     </Dialog>
   );

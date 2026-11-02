@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { ConfirmPill, type ConfirmPillRequest } from '@/components/ui/confirm-pill';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
@@ -36,6 +37,7 @@ export function CouponManagerDialog({ open, onOpenChange }: CouponManagerDialogP
   const [loading, setLoading] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<(ConfirmPillRequest & { id: string }) | null>(null);
 
   // Generator form
   const [count, setCount] = useState(1);
@@ -281,6 +283,8 @@ export function CouponManagerDialog({ open, onOpenChange }: CouponManagerDialogP
                         size="icon"
                         className="h-8 w-8"
                         onClick={() => copyCode(coupon.code, coupon.id)}
+                        aria-label={`Copy code ${coupon.code}`}
+                        title={`Copy code ${coupon.code}`}
                       >
                         {copiedId === coupon.id ? (
                           <Check className="w-3.5 h-3.5 text-emerald-500" />
@@ -297,7 +301,9 @@ export function CouponManagerDialog({ open, onOpenChange }: CouponManagerDialogP
                         variant="ghost"
                         size="icon"
                         className="h-8 w-8 text-destructive"
-                        onClick={() => deleteCoupon(coupon.id)}
+                        onClick={(e) => setConfirmDelete({ id: coupon.id, x: e.clientX, y: e.clientY, message: `Delete coupon "${coupon.code}"?` })}
+                        aria-label={`Delete coupon ${coupon.code}`}
+                        title={`Delete coupon ${coupon.code}`}
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </Button>
@@ -308,6 +314,14 @@ export function CouponManagerDialog({ open, onOpenChange }: CouponManagerDialogP
             )}
           </div>
         </div>
+        <ConfirmPill
+          request={confirmDelete}
+          onConfirm={async () => {
+            if (confirmDelete) await deleteCoupon(confirmDelete.id);
+            setConfirmDelete(null);
+          }}
+          onCancel={() => setConfirmDelete(null)}
+        />
       </DialogContent>
     </Dialog>
   );

@@ -15,6 +15,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
+import { ConfirmDeleteButton } from '@/components/shared/ConfirmDeleteButton';
 import type { SeatingShare, SeatingShareRole } from '@/types/seatingCharts';
 
 const ROLES: Array<{ value: SeatingShareRole; label: string; help: string }> = [
@@ -143,7 +144,7 @@ export function ShareDialog({ open, onOpenChange, chartId }: ShareDialogProps) {
                   {ROLES.map((r) => <SelectItem key={r.value} value={r.value} className="text-xs">{r.label}</SelectItem>)}
                 </SelectContent>
               </Select>
-              <Button size="sm" disabled={!selectedUserId || saving} onClick={invite} className="shrink-0">
+              <Button size="sm" disabled={!selectedUserId || saving} onClick={invite} className="shrink-0" aria-label="Invite" title="Invite">
                 <UserPlus className="w-4 h-4" />
               </Button>
             </div>
@@ -166,9 +167,17 @@ export function ShareDialog({ open, onOpenChange, chartId }: ShareDialogProps) {
                     </div>
                     <div className="flex items-center gap-2">
                       <Badge variant="secondary" className="text-xs">{ROLES.find((r) => r.value === s.role)?.label ?? s.role}</Badge>
-                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => revoke(s.id)}>
+                      <ConfirmDeleteButton
+                        confirmKey="revoke-seating-chart-share"
+                        title={`Revoke access for ${s.display_name ?? 'this person'}?`}
+                        description="They lose access to this chart until you share it again."
+                        confirmLabel="Revoke"
+                        onConfirm={() => revoke(s.id)}
+                        ariaLabel={`Revoke access for ${s.display_name ?? 'user'}`}
+                        className="inline-flex items-center justify-center h-6 w-6 rounded-md hover:bg-muted"
+                      >
                         <Trash2 className="w-4 h-4" />
-                      </Button>
+                      </ConfirmDeleteButton>
                     </div>
                   </li>
                 ))}

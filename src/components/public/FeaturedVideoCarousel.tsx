@@ -161,6 +161,8 @@ export const FeaturedVideoCarousel: React.FC<FeaturedVideoCarouselProps> = ({
               size="icon"
               className="absolute -top-12 right-0 text-white hover:bg-white/20"
               onClick={() => setActiveVideo(null)}
+              aria-label="Close video"
+              title="Close video"
             >
               ✕
             </Button>

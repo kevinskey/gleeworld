@@ -568,6 +568,8 @@ export const AppointmentManager: React.FC<AppointmentManagerProps> = ({
                         size="sm"
                         variant="outline"
                         onClick={() => handleEdit(appointment)}
+                        aria-label="Edit appointment"
+                        title="Edit appointment"
                       >
                         <Edit className="h-4 w-4" />
                       </Button>

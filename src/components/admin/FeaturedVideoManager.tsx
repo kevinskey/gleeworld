@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
+import { ConfirmPill, type ConfirmPillRequest } from '@/components/ui/confirm-pill';
 import { 
   Star, 
   Plus, 
@@ -46,6 +47,8 @@ export const FeaturedVideoManager: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
   const [showAddDialog, setShowAddDialog] = useState(false);
+  const [confirmRemove, setConfirmRemove] = useState<(ConfirmPillRequest & { id: string }) | null>(null);
+  const [removing, setRemoving] = useState(false);
 
   useEffect(() => {
     fetchFeaturedVideos();
@@ -136,6 +139,7 @@ export const FeaturedVideoManager: React.FC = () => {
   };
 
   const handleRemoveFeatured = async (id: string) => {
+    setRemoving(true);
     try {
       const { error } = await supabase
         .from('gw_featured_videos')
@@ -148,6 +152,8 @@ export const FeaturedVideoManager: React.FC = () => {
     } catch (err) {
       console.error('Error removing featured video:', err);
       toast({ title: 'Failed to remove video', variant: 'destructive' });
+    } finally {
+      setRemoving(false);
     }
   };
 
@@ -321,6 +327,8 @@ export const FeaturedVideoManager: React.FC = () => {
                       size="icon"
                       onClick={() => handleReorder(video.id, 'up')}
                       disabled={index === 0}
+                      aria-label="Move video up"
+                      title="Move video up"
                     >
                       <ArrowUp className="h-4 w-4" />
                     </Button>
@@ -329,6 +337,8 @@ export const FeaturedVideoManager: React.FC = () => {
                       size="icon"
                       onClick={() => handleReorder(video.id, 'down')}
                       disabled={index === featuredVideos.length - 1}
+                      aria-label="Move video down"
+                      title="Move video down"
                     >
                       <ArrowDown className="h-4 w-4" />
                     </Button>
@@ -336,6 +346,9 @@ export const FeaturedVideoManager: React.FC = () => {
                       variant="ghost"
                       size="icon"
                       onClick={() => handleToggleActive(video.id, video.is_active)}
+                      aria-label={video.is_active ? 'Hide video' : 'Show video'}
+                      title={video.is_active ? 'Hide video' : 'Show video'}
+                      aria-pressed={video.is_active}
                     >
                       {video.is_active ? (
                         <Eye className="h-4 w-4" />
@@ -346,7 +359,16 @@ export const FeaturedVideoManager: React.FC = () => {
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={() => handleRemoveFeatured(video.id)}
+                      onClick={(e) =>
+                        setConfirmRemove({
+                          id: video.id,
+                          x: e.clientX,
+                          y: e.clientY,
+                          message: `Remove "${video.youtube_videos?.title || 'this video'}" from the featured carousel?`,
+                        })
+                      }
+                      aria-label={`Remove ${video.youtube_videos?.title || 'video'} from featured`}
+                      title={`Remove ${video.youtube_videos?.title || 'video'} from featured`}
                     >
                       <Trash2 className="h-4 w-4 text-destructive" />
                     </Button>
@@ -357,6 +379,16 @@ export const FeaturedVideoManager: React.FC = () => {
           )}
         </CardContent>
       </Card>
+      <ConfirmPill
+        request={confirmRemove}
+        busy={removing}
+        onConfirm={async () => {
+          if (!confirmRemove) return;
+          await handleRemoveFeatured(confirmRemove.id);
+          setConfirmRemove(null);
+        }}
+        onCancel={() => setConfirmRemove(null)}
+      />
     </div>
   );
 };

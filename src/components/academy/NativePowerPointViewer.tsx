@@ -217,6 +217,8 @@ export function NativePowerPointViewer({
               size="icon"
               className="h-8 w-8"
               onClick={toggleAudio}
+              aria-label={isAudioPlaying ? 'Pause audio' : 'Play audio'}
+              title={isAudioPlaying ? 'Pause audio' : 'Play audio'}
             >
               {isAudioPlaying ? (
                 <Pause className="h-4 w-4" />
@@ -232,6 +234,9 @@ export function NativePowerPointViewer({
               size="icon"
               className="h-8 w-8"
               onClick={toggleMute}
+              aria-label={isMuted ? 'Unmute' : 'Mute'}
+              aria-pressed={isMuted}
+              title={isMuted ? 'Unmute' : 'Mute'}
             >
               {isMuted ? (
                 <VolumeX className="h-4 w-4" />
@@ -411,6 +416,8 @@ export function NativePowerPointViewer({
                 variant="ghost"
                 size="icon"
                 onClick={onClose}
+                aria-label="Close presentation"
+                title="Close presentation"
               >
                 <X className="h-4 w-4" />
               </Button>

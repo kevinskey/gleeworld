@@ -283,6 +283,8 @@ export const DiscussionModule: React.FC<DiscussionModuleProps> = ({
                       e.stopPropagation();
                       setDeleteTarget({ id: disc.id, title: disc.title });
                     }}
+                    aria-label={`Delete ${disc.title}`}
+                    title="Delete discussion"
                   >
                     <Trash2 className="h-3.5 w-3.5" />
                   </Button>

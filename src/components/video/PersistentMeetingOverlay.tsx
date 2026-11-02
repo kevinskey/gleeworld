@@ -36,10 +36,10 @@ export const PersistentMeetingOverlay: React.FC = () => {
           <span className="font-semibold text-sm">Meeting: {activeMeeting.roomName}</span>
         </div>
         <div className="flex items-center gap-1">
-          <Button variant="ghost" size="icon" className="h-8 w-8 text-primary-foreground hover:bg-white/20" onClick={toggleMinimize}>
+          <Button variant="ghost" size="icon" className="h-8 w-8 text-primary-foreground hover:bg-white/20" onClick={toggleMinimize} aria-label="Minimize meeting" title="Minimize meeting">
             <Minimize2 className="h-4 w-4" />
           </Button>
-          <Button variant="ghost" size="icon" className="h-8 w-8 text-primary-foreground hover:bg-destructive/80" onClick={endMeeting}>
+          <Button variant="ghost" size="icon" className="h-8 w-8 text-primary-foreground hover:bg-destructive/80" onClick={endMeeting} aria-label="End meeting" title="End meeting">
             <X className="h-4 w-4" />
           </Button>
         </div>

@@ -17,6 +17,7 @@ import {
   Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { ConfirmPill, type ConfirmPillRequest } from '@/components/ui/confirm-pill';
 import * as foldersApi from '@/lib/planner/foldersApi';
 import type { PlannerFolder, SavedFilter } from '@/lib/planner/types';
 import { useAllTags, useFolders, useSavedFilters, useTaskCounts } from '../hooks';
@@ -67,6 +68,7 @@ export default function PlannerSidebar({ selection, onSelect }: PlannerSidebarPr
 
   const [folderDialog, setFolderDialog] = useState<{ mode: 'create' | 'rename'; folder?: PlannerFolder } | null>(null);
   const [folderName, setFolderName] = useState('');
+  const [confirmDelete, setConfirmDelete] = useState<(ConfirmPillRequest & { run: () => void }) | null>(null);
 
   const invalidateFolders = () => qc.invalidateQueries({ queryKey: ['planner', 'folders'] });
   const createFolder = useMutation({
@@ -122,7 +124,10 @@ export default function PlannerSidebar({ selection, onSelect }: PlannerSidebarPr
             <ContextMenuItem onClick={() => { setFolderDialog({ mode: 'rename', folder: f }); setFolderName(f.name); }}>
               <Pencil className="mr-2 h-4 w-4" /> Rename
             </ContextMenuItem>
-            <ContextMenuItem className="text-destructive focus:text-destructive" onClick={() => removeFolder.mutate(f.id)}>
+            <ContextMenuItem
+              className="text-destructive focus:text-destructive"
+              onClick={(e) => setConfirmDelete({ x: e.clientX, y: e.clientY, message: `Delete folder "${f.name}"? Its notes move to All notes.`, run: () => removeFolder.mutate(f.id) })}
+            >
               <Trash2 className="mr-2 h-4 w-4" /> Delete folder
             </ContextMenuItem>
           </ContextMenuContent>
@@ -189,7 +194,10 @@ export default function PlannerSidebar({ selection, onSelect }: PlannerSidebarPr
                 </div>
               </ContextMenuTrigger>
               <ContextMenuContent>
-                <ContextMenuItem className="text-destructive focus:text-destructive" onClick={() => removeFilter.mutate(f.id)}>
+                <ContextMenuItem
+                  className="text-destructive focus:text-destructive"
+                  onClick={(e) => setConfirmDelete({ x: e.clientX, y: e.clientY, message: `Delete filter "${f.name}"?`, run: () => removeFilter.mutate(f.id) })}
+                >
                   <Trash2 className="mr-2 h-4 w-4" /> Delete filter
                 </ContextMenuItem>
               </ContextMenuContent>
@@ -238,6 +246,12 @@ export default function PlannerSidebar({ selection, onSelect }: PlannerSidebarPr
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      <ConfirmPill
+        request={confirmDelete}
+        busy={removeFolder.isPending || removeFilter.isPending}
+        onConfirm={() => { confirmDelete?.run(); setConfirmDelete(null); }}
+        onCancel={() => setConfirmDelete(null)}
+      />
     </nav>
   );
 }

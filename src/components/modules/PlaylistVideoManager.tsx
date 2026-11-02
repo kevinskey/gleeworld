@@ -8,6 +8,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { Plus, Trash2, Search, Youtube, GripVertical, Check } from 'lucide-react';
+import { ConfirmDeleteButton } from '@/components/shared/ConfirmDeleteButton';
 
 interface Video {
   id: string;
@@ -194,14 +195,17 @@ export const PlaylistVideoManager: React.FC<PlaylistVideoManagerProps> = ({
                         />
                       </div>
                       <span className="flex-1 text-sm truncate">{pv.video?.title || 'Unknown'}</span>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7 text-destructive hover:text-destructive"
-                        onClick={() => handleRemoveVideo(pv.id)}
+                      <ConfirmDeleteButton
+                        confirmKey="remove-playlist-video"
+                        title={`Remove "${pv.video?.title || 'Unknown'}" from playlist?`}
+                        description="The video stays in the library; only its place in this playlist is removed."
+                        confirmLabel="Remove"
+                        onConfirm={() => handleRemoveVideo(pv.id)}
+                        ariaLabel={`Remove ${pv.video?.title || 'video'} from playlist`}
+                        className="inline-flex items-center justify-center h-7 w-7 rounded-md text-destructive hover:text-destructive hover:bg-muted"
                       >
                         <Trash2 className="h-4 w-4" />
-                      </Button>
+                      </ConfirmDeleteButton>
                     </div>
                   ))}
                 </div>
@@ -252,6 +256,8 @@ export const PlaylistVideoManager: React.FC<PlaylistVideoManagerProps> = ({
                           className="h-7 w-7 flex-shrink-0"
                           onClick={() => handleAddVideo(video)}
                           disabled={adding === video.id}
+                          aria-label={`Add ${video.title} to playlist`}
+                          title="Add to playlist"
                         >
                           <Plus className="h-4 w-4" />
                         </Button>

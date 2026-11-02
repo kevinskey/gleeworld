@@ -8,6 +8,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { ConfirmPill, type ConfirmPillRequest } from '@/components/ui/confirm-pill';
 import {
   Dialog,
   DialogContent,
@@ -39,6 +40,7 @@ export function AudioExamplesSection({ courseId }: AudioExamplesSectionProps) {
   });
   const [uploadingAudio, setUploadingAudio] = useState(false);
   const [playingAudioId, setPlayingAudioId] = useState<string | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<(ConfirmPillRequest & { audio: AudioResource }) | null>(null);
 
   const isAdmin = (user as any)?.is_admin || (user as any)?.is_super_admin;
 
@@ -231,7 +233,9 @@ export function AudioExamplesSection({ courseId }: AudioExamplesSectionProps) {
                     <Button
                       size="sm"
                       variant="ghost"
-                      onClick={() => deleteAudioMutation.mutate(audio)}
+                      aria-label={`Delete ${audio.title}`}
+                      title={`Delete ${audio.title}`}
+                      onClick={(e) => setDeleteConfirm({ x: e.clientX, y: e.clientY, message: `Delete "${audio.title}"?`, audio })}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -255,6 +259,14 @@ export function AudioExamplesSection({ courseId }: AudioExamplesSectionProps) {
           </div>
         )}
       </CardContent>
+      <ConfirmPill
+        request={deleteConfirm}
+        busy={deleteAudioMutation.isPending}
+        onConfirm={() => {
+          if (deleteConfirm) deleteAudioMutation.mutate(deleteConfirm.audio, { onSettled: () => setDeleteConfirm(null) });
+        }}
+        onCancel={() => setDeleteConfirm(null)}
+      />
     </Card>
   );
 }

@@ -27,6 +27,7 @@ import {
 import { format, isToday, isFuture, isPast } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { ConfirmPill, type ConfirmPillRequest } from '@/components/ui/confirm-pill';
 import { OfficeHoursAssistant } from './OfficeHoursAssistant';
 import { useUserProfile } from '@/hooks/useUserProfile';
 
@@ -786,6 +787,8 @@ const DateOverrideManager: React.FC = () => {
   const [overrideType, setOverrideType] = useState<'available' | 'blocked'>('blocked');
   const [overrideStart, setOverrideStart] = useState('09:00');
   const [overrideEnd, setOverrideEnd] = useState('17:00');
+  const [confirmDelete, setConfirmDelete] = useState<(ConfirmPillRequest & { id: string }) | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const { data: overrides = [], isLoading } = useQuery({
     queryKey: ['provider-availability-overrides'],
@@ -823,12 +826,15 @@ const DateOverrideManager: React.FC = () => {
   };
 
   const deleteOverride = async (id: string) => {
+    setDeleting(true);
     try {
       await supabase.from('gw_provider_availability').delete().eq('id', id);
       queryClient.invalidateQueries({ queryKey: ['provider-availability-overrides'] });
       toast.success('Override removed');
     } catch (e: any) {
       toast.error(e.message);
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -862,7 +868,14 @@ const DateOverrideManager: React.FC = () => {
                 </div>
               </div>
               <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive"
-                onClick={() => deleteOverride(ov.id)}>
+                onClick={(e) => setConfirmDelete({
+                  id: ov.id,
+                  x: e.clientX,
+                  y: e.clientY,
+                  message: `Remove the ${format(new Date(ov.specific_date + 'T12:00:00'), 'MMM d')} override?`,
+                })}
+                aria-label={`Remove ${format(new Date(ov.specific_date + 'T12:00:00'), 'MMM d')} override`}
+                title={`Remove ${format(new Date(ov.specific_date + 'T12:00:00'), 'MMM d')} override`}>
                 <Trash2 className="h-3.5 w-3.5" />
               </Button>
             </div>
@@ -948,6 +961,16 @@ const DateOverrideManager: React.FC = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      <ConfirmPill
+        request={confirmDelete}
+        busy={deleting}
+        onConfirm={async () => {
+          if (!confirmDelete) return;
+          await deleteOverride(confirmDelete.id);
+          setConfirmDelete(null);
+        }}
+        onCancel={() => setConfirmDelete(null)}
+      />
     </div>
   );
 };
@@ -973,6 +996,8 @@ const ReminderManager: React.FC = () => {
   const [newType, setNewType] = useState<string>('upcoming_appointment');
   const [newHours, setNewHours] = useState('24');
   const [newMessage, setNewMessage] = useState('');
+  const [confirmDelete, setConfirmDelete] = useState<(ConfirmPillRequest & { id: string }) | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const [newSms, setNewSms] = useState(true);
 
   const toggleReminder = async (id: string, currentActive: boolean) => {
@@ -986,12 +1011,15 @@ const ReminderManager: React.FC = () => {
   };
 
   const deleteReminder = async (id: string) => {
+    setDeleting(true);
     try {
       await supabase.from('gw_office_hours_reminders').delete().eq('id', id);
       queryClient.invalidateQueries({ queryKey: ['office-hours-reminders'] });
       toast.success('Reminder deleted');
     } catch (e: any) {
       toast.error(e.message);
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -1078,7 +1106,9 @@ const ReminderManager: React.FC = () => {
                   </div>
                 </div>
                 <Button variant="ghost" size="icon" className="h-7 w-7 text-white/40 hover:text-destructive"
-                  onClick={() => deleteReminder(r.id)}>
+                  onClick={(e) => setConfirmDelete({ id: r.id, x: e.clientX, y: e.clientY, message: `Delete the ${r.hours_before}-hour appointment reminder?` })}
+                  aria-label="Delete appointment reminder"
+                  title="Delete appointment reminder">
                   <Trash2 className="h-3.5 w-3.5" />
                 </Button>
               </div>
@@ -1107,7 +1137,9 @@ const ReminderManager: React.FC = () => {
                 </div>
               </div>
               <Button variant="ghost" size="icon" className="h-7 w-7 text-white/40 hover:text-destructive"
-                onClick={() => deleteReminder(r.id)}>
+                onClick={(e) => setConfirmDelete({ id: r.id, x: e.clientX, y: e.clientY, message: 'Delete the booking nudge?' })}
+                aria-label="Delete booking nudge"
+                title="Delete booking nudge">
                 <Trash2 className="h-3.5 w-3.5" />
               </Button>
             </div>

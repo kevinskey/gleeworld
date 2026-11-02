@@ -24,6 +24,7 @@ import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Field } from '@/components/ui/field';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
@@ -251,6 +252,7 @@ export default function WorkspaceUsersPage() {
             <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
             <Input
               placeholder="Search by name or email…"
+              aria-label="Search people"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="pl-9"
@@ -376,7 +378,13 @@ function PersonRow({
         <Icon className="w-3 h-3 mr-1" /> {meta.label}
       </Badge>
       {canManage && (
-        <Button size="icon" variant="ghost" onClick={onEdit}>
+        <Button
+          size="icon"
+          variant="ghost"
+          onClick={onEdit}
+          aria-label={`Edit ${p.full_name || p.email || 'person'}`}
+          title={`Edit ${p.full_name || p.email || 'person'}`}
+        >
           <MoreVertical className="w-4 h-4" />
         </Button>
       )}
@@ -491,27 +499,24 @@ function InviteDialog({
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-3">
-          <div className="space-y-1.5">
-            <Label className="text-xs">Role</Label>
-            <Select value={role} onValueChange={(v) => setRole(v as any)}>
+          <Select value={role} onValueChange={(v) => setRole(v as any)}>
+            <Field label="Role" labelClassName="text-xs">
               <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="member">Member</SelectItem>
-                <SelectItem value="instructor">Teacher</SelectItem>
-                <SelectItem value="fan">Fan</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-1.5">
-            <Label className="text-xs">Emails</Label>
+            </Field>
+            <SelectContent>
+              <SelectItem value="member">Member</SelectItem>
+              <SelectItem value="instructor">Teacher</SelectItem>
+              <SelectItem value="fan">Fan</SelectItem>
+            </SelectContent>
+          </Select>
+          <Field label="Emails" labelClassName="text-xs" hint="One per line or comma-separated.">
             <Textarea
               value={emails}
               onChange={(e) => setEmails(e.target.value)}
               rows={5}
               placeholder={"alice@example.com\nben@example.com\ncharlie@example.com"}
             />
-            <p className="text-sm text-muted-foreground">One per line or comma-separated.</p>
-          </div>
+          </Field>
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>Cancel</Button>
@@ -639,20 +644,20 @@ function CsvImportDialog({
             </div>
           </div>
 
-          <div className="space-y-1.5">
-            <Label className="text-xs">Fallback role</Label>
-            <Select value={fallbackRole} onValueChange={(v) => setFallbackRole(v as any)}>
+          <Select value={fallbackRole} onValueChange={(v) => setFallbackRole(v as any)}>
+            <Field
+              label="Fallback role"
+              labelClassName="text-xs"
+              hint={<>Used for rows that don't include a <code>role</code> column. Per-row roles win.</>}
+            >
               <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="member">Member</SelectItem>
-                <SelectItem value="instructor">Teacher</SelectItem>
-                <SelectItem value="fan">Fan</SelectItem>
-              </SelectContent>
-            </Select>
-            <p className="text-xs text-muted-foreground">
-              Used for rows that don't include a <code>role</code> column. Per-row roles win.
-            </p>
-          </div>
+            </Field>
+            <SelectContent>
+              <SelectItem value="member">Member</SelectItem>
+              <SelectItem value="instructor">Teacher</SelectItem>
+              <SelectItem value="fan">Fan</SelectItem>
+            </SelectContent>
+          </Select>
 
           <div className="flex items-center justify-between gap-3 rounded-lg border p-3">
             <div className="space-y-0.5">
@@ -794,42 +799,45 @@ function EditUserDialog({
         </DialogHeader>
 
         <div className="space-y-3">
-          <div className="space-y-1.5">
-            <Label className="text-xs">Role</Label>
-            <Select value={role} onValueChange={setRole}>
+          <Select value={role} onValueChange={setRole}>
+            <Field label="Role" labelClassName="text-xs">
               <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="member">Member</SelectItem>
-                <SelectItem value="instructor">Teacher</SelectItem>
-                <SelectItem value="admin">Admin (manages this workspace)</SelectItem>
-                <SelectItem value="fan">Fan</SelectItem>
-                <SelectItem value="alumni">Alumni</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+            </Field>
+            <SelectContent>
+              <SelectItem value="member">Member</SelectItem>
+              <SelectItem value="instructor">Teacher</SelectItem>
+              <SelectItem value="admin">Admin (manages this workspace)</SelectItem>
+              <SelectItem value="fan">Fan</SelectItem>
+              <SelectItem value="alumni">Alumni</SelectItem>
+            </SelectContent>
+          </Select>
 
           <div className="flex items-center justify-between pt-2 border-t">
             <div>
-              <div className="text-base font-semibold">Workspace admin</div>
-              <div className="text-sm text-muted-foreground">Can manage modules, billing, and settings.</div>
+              <label htmlFor="edit-user-is-admin" className="block text-base font-semibold">Workspace admin</label>
+              <div id="edit-user-is-admin-hint" className="text-sm text-muted-foreground">Can manage modules, billing, and settings.</div>
             </div>
             <input
+              id="edit-user-is-admin"
               type="checkbox"
               checked={isAdmin}
               onChange={(e) => setIsAdmin(e.target.checked)}
+              aria-describedby="edit-user-is-admin-hint"
               className="w-4 h-4"
             />
           </div>
 
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-base font-semibold">Disabled</div>
-              <div className="text-sm text-muted-foreground">Block sign-in while preserving data.</div>
+              <label htmlFor="edit-user-disabled" className="block text-base font-semibold">Disabled</label>
+              <div id="edit-user-disabled-hint" className="text-sm text-muted-foreground">Block sign-in while preserving data.</div>
             </div>
             <input
+              id="edit-user-disabled"
               type="checkbox"
               checked={disabled}
               onChange={(e) => setDisabled(e.target.checked)}
+              aria-describedby="edit-user-disabled-hint"
               className="w-4 h-4"
             />
           </div>

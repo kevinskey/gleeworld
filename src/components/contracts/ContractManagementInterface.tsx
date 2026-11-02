@@ -22,6 +22,7 @@ import {
   AlertCircle
 } from "lucide-react";
 import { useContractManagement, Contract } from '@/hooks/useContractManagement';
+import { ConfirmPill, type ConfirmPillRequest } from '@/components/ui/confirm-pill';
 import { ContractForm } from './ContractForm';
 import { ContractDetails } from './ContractDetails';
 import { ContractMemberManagement } from './ContractMemberManagement';
@@ -47,6 +48,7 @@ export const ContractManagementInterface = () => {
   const [showForm, setShowForm] = useState(false);
   const [showMembers, setShowMembers] = useState(false);
   const [editingContract, setEditingContract] = useState<Contract | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<(ConfirmPillRequest & { id: string }) | null>(null);
 
   const priorityColors = {
     low: 'bg-gray-100 text-gray-800',
@@ -337,6 +339,8 @@ export const ContractManagementInterface = () => {
                           variant="ghost"
                           size="sm"
                           onClick={() => setSelectedContract(contract)}
+                          aria-label={`View ${contract.title}`}
+                          title={`View ${contract.title}`}
                         >
                           <Eye className="h-4 w-4" />
                         </Button>
@@ -347,6 +351,8 @@ export const ContractManagementInterface = () => {
                             setEditingContract(contract);
                             setShowForm(true);
                           }}
+                          aria-label={`Edit ${contract.title}`}
+                          title={`Edit ${contract.title}`}
                         >
                           <Edit className="h-4 w-4" />
                         </Button>
@@ -357,6 +363,8 @@ export const ContractManagementInterface = () => {
                             setSelectedContract(contract);
                             setShowMembers(true);
                           }}
+                          aria-label={`Manage members for ${contract.title}`}
+                          title={`Manage members for ${contract.title}`}
                         >
                           <Users className="h-4 w-4" />
                         </Button>
@@ -364,6 +372,8 @@ export const ContractManagementInterface = () => {
                           variant="ghost"
                           size="sm"
                           onClick={() => duplicateContract(contract.id)}
+                          aria-label={`Duplicate ${contract.title}`}
+                          title={`Duplicate ${contract.title}`}
                         >
                           <Copy className="h-4 w-4" />
                         </Button>
@@ -375,14 +385,19 @@ export const ContractManagementInterface = () => {
                               ? unarchiveContract(contract.id)
                               : archiveContract(contract.id)
                           }
+                          aria-label={`${contract.archived ? 'Unarchive' : 'Archive'} ${contract.title}`}
+                          aria-pressed={!!contract.archived}
+                          title={`${contract.archived ? 'Unarchive' : 'Archive'} ${contract.title}`}
                         >
                           <Archive className="h-4 w-4" />
                         </Button>
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => deleteContract(contract.id)}
+                          onClick={(e) => setConfirmDelete({ id: contract.id, x: e.clientX, y: e.clientY, message: `Delete "${contract.title}"?` })}
                           className="text-red-600 hover:text-red-700"
+                          aria-label={`Delete ${contract.title}`}
+                          title={`Delete ${contract.title}`}
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
@@ -395,6 +410,15 @@ export const ContractManagementInterface = () => {
           )}
         </TabsContent>
       </Tabs>
+      <ConfirmPill
+        request={confirmDelete}
+        onConfirm={async () => {
+          const id = confirmDelete?.id;
+          setConfirmDelete(null);
+          if (id) await deleteContract(id);
+        }}
+        onCancel={() => setConfirmDelete(null)}
+      />
     </div>
   );
 };

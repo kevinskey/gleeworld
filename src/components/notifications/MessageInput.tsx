@@ -103,6 +103,8 @@ export const MessageInput: React.FC<MessageInputProps> = ({
             size="icon"
             className="h-8 w-8 rounded-full flex-shrink-0"
             onClick={clearSelectedFile}
+            aria-label="Remove attachment"
+            title="Remove attachment"
           >
             <X className="h-4 w-4" />
           </Button>
@@ -151,6 +153,8 @@ export const MessageInput: React.FC<MessageInputProps> = ({
           className="h-10 w-10 flex-shrink-0 rounded-full text-muted-foreground hover:bg-muted touch-manipulation"
           disabled={disabled}
           onClick={() => fileInputRef.current?.click()}
+          aria-label="Attach file"
+          title="Attach file"
         >
           <Plus className="h-5 w-5" />
         </Button>

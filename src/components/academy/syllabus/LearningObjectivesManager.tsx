@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { ConfirmPill, type ConfirmPillRequest } from '@/components/ui/confirm-pill';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
@@ -81,6 +82,7 @@ export const LearningObjectivesManager: React.FC<Props> = ({ courseId, syllabusI
   const [showPasteDialog, setShowPasteDialog] = useState(false);
   const [pasteText, setPasteText] = useState('');
   const [selectedObjective, setSelectedObjective] = useState<LearningObjective | null>(null);
+  const [confirmRemove, setConfirmRemove] = useState<(ConfirmPillRequest & { index: number }) | null>(null);
   const [newCriterion, setNewCriterion] = useState<Partial<RubricCriterion>>({
     assignment_type: '',
     criterion_name: '',
@@ -395,8 +397,14 @@ export const LearningObjectivesManager: React.FC<Props> = ({ courseId, syllabusI
                           <Button 
                             variant="ghost" 
                             size="sm"
-                            onClick={() => removeObjective(index)}
+                            onClick={(e) => {
+                              if (!objective.id) { removeObjective(index); return; }
+                              const label = objective.objective_text.length > 60 ? objective.objective_text.slice(0, 57) + '...' : objective.objective_text;
+                              setConfirmRemove({ index, x: e.clientX, y: e.clientY, message: `Delete objective "${label}"?` });
+                            }}
                             className="text-destructive"
+                            aria-label="Delete objective"
+                            title="Delete objective"
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
@@ -579,6 +587,14 @@ export const LearningObjectivesManager: React.FC<Props> = ({ courseId, syllabusI
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      <ConfirmPill
+        request={confirmRemove}
+        onConfirm={async () => {
+          if (confirmRemove) await removeObjective(confirmRemove.index);
+          setConfirmRemove(null);
+        }}
+        onCancel={() => setConfirmRemove(null)}
+      />
     </div>
   );
 };

@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { ConfirmPill, type ConfirmPillRequest } from '@/components/ui/confirm-pill';
 import {
   loadPlaylistItems, removePlaylistItem, reorderPlaylist,
   type Playlist, type PlaylistItemWithVideo,
@@ -31,6 +32,8 @@ export function PlaylistDetailDialog({
 }: Props) {
   const [items, setItems] = useState<PlaylistItemWithVideo[]>([]);
   const [loading, setLoading] = useState(false);
+  const [removeConfirm, setRemoveConfirm] = useState<(ConfirmPillRequest & { itemId: string }) | null>(null);
+  const [removing, setRemoving] = useState(false);
 
   const load = useCallback(async () => {
     if (!playlist) return;
@@ -139,13 +142,13 @@ export function PlaylistDetailDialog({
                       {it.title}
                     </button>
                     <div className="flex items-center gap-0.5">
-                      <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => move(index, -1)} disabled={index === 0}>
+                      <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => move(index, -1)} disabled={index === 0} aria-label={`Move ${it.title} up`} title="Move up">
                         <ArrowUp className="w-3.5 h-3.5" />
                       </Button>
-                      <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => move(index, 1)} disabled={index === items.length - 1}>
+                      <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => move(index, 1)} disabled={index === items.length - 1} aria-label={`Move ${it.title} down`} title="Move down">
                         <ArrowDown className="w-3.5 h-3.5" />
                       </Button>
-                      <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-destructive hover:text-destructive" onClick={() => remove(it.itemId)}>
+                      <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-destructive hover:text-destructive" onClick={(e) => setRemoveConfirm({ x: e.clientX, y: e.clientY, message: `Remove "${it.title}" from this playlist?`, confirmLabel: 'Remove', itemId: it.itemId })} aria-label={`Remove ${it.title} from playlist`} title="Remove from playlist">
                         <Trash2 className="w-3.5 h-3.5" />
                       </Button>
                     </div>
@@ -161,6 +164,16 @@ export function PlaylistDetailDialog({
             <X className="w-4 h-4 mr-1" /> Close
           </Button>
         </div>
+        <ConfirmPill
+          request={removeConfirm}
+          busy={removing}
+          onConfirm={async () => {
+            if (!removeConfirm) return;
+            setRemoving(true);
+            try { await remove(removeConfirm.itemId); } finally { setRemoving(false); setRemoveConfirm(null); }
+          }}
+          onCancel={() => setRemoveConfirm(null)}
+        />
       </DialogContent>
     </Dialog>
   );

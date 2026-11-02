@@ -224,7 +224,7 @@ export default function QuizTakingPage() {
       <DashboardShell>
     <div className="px-6 py-6 max-w-3xl mx-auto space-y-4">
       <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" onClick={() => navigate(`/academy/c/${code}?tab=quizzes`)}>
+        <Button variant="ghost" size="icon" onClick={() => navigate(`/academy/c/${code}?tab=quizzes`)} aria-label="Back to quizzes" title="Back to quizzes">
           <ArrowLeft className="w-5 h-5" />
         </Button>
         <div className="flex-1 min-w-0">

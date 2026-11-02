@@ -10,6 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
+import { ConfirmPill, type ConfirmPillRequest } from '@/components/ui/confirm-pill';
 import {
   X, Send, Loader2, Mail, Paperclip, FileIcon, PenSquare, Inbox, ChevronLeft, FileEdit, Trash2, Eye, Save,
 } from 'lucide-react';
@@ -57,6 +58,7 @@ export function EmailClient({ onClose, inline = false }: { onClose: () => void; 
   const qc = useQueryClient();
   const { toast } = useToast();
   const [view, setView] = useState<'compose' | 'drafts' | 'history'>('compose');
+  const [confirmDeleteDraft, setConfirmDeleteDraft] = useState<(ConfirmPillRequest & { id: string }) | null>(null);
   const [selectedEmail, setSelectedEmail] = useState<SentEmail | null>(null);
 
   // Compose state
@@ -485,8 +487,9 @@ export function EmailClient({ onClose, inline = false }: { onClose: () => void; 
                       variant="ghost"
                       size="sm"
                       className="mr-2 shrink-0 text-muted-foreground hover:text-destructive"
-                      aria-label="Delete draft"
-                      onClick={() => deleteDraft(d.id)}
+                      aria-label={`Delete draft ${d.title || '(no subject)'}`}
+                      title={`Delete draft ${d.title || '(no subject)'}`}
+                      onClick={(e) => setConfirmDeleteDraft({ id: d.id, x: e.clientX, y: e.clientY, message: `Delete draft "${d.title || '(no subject)'}"?` })}
                     >
                       <Trash2 className="w-4 h-4" />
                     </Button>
@@ -577,6 +580,15 @@ export function EmailClient({ onClose, inline = false }: { onClose: () => void; 
           </div>
         </DialogContent>
       </Dialog>
+      <ConfirmPill
+        request={confirmDeleteDraft}
+        onConfirm={async () => {
+          const id = confirmDeleteDraft?.id;
+          setConfirmDeleteDraft(null);
+          if (id) await deleteDraft(id);
+        }}
+        onCancel={() => setConfirmDeleteDraft(null)}
+      />
     </div>
   );
 }

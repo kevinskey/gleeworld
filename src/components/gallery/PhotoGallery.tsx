@@ -544,6 +544,9 @@ export const PhotoGallery: React.FC = () => {
             variant={viewMode === 'grid' ? 'default' : 'outline'} 
             size="icon"
             onClick={() => setViewMode('grid')}
+            aria-label="Grid view"
+            aria-pressed={viewMode === 'grid'}
+            title="Grid view"
           >
             <Grid3X3 className="h-4 w-4" />
           </Button>
@@ -551,6 +554,9 @@ export const PhotoGallery: React.FC = () => {
             variant={viewMode === 'list' ? 'default' : 'outline'} 
             size="icon"
             onClick={() => setViewMode('list')}
+            aria-label="List view"
+            aria-pressed={viewMode === 'list'}
+            title="List view"
           >
             <List className="h-4 w-4" />
           </Button>

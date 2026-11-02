@@ -149,6 +149,9 @@ export const FinderSidebar = ({
               <button
                 onClick={(e) => toggleFolderExpand(folder.id, e)}
                 className="p-0.5 hover:bg-muted-foreground/20 rounded"
+                aria-label={`${isExpanded ? 'Collapse' : 'Expand'} ${folder.name}`}
+                aria-expanded={isExpanded}
+                title={isExpanded ? 'Collapse folder' : 'Expand folder'}
               >
                 {isExpanded ? (
                   <ChevronDown className="h-3 w-3" />
@@ -205,6 +208,8 @@ export const FinderSidebar = ({
                   e.stopPropagation();
                   onNewFolder?.();
                 }}
+                aria-label="New folder"
+                title="New folder"
               >
                 <FolderPlus className="h-3 w-3" />
               </Button>

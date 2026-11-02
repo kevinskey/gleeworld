@@ -359,12 +359,12 @@ export const TourRollCallSection: React.FC = () => {
                     {checkedInIds.size}<span className="text-sm text-muted-foreground font-normal">/{rosterCount}</span>
                   </p>
                   <div className="flex items-center gap-1 justify-end">
-                    <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => openEdit(checkin)}>
+                    <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => openEdit(checkin)} aria-label={`Edit ${checkin.title}`} title={`Edit ${checkin.title}`}>
                       <Pencil className="h-3 w-3" />
                     </Button>
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
-                        <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive">
+                        <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive" aria-label={`Delete ${checkin.title}`} title={`Delete ${checkin.title}`}>
                           <Trash2 className="h-3 w-3" />
                         </Button>
                       </AlertDialogTrigger>
@@ -455,12 +455,12 @@ export const TourRollCallSection: React.FC = () => {
                         </div>
                       </div>
                       <div className="flex items-center gap-1">
-                        <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => openEdit(checkin)}>
+                        <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => openEdit(checkin)} aria-label={`Edit ${checkin.title}`} title={`Edit ${checkin.title}`}>
                           <Pencil className="h-3 w-3" />
                         </Button>
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
-                            <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive">
+                            <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive" aria-label={`Delete ${checkin.title}`} title={`Delete ${checkin.title}`}>
                               <Trash2 className="h-3 w-3" />
                             </Button>
                           </AlertDialogTrigger>

@@ -231,6 +231,8 @@ export const AnnouncementManager = () => {
                       size="icon"
                       onClick={() => moveAnnouncement(announcement.id, "up")}
                       disabled={index === 0}
+                      aria-label="Move announcement up"
+                      title="Move announcement up"
                     >
                       <MoveUp className="h-4 w-4" />
                     </Button>
@@ -239,6 +241,8 @@ export const AnnouncementManager = () => {
                       size="icon"
                       onClick={() => moveAnnouncement(announcement.id, "down")}
                       disabled={index === announcements.length - 1}
+                      aria-label="Move announcement down"
+                      title="Move announcement down"
                     >
                       <MoveDown className="h-4 w-4" />
                     </Button>

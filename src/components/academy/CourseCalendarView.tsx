@@ -218,13 +218,13 @@ export const CourseCalendarView: React.FC<CourseCalendarViewProps> = ({ courseId
         <CardHeader className="pb-3">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div className="flex items-center gap-4">
-              <Button variant="outline" size="icon" onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}>
+              <Button variant="outline" size="icon" onClick={() => setCurrentMonth(subMonths(currentMonth, 1))} aria-label="Previous month" title="Previous month">
                 <ChevronLeft className="h-4 w-4" />
               </Button>
               <h2 className="text-xl font-bold min-w-[180px] text-center">
                 {format(currentMonth, 'MMMM yyyy')}
               </h2>
-              <Button variant="outline" size="icon" onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}>
+              <Button variant="outline" size="icon" onClick={() => setCurrentMonth(addMonths(currentMonth, 1))} aria-label="Next month" title="Next month">
                 <ChevronRight className="h-4 w-4" />
               </Button>
             </div>

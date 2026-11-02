@@ -400,7 +400,7 @@ export const MusicLibraryModule = () => {
             }}>
                     <div className="aspect-square bg-gradient-to-br from-primary/10 to-primary/5 rounded-lg mb-2 md:mb-3 flex items-center justify-center relative overflow-hidden">
                       {piece.pdf_url ? <PDFThumbnail pdfUrl={piece.pdf_url} alt={piece.title} title={piece.title} className="w-full h-full" /> : <Music className="w-8 h-8 md:w-12 md:h-12 text-primary/50" />}
-                      <Button variant="ghost" size="icon" className={cn("absolute top-1 right-1 md:top-2 md:right-2 h-6 w-6 md:h-8 md:w-8 bg-background/80 backdrop-blur-sm hover:bg-background/90", isFavorite(piece.id) && "text-destructive")} onClick={e => {
+                      <Button variant="ghost" size="icon" className={cn("absolute top-1 right-1 md:top-2 md:right-2 h-6 w-6 md:h-8 md:w-8 bg-background/80 backdrop-blur-sm hover:bg-background/90", isFavorite(piece.id) && "text-destructive")} aria-label={isFavorite(piece.id) ? 'Remove from favorites' : 'Add to favorites'} title={isFavorite(piece.id) ? 'Remove from favorites' : 'Add to favorites'} aria-pressed={isFavorite(piece.id)} onClick={e => {
                   e.stopPropagation();
                   toggleFavorite(piece.id);
                 }}>
@@ -492,7 +492,7 @@ export const MusicLibraryModule = () => {
                           {new Date(piece.created_at).toLocaleDateString()}
                         </span>
                         <div className="flex gap-1">
-                          <Button variant="ghost" size="icon" className={cn("h-8 w-8", isFavorite(piece.id) && "text-destructive")} onClick={e => {
+                          <Button variant="ghost" size="icon" className={cn("h-8 w-8", isFavorite(piece.id) && "text-destructive")} aria-label={isFavorite(piece.id) ? 'Remove from favorites' : 'Add to favorites'} title={isFavorite(piece.id) ? 'Remove from favorites' : 'Add to favorites'} aria-pressed={isFavorite(piece.id)} onClick={e => {
                       e.stopPropagation();
                       toggleFavorite(piece.id);
                     }}>
@@ -557,7 +557,7 @@ export const MusicLibraryModule = () => {
                 {favoritedMusic.map(piece => <Card key={piece.id} className="p-4 hover:shadow-md transition-shadow cursor-pointer" onClick={() => piece.pdf_url && openPdfViewer(piece)}>
                     <div className="aspect-square bg-gradient-to-br from-primary/10 to-primary/5 rounded-lg mb-3 flex items-center justify-center relative overflow-hidden">
                       {piece.pdf_url ? <PDFThumbnail pdfUrl={piece.pdf_url} alt={piece.title} title={piece.title} className="w-full h-full" /> : <Music className="w-12 h-12 text-primary/50" />}
-                      <Button variant="ghost" size="icon" className="absolute top-2 right-2 h-8 w-8 text-destructive bg-background/80 backdrop-blur-sm hover:bg-background/90" onClick={e => {
+                      <Button variant="ghost" size="icon" className="absolute top-2 right-2 h-8 w-8 text-destructive bg-background/80 backdrop-blur-sm hover:bg-background/90" aria-label="Remove from favorites" title="Remove from favorites" aria-pressed onClick={e => {
                   e.stopPropagation();
                   toggleFavorite(piece.id);
                 }}>

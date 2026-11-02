@@ -57,6 +57,7 @@ import { usePublicGleeWorldEvents } from "@/hooks/usePublicGleeWorldEvents";
 import { PublicCalendarViews } from "@/components/calendar/PublicCalendarViews";
 import { NotificationCenter } from "@/components/notifications/NotificationCenter";
 import { toast } from "sonner";
+import { ConfirmPill, type ConfirmPillRequest } from "@/components/ui/confirm-pill";
 
 interface Notification {
   id: string;
@@ -139,6 +140,8 @@ export const CommunityHubWidget = () => {
   const [loveMessages, setLoveMessages] = useState<LoveMessage[]>([]);
   const [loveMessagesLoading, setLoveMessagesLoading] = useState(true);
   const [loveDialogOpen, setLoveDialogOpen] = useState(false);
+  const [confirmDeleteMessage, setConfirmDeleteMessage] = useState<(ConfirmPillRequest & { id: string }) | null>(null);
+  const [deletingMessage, setDeletingMessage] = useState(false);
   
   // State for music library
   const [sheetMusic, setSheetMusic] = useState<SheetMusic[]>([]);
@@ -771,8 +774,9 @@ export const CommunityHubWidget = () => {
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
-                                handleDeleteMessage(message.id);
+                                setConfirmDeleteMessage({ x: e.clientX, y: e.clientY, message: 'Delete your message?', id: message.id });
                               }}
+                              aria-label="Delete your message"
                               className="flex items-center gap-1 text-xs px-2 py-1 rounded-full transition-colors bg-gray-100 text-gray-600 hover:bg-red-50 hover:text-red-600"
                               title="Delete your message"
                             >
@@ -1164,6 +1168,17 @@ export const CommunityHubWidget = () => {
           item={selectedMusicItem} 
         />
       )}
+      <ConfirmPill
+        request={confirmDeleteMessage}
+        busy={deletingMessage}
+        onConfirm={async () => {
+          if (!confirmDeleteMessage) return;
+          setDeletingMessage(true);
+          try { await handleDeleteMessage(confirmDeleteMessage.id); }
+          finally { setDeletingMessage(false); setConfirmDeleteMessage(null); }
+        }}
+        onCancel={() => setConfirmDeleteMessage(null)}
+      />
     </Card>
   );
 };

@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { format, isToday } from 'date-fns';
+import { ConfirmPill, type ConfirmPillRequest } from '@/components/ui/confirm-pill';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -59,6 +60,7 @@ export const CalendarDayDetail: React.FC<CalendarDayDetailProps> = ({
   onAddSession,
 }) => {
   const isCurrentDay = isToday(date);
+  const [deleteConfirm, setDeleteConfirm] = useState<(ConfirmPillRequest & { sessionId: string }) | null>(null);
 
   return (
     <Card className="h-full">
@@ -210,11 +212,13 @@ export const CalendarDayDetail: React.FC<CalendarDayDetailProps> = ({
                                 <QrCode className="h-4 w-4 mr-2" />
                                 QR Attendance
                               </Button>
-                              <Button 
-                                size="sm" 
+                              <Button
+                                size="sm"
                                 variant="ghost"
-                                onClick={() => onDelete?.(session.id)}
+                                onClick={(e) => setDeleteConfirm({ x: e.clientX, y: e.clientY, message: `Delete "${session.title}"?`, sessionId: session.id })}
                                 className="text-destructive hover:text-destructive"
+                                aria-label={`Delete ${session.title}`}
+                                title="Delete session"
                               >
                                 <Trash2 className="h-4 w-4" />
                               </Button>
@@ -230,6 +234,11 @@ export const CalendarDayDetail: React.FC<CalendarDayDetailProps> = ({
           </div>
         </ScrollArea>
       </CardContent>
+      <ConfirmPill
+        request={deleteConfirm}
+        onConfirm={() => { if (deleteConfirm) onDelete?.(deleteConfirm.sessionId); setDeleteConfirm(null); }}
+        onCancel={() => setDeleteConfirm(null)}
+      />
     </Card>
   );
 };

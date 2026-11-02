@@ -449,6 +449,8 @@ export const TourRosterSection = () => {
                     size="icon"
                     className="h-8 w-8 text-muted-foreground hover:text-destructive flex-shrink-0"
                     onClick={() => member.roster_id && removeFromRoster(member.roster_id)}
+                    aria-label={`Remove ${member.full_name} from roster`}
+                    title="Remove from roster"
                   >
                     <X className="h-4 w-4" />
                   </Button>

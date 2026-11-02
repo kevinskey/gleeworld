@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import { ConfirmPill, type ConfirmPillRequest } from "@/components/ui/confirm-pill";
 import { 
   Plus, 
   Receipt, 
@@ -51,6 +52,7 @@ export const ReceiptKeeper = () => {
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingReceipt, setEditingReceipt] = useState<ReceiptRecord | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<(ConfirmPillRequest & { id: string }) | null>(null);
   const [uploading, setUploading] = useState(false);
   const [formData, setFormData] = useState({
     vendor_name: '',
@@ -482,10 +484,10 @@ export const ReceiptKeeper = () => {
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Button variant="outline" size="sm" onClick={() => handleEdit(receipt)}>
+                    <Button variant="outline" size="sm" onClick={() => handleEdit(receipt)} aria-label={`Edit receipt from ${receipt.vendor_name}`} title={`Edit receipt from ${receipt.vendor_name}`}>
                       <Edit3 className="h-4 w-4" />
                     </Button>
-                    <Button variant="outline" size="sm" onClick={() => handleDelete(receipt.id)}>
+                    <Button variant="outline" size="sm" onClick={(e) => setConfirmDelete({ id: receipt.id, x: e.clientX, y: e.clientY, message: `Delete receipt from "${receipt.vendor_name}"?` })} aria-label={`Delete receipt from ${receipt.vendor_name}`} title={`Delete receipt from ${receipt.vendor_name}`}>
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
@@ -549,6 +551,15 @@ export const ReceiptKeeper = () => {
           ))
         )}
       </div>
+      <ConfirmPill
+        request={confirmDelete}
+        onConfirm={async () => {
+          const id = confirmDelete?.id;
+          setConfirmDelete(null);
+          if (id) await handleDelete(id);
+        }}
+        onCancel={() => setConfirmDelete(null)}
+      />
     </div>
   );
 };

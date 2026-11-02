@@ -596,6 +596,8 @@ const PollQuestionEditor: React.FC<PollQuestionEditorProps> = ({ poll, onSave, o
                     size="sm"
                     onClick={() => removeQuestion(qIndex)}
                     className="text-destructive"
+                    aria-label={`Remove question ${qIndex + 1}`}
+                    title={`Remove question ${qIndex + 1}`}
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>

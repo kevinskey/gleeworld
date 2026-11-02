@@ -17,7 +17,8 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
 import { ConfirmDeleteButton } from '@/components/shared/ConfirmDeleteButton';
-import { 
+import { ConfirmPill, type ConfirmPillRequest } from '@/components/ui/confirm-pill';
+import {
   extractYouTubeVideoId, 
   getYouTubeThumbnail, 
   formatYouTubeDuration,
@@ -81,6 +82,8 @@ export const CourseVideoLibrary: React.FC<CourseVideoLibraryProps> = ({
   const [selectedPlaylist, setSelectedPlaylist] = useState<YouTubePlaylist | null>(null);
   const [videoModalOpen, setVideoModalOpen] = useState(false);
   const [expandedChannels, setExpandedChannels] = useState<Set<string>>(new Set());
+  const [videoDeleteConfirm, setVideoDeleteConfirm] = useState<(ConfirmPillRequest & { videoId: string }) | null>(null);
+  const [deletingVideo, setDeletingVideo] = useState(false);
   
   // Add channel dialog
   const [addChannelOpen, setAddChannelOpen] = useState(false);
@@ -430,6 +433,9 @@ export const CourseVideoLibrary: React.FC<CourseVideoLibraryProps> = ({
                 size="icon"
                 className="h-6 w-6"
                 onClick={(e) => { e.stopPropagation(); toggleFeatured(video); }}
+                aria-label={video.is_featured ? 'Remove from featured' : 'Add to featured'}
+                aria-pressed={video.is_featured}
+                title={video.is_featured ? 'Remove from featured' : 'Add to featured'}
               >
                 {video.is_featured ? (
                   <Star className="h-3 w-3 text-yellow-500 fill-yellow-500" />
@@ -441,7 +447,9 @@ export const CourseVideoLibrary: React.FC<CourseVideoLibraryProps> = ({
                 variant="ghost"
                 size="icon"
                 className="h-6 w-6 text-destructive"
-                onClick={(e) => { e.stopPropagation(); deleteVideo(video.id); }}
+                onClick={(e) => { e.stopPropagation(); setVideoDeleteConfirm({ x: e.clientX, y: e.clientY, message: `Remove "${video.title}" from the library?`, confirmLabel: 'Remove', videoId: video.id }); }}
+                aria-label={`Remove ${video.title} from library`}
+                title="Remove from library"
               >
                 <Trash2 className="h-3 w-3" />
               </Button>
@@ -777,6 +785,9 @@ export const CourseVideoLibrary: React.FC<CourseVideoLibraryProps> = ({
                         size="icon"
                         className="h-6 w-6 shrink-0"
                         onClick={() => toggleChannelExpansion(channel.id)}
+                        aria-label={isExpanded ? `Collapse playlists for ${channel.channel_name}` : `Expand playlists for ${channel.channel_name}`}
+                        aria-expanded={isExpanded}
+                        title={isExpanded ? 'Collapse playlists' : 'Expand playlists'}
                       >
                         {isExpanded ? (
                           <ChevronDown className="h-4 w-4" />
@@ -892,6 +903,16 @@ export const CourseVideoLibrary: React.FC<CourseVideoLibraryProps> = ({
         title={selectedVideo?.title || selectedPlaylist?.title}
         url={selectedPlaylist?.playlist_url}
         playlistId={selectedPlaylist?.playlist_id}
+      />
+      <ConfirmPill
+        request={videoDeleteConfirm}
+        busy={deletingVideo}
+        onConfirm={async () => {
+          if (!videoDeleteConfirm) return;
+          setDeletingVideo(true);
+          try { await deleteVideo(videoDeleteConfirm.videoId); } finally { setDeletingVideo(false); setVideoDeleteConfirm(null); }
+        }}
+        onCancel={() => setVideoDeleteConfirm(null)}
       />
     </div>
   );

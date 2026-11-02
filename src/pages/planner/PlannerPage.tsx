@@ -16,7 +16,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Skeleton } from '@/components/ui/skeleton';
 import { periodKey, PERIOD_TYPES, type PeriodType } from '@/lib/planner/dateKeys';
-import { createNote, trashNote } from '@/lib/planner/notesApi';
+import { createNote, restoreNote, trashNote } from '@/lib/planner/notesApi';
 import { useNote, useSavedFilters } from './hooks';
 import ContextPanel from './components/ContextPanel';
 import KanbanView from './components/KanbanView';
@@ -198,8 +198,21 @@ function NoteView({ noteId, onOpenNote, onBack }: {
   const trash = useMutation({
     mutationFn: () => trashNote(noteId),
     onSuccess: () => {
-      toast.success('Note moved to Trash');
       qc.invalidateQueries({ queryKey: ['planner'] });
+      toast(`Removed "${note?.title || 'Untitled note'}".`, {
+        duration: 8000,
+        action: {
+          label: 'Undo',
+          onClick: async () => {
+            try {
+              await restoreNote(noteId);
+              qc.invalidateQueries({ queryKey: ['planner'] });
+            } catch {
+              toast.error('Could not restore the note');
+            }
+          },
+        },
+      });
       onBack();
     },
     onError: () => toast.error('Could not delete the note'),

@@ -372,6 +372,8 @@ export const MusicLibraryManager = () => {
                             variant="ghost"
                             onClick={() => openEditDialog(item)}
                             className="h-9 w-9 p-0 touch-target"
+                            aria-label={`Edit ${item.title}`}
+                            title="Edit score"
                           >
                             <Edit className="h-4 w-4" />
                           </Button>
@@ -521,6 +523,8 @@ export const MusicLibraryManager = () => {
                             size="sm"
                             variant="ghost"
                             onClick={() => openEditDialog(item)}
+                            aria-label={`Edit ${item.title}`}
+                            title="Edit score"
                           >
                             <Edit className="h-4 w-4" />
                           </Button>

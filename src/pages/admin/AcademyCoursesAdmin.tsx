@@ -427,7 +427,7 @@ export default function AcademyCoursesAdmin() {
                     {selectedCourse.highlights?.map((h, i) => (
                       <Badge key={i} variant="secondary" className="gap-1">
                         {h}
-                        <button onClick={() => removeHighlight(i)} className="ml-1 hover:text-destructive">
+                        <button onClick={() => removeHighlight(i)} className="ml-1 hover:text-destructive" aria-label={`Remove highlight ${h}`} title="Remove highlight">
                           <X className="h-3 w-3" />
                         </button>
                       </Badge>

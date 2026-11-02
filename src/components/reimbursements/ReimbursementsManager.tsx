@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { ConfirmPill, type ConfirmPillRequest } from "@/components/ui/confirm-pill";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/contexts/AuthContext";
@@ -54,6 +55,7 @@ export const ReimbursementsManager = () => {
   const [selectedRequest, setSelectedRequest] = useState<ReimbursementRequest | null>(null);
   const [approvalDialogOpen, setApprovalDialogOpen] = useState(false);
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState<(ConfirmPillRequest & { request: ReimbursementRequest }) | null>(null);
   const [userRole, setUserRole] = useState<{isTreasurer: boolean, isAdmin: boolean, isSuperAdmin: boolean}>({
     isTreasurer: false,
     isAdmin: false,
@@ -376,7 +378,9 @@ export const ReimbursementsManager = () => {
                                 <Button 
                                   variant="destructive" 
                                   size="sm"
-                                  onClick={() => handleDelete(request)}
+                                  onClick={(e) => setConfirmDelete({ request, x: e.clientX, y: e.clientY, message: `Delete ${request.requester_name}'s reimbursement request?` })}
+                                  aria-label={`Delete ${request.requester_name}'s request`}
+                                  title={`Delete ${request.requester_name}'s request`}
                                 >
                                   <Trash2 className="w-4 h-4" />
                                 </Button>
@@ -427,6 +431,14 @@ export const ReimbursementsManager = () => {
           />
         </>
       )}
+      <ConfirmPill
+        request={confirmDelete}
+        onConfirm={async () => {
+          if (confirmDelete) await handleDelete(confirmDelete.request);
+          setConfirmDelete(null);
+        }}
+        onCancel={() => setConfirmDelete(null)}
+      />
     </div>
   );
 };

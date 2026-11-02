@@ -3,10 +3,14 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { Field } from '@/components/ui/field';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
 } from '@/components/ui/dialog';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription,
+  AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import {
   Music, Upload, Search, Loader2, Headphones, Youtube, X, Library as LibraryIcon,
 } from 'lucide-react';
@@ -33,6 +37,9 @@ export function AttachAudioDialog({
   // Multi-track state. tracks list comes from the new audio_tracks table.
   const { tracks, addTrack, setDefaultTrack, deleteTrack } = useSheetMusicTracks(score?.id);
   const [addingTrack, setAddingTrack] = useState(false);
+  // Track pending a hard-delete confirmation (gw_sheet_music_audio_tracks
+  // row is removed outright — no undo).
+  const [trackToDelete, setTrackToDelete] = useState<{ id: string; label: string } | null>(null);
   // Apple Music tab state. Search is debounced through useEffect below.
   const [appleSearch, setAppleSearch] = useState('');
   const [appleResults, setAppleResults] = useState<Array<{ id: string; title: string; artist: string; album: string; artworkUrl: string | null; storefront: string }>>([]);
@@ -241,8 +248,9 @@ export function AttachAudioDialog({
                   </button>
                   <button
                     type="button"
-                    onClick={() => { if (confirm(`Delete track "${t.label}"?`)) deleteTrack.mutate(t.id); }}
+                    onClick={() => setTrackToDelete({ id: t.id, label: t.label })}
                     className="text-muted-foreground hover:text-destructive p-0.5"
+                    aria-label={`Delete track ${t.label}`}
                     title="Delete"
                   >
                     <X className="w-3.5 h-3.5" />
@@ -316,45 +324,41 @@ export function AttachAudioDialog({
 
         {addingTrack && <div className="space-y-3 pt-2">
           {tab === 'file' && (
-            <div>
-              <Label className="text-sm">MP3 file</Label>
+            <Field label="MP3 file">
               <Input
                 type="file"
                 accept="audio/mpeg,audio/mp3,audio/wav,audio/aac,audio/*"
                 onChange={(e) => setFile(e.target.files?.[0] ?? null)}
                 className="cursor-pointer"
               />
-            </div>
+            </Field>
           )}
           {tab === 'youtube' && (
-            <div>
-              <Label className="text-sm">YouTube URL</Label>
+            <Field label="YouTube URL" hint="Video stays hidden during playback — only the audio plays.">
               <Input
                 type="url"
                 placeholder="https://www.youtube.com/watch?v=..."
                 value={youtubeUrl}
                 onChange={(e) => setYoutubeUrl(e.target.value)}
               />
-              <p className="text-xs text-muted-foreground mt-1">
-                Video stays hidden during playback — only the audio plays.
-              </p>
-            </div>
+            </Field>
           )}
           {tab === 'apple' && (
             <div className="space-y-2">
-              <Label className="text-sm">Search Apple Music</Label>
-              <div className="relative">
-                <Search className="w-4 h-4 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  value={appleSearch}
-                  onChange={(e) => setAppleSearch(e.target.value)}
-                  placeholder="Song, artist, or album…"
-                  className="pl-8 h-9"
-                />
-              </div>
-              {appleErr && (
-                <p className="text-xs text-destructive">{appleErr}</p>
-              )}
+              <Field label="Search Apple Music" htmlFor="attach-audio-apple-search" error={appleErr} className="space-y-2">
+                <div className="relative">
+                  <Search className="w-4 h-4 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    id="attach-audio-apple-search"
+                    value={appleSearch}
+                    onChange={(e) => setAppleSearch(e.target.value)}
+                    placeholder="Song, artist, or album…"
+                    aria-invalid={appleErr ? true : undefined}
+                    aria-describedby={appleErr ? 'attach-audio-apple-search-error' : undefined}
+                    className="pl-8 h-9"
+                  />
+                </div>
+              </Field>
               <p className="text-xs text-muted-foreground italic">
                 Playback requires an active Apple Music subscription. Free users will see a subscription prompt when they hit play.
               </p>
@@ -419,16 +423,18 @@ export function AttachAudioDialog({
           )}
           {tab === 'media' && (
             <div className="space-y-2">
-              <Label className="text-sm">Pick a track from your Media Library</Label>
-              <div className="relative">
-                <Search className="w-4 h-4 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  value={mediaSearch}
-                  onChange={(e) => setMediaSearch(e.target.value)}
-                  placeholder="Search title or tag…"
-                  className="pl-8 h-9"
-                />
-              </div>
+              <Field label="Pick a track from your Media Library" htmlFor="attach-audio-media-search" className="space-y-2">
+                <div className="relative">
+                  <Search className="w-4 h-4 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    id="attach-audio-media-search"
+                    value={mediaSearch}
+                    onChange={(e) => setMediaSearch(e.target.value)}
+                    placeholder="Search title or tag…"
+                    className="pl-8 h-9"
+                  />
+                </div>
+              </Field>
               <div className="border rounded-md max-h-60 overflow-y-auto divide-y">
                 {mediaLoading ? (
                   <div className="p-4 text-center text-xs text-muted-foreground">
@@ -468,15 +474,46 @@ export function AttachAudioDialog({
             </div>
           )}
 
-          <div>
-            <Label className="text-sm">Track label</Label>
+          <Field label="Track label">
             <Input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Rehearsal, Accompaniment, Reference…"
             />
-          </div>
+          </Field>
         </div>}
+
+        {/* Hard delete — confirm before the row goes. Rendered as an
+            AlertDialog (not ConfirmPill) because a body-portaled pill is
+            unclickable under a modal Dialog's pointer-events lock. */}
+        <AlertDialog open={!!trackToDelete} onOpenChange={(o) => { if (!o) setTrackToDelete(null); }}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete track “{trackToDelete?.label}”?</AlertDialogTitle>
+              <AlertDialogDescription>
+                The recording is removed from this score for everyone. This cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={deleteTrack.isPending}>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                disabled={deleteTrack.isPending}
+                onClick={(e) => {
+                  e.preventDefault();
+                  if (!trackToDelete) return;
+                  deleteTrack.mutate(trackToDelete.id, {
+                    onSuccess: () => setTrackToDelete(null),
+                    onError: (err) => toast.error(err instanceof Error ? err.message : 'Could not delete the track.'),
+                  });
+                }}
+              >
+                {deleteTrack.isPending && <Loader2 className="w-4 h-4 mr-1.5 animate-spin" />}
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
 
         <DialogFooter className="flex-row items-center justify-between sm:justify-between gap-2">
           <div />

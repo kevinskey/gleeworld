@@ -419,12 +419,14 @@ https://www.scholarships.com/financial-aid/college-scholarships`}
                             variant="ghost"
                             size="sm"
                             onClick={() => handleEdit(source)}
+                            aria-label={`Edit ${source.name}`}
+                            title={`Edit ${source.name}`}
                           >
                             <Edit3 className="h-4 w-4" />
                           </Button>
                           <Dialog>
                             <DialogTrigger asChild>
-                              <Button variant="ghost" size="sm">
+                              <Button variant="ghost" size="sm" aria-label={`Delete ${source.name}`} title={`Delete ${source.name}`}>
                                 <Trash2 className="h-4 w-4" />
                               </Button>
                             </DialogTrigger>

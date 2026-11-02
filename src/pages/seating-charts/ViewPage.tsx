@@ -89,7 +89,7 @@ export function SeatingChartViewPage() {
       <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 md:gap-3 border-b bg-white px-2 md:px-3 py-2">
         <div className="flex items-center gap-2 min-w-0">
           <Link to="/seating-charts" className="shrink-0">
-            <Button variant="ghost" size="icon"><ArrowLeft className="w-4 h-4" /></Button>
+            <Button variant="ghost" size="icon" aria-label="Back to seating charts" title="Back to seating charts"><ArrowLeft className="w-4 h-4" /></Button>
           </Link>
           <Armchair className="w-4 h-4 text-primary shrink-0" />
           <span className="text-sm font-semibold truncate min-w-0">{state.chart.name}</span>

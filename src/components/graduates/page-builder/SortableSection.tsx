@@ -50,7 +50,7 @@ export const SortableSection = ({ section, onEdit, onDelete }: SortableSectionPr
               </div>
             </div>
             <div className="flex gap-2">
-              <Button size="sm" variant="outline" onClick={() => onEdit(section)}>
+              <Button size="sm" variant="outline" onClick={() => onEdit(section)} aria-label="Edit section" title="Edit section">
                 <Edit className="h-4 w-4" />
               </Button>
               <ConfirmDeleteButton

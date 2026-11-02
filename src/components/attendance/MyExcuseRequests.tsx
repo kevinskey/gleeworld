@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { ConfirmPill, type ConfirmPillRequest } from '@/components/ui/confirm-pill';
 import { 
   Clock, 
   CheckCircle, 
@@ -45,6 +46,7 @@ export const MyExcuseRequests = ({ onEditRequest }: MyExcuseRequestsProps) => {
   const [myRequests, setMyRequests] = useState<MyExcuseRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState<(ConfirmPillRequest & { id: string }) | null>(null);
 
   const loadMyRequests = async () => {
     if (!user) return;
@@ -224,7 +226,7 @@ export const MyExcuseRequests = ({ onEditRequest }: MyExcuseRequestsProps) => {
                       <Button
                         size="sm"
                         variant="destructive"
-                        onClick={() => deleteRequest(request.id)}
+                        onClick={(e) => setConfirmDelete({ id: request.id, x: e.clientX, y: e.clientY, message: `Delete your excuse request for "${request.event_title}"?` })}
                         className="flex items-center gap-2"
                       >
                         <Trash2 className="h-3 w-3" />
@@ -245,6 +247,14 @@ export const MyExcuseRequests = ({ onEditRequest }: MyExcuseRequestsProps) => {
           </CardContent>
         </CollapsibleContent>
       </Card>
+      <ConfirmPill
+        request={confirmDelete}
+        onConfirm={async () => {
+          if (confirmDelete) await deleteRequest(confirmDelete.id);
+          setConfirmDelete(null);
+        }}
+        onCancel={() => setConfirmDelete(null)}
+      />
     </Collapsible>
   );
 };

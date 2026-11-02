@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { ConfirmPill, type ConfirmPillRequest } from '@/components/ui/confirm-pill';
 import { getOrgName } from '@/lib/orgName';
 
 export const EmailModule = () => {
@@ -21,6 +22,8 @@ export const EmailModule = () => {
   const [showCompose, setShowCompose] = useState(false);
   const [archivedEmails, setArchivedEmails] = useState<string[]>([]);
   const [deletedEmails, setDeletedEmails] = useState<string[]>([]);
+  const [confirmDraftDelete, setConfirmDraftDelete] = useState<(ConfirmPillRequest & { id: string }) | null>(null);
+  const [deletingDraft, setDeletingDraft] = useState(false);
   const [currentView, setCurrentView] = useState<'inbox' | 'archived' | 'drafts'>('inbox');
   const [selectedRecipients, setSelectedRecipients] = useState<string[]>([]);
   const [users, setUsers] = useState<any[]>([]);
@@ -175,6 +178,7 @@ export const EmailModule = () => {
 
   // Delete draft
   const handleDeleteDraft = async (draftId: string) => {
+    setDeletingDraft(true);
     try {
       const { error } = await supabase
         .from('gw_email_drafts')
@@ -202,6 +206,8 @@ export const EmailModule = () => {
         description: error.message || "Failed to delete draft",
         variant: "destructive",
       });
+    } finally {
+      setDeletingDraft(false);
     }
   };
 
@@ -447,8 +453,11 @@ export const EmailModule = () => {
                                 <Badge key={recipientId} variant="secondary" className="text-xs">
                                   {user.name}
                                   <button
+                                    type="button"
                                     onClick={() => setSelectedRecipients(prev => prev.filter(id => id !== recipientId))}
                                     className="ml-1 hover:text-destructive"
+                                    aria-label={`Remove ${user.name}`}
+                                    title={`Remove ${user.name}`}
                                   >
                                     ×
                                   </button>
@@ -613,6 +622,8 @@ export const EmailModule = () => {
                             handleLoadDraft(draft);
                           }}
                           className="h-8 w-8 p-0"
+                          aria-label={`Edit draft ${draft.subject || 'No Subject'}`}
+                          title={`Edit draft ${draft.subject || 'No Subject'}`}
                         >
                           ✏️
                         </Button>
@@ -621,9 +632,16 @@ export const EmailModule = () => {
                           variant="ghost"
                           onClick={(e) => {
                             e.stopPropagation();
-                            handleDeleteDraft(draft.id);
+                            setConfirmDraftDelete({
+                              id: draft.id,
+                              x: e.clientX,
+                              y: e.clientY,
+                              message: `Delete draft "${draft.subject || 'No Subject'}"?`,
+                            });
                           }}
                           className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                          aria-label={`Delete draft ${draft.subject || 'No Subject'}`}
+                          title={`Delete draft ${draft.subject || 'No Subject'}`}
                         >
                           <Trash2 className="w-3 h-3" />
                         </Button>
@@ -711,16 +729,16 @@ export const EmailModule = () => {
                   Back
                 </Button>
                 <div className="flex gap-1">
-                  <Button variant="ghost" size="sm" onClick={() => handleArchiveEmail(selectedEmailData.id)}>
+                  <Button variant="ghost" size="sm" onClick={() => handleArchiveEmail(selectedEmailData.id)} aria-label="Archive email" title="Archive email">
                     <Archive className="w-4 h-4" />
                   </Button>
-                  <Button variant="ghost" size="sm" onClick={() => handleDeleteEmail(selectedEmailData.id)}>
+                  <Button variant="ghost" size="sm" onClick={() => handleDeleteEmail(selectedEmailData.id)} aria-label="Delete email" title="Delete email">
                     <Trash2 className="w-4 h-4" />
                   </Button>
-                  <Button variant="ghost" size="sm">
+                  <Button variant="ghost" size="sm" aria-label="Reply" title="Reply">
                     <Reply className="w-4 h-4" />
                   </Button>
-                  <Button variant="ghost" size="sm">
+                  <Button variant="ghost" size="sm" aria-label="Forward" title="Forward">
                     <Forward className="w-4 h-4" />
                   </Button>
                   <Button variant="ghost" size="sm">
@@ -883,6 +901,16 @@ export const EmailModule = () => {
           </div>
         )}
       </div>
+      <ConfirmPill
+        request={confirmDraftDelete}
+        busy={deletingDraft}
+        onConfirm={async () => {
+          if (!confirmDraftDelete) return;
+          await handleDeleteDraft(confirmDraftDelete.id);
+          setConfirmDraftDelete(null);
+        }}
+        onCancel={() => setConfirmDraftDelete(null)}
+      />
     </div>
   );
 };

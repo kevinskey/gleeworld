@@ -221,6 +221,8 @@ export const DiscussionsSection: React.FC<DiscussionsSectionProps> = ({ courseId
                       variant="ghost"
                       size="icon"
                       className="h-8 w-8"
+                      aria-label={`Edit ${discussion.title}`}
+                      title="Edit discussion"
                       onClick={(e) => handleEditClick(e, discussion)}>
 
                         <Edit className="h-4 w-4" />

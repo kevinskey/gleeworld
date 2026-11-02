@@ -76,6 +76,8 @@ export const LykeHouseHeroSlider: React.FC = () => {
             size="icon"
             className="absolute left-2 top-1/2 -translate-y-1/2 z-10 h-8 w-8 rounded-full shadow-lg bg-background/90 hover:bg-background"
             onClick={() => scroll('left')}
+            aria-label="Scroll left"
+            title="Scroll left"
           >
             <ChevronLeft className="h-4 w-4" />
           </Button>
@@ -86,6 +88,8 @@ export const LykeHouseHeroSlider: React.FC = () => {
             size="icon"
             className="absolute right-2 top-1/2 -translate-y-1/2 z-10 h-8 w-8 rounded-full shadow-lg bg-background/90 hover:bg-background"
             onClick={() => scroll('right')}
+            aria-label="Scroll right"
+            title="Scroll right"
           >
             <ChevronRight className="h-4 w-4" />
           </Button>

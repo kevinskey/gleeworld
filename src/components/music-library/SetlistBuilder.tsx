@@ -30,6 +30,7 @@ import {
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
+import { ConfirmPill, type ConfirmPillRequest } from "@/components/ui/confirm-pill";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -82,6 +83,7 @@ export const SetlistBuilder: React.FC<SetlistBuilderProps> = ({ onPdfSelect, onO
   const [loading, setLoading] = useState(true);
   const [createLoading, setCreateLoading] = useState(false);
   const [sheetMusicSearch, setSheetMusicSearch] = useState('');
+  const [confirmRemove, setConfirmRemove] = useState<(ConfirmPillRequest & { id: string }) | null>(null);
   
   // Form state for creating/editing setlists
   const [formData, setFormData] = useState({
@@ -909,8 +911,10 @@ export const SetlistBuilder: React.FC<SetlistBuilderProps> = ({ onPdfSelect, onO
                       <Button
                         size="sm"
                         variant="ghost"
-                        onClick={(e) => { e.stopPropagation(); removeFromSetlist(item.id); }}
+                        onClick={(e) => { e.stopPropagation(); setConfirmRemove({ id: item.id, x: e.clientX, y: e.clientY, message: `Remove "${item.sheet_music?.title ?? 'this piece'}" from the setlist?`, confirmLabel: 'Remove' }); }}
                         className="h-11 w-11 min-w-[44px] p-0 lg:h-5 lg:w-5 lg:min-w-0 text-destructive"
+                        aria-label={`Remove ${item.sheet_music?.title ?? 'piece'} from setlist`}
+                        title={`Remove ${item.sheet_music?.title ?? 'piece'} from setlist`}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -969,6 +973,15 @@ export const SetlistBuilder: React.FC<SetlistBuilderProps> = ({ onPdfSelect, onO
           </div>
         )}
       </div>
+      <ConfirmPill
+        request={confirmRemove}
+        onConfirm={async () => {
+          const id = confirmRemove?.id;
+          setConfirmRemove(null);
+          if (id) await removeFromSetlist(id);
+        }}
+        onCancel={() => setConfirmRemove(null)}
+      />
 
     </div>
   );

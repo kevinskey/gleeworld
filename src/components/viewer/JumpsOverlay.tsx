@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Loader2, Trash2 } from 'lucide-react';
+import { ConfirmPill, type ConfirmPillRequest } from '@/components/ui/confirm-pill';
 import { useSheetMusicJumps } from '@/hooks/useSheetMusicJumps';
 import type { SheetMusicJump } from '@/lib/jumps';
 
@@ -147,10 +148,12 @@ interface JumpsListProps {
 // so the user can review and delete without re-entering placement mode.
 export function JumpsList({ sheetMusicId }: JumpsListProps) {
   const { jumps, deleteJump } = useSheetMusicJumps(sheetMusicId);
+  const [deleteConfirm, setDeleteConfirm] = useState<(ConfirmPillRequest & { id: string }) | null>(null);
   if (jumps.length === 0) {
     return <p className="text-xs text-muted-foreground italic">No jumps yet.</p>;
   }
   return (
+    <>
     <ul className="space-y-1 max-h-60 overflow-y-auto">
       {jumps.map((j) => (
         <li key={j.id} className="flex items-center gap-2 text-sm px-2 py-1 rounded hover:bg-accent/40">
@@ -160,14 +163,22 @@ export function JumpsList({ sheetMusicId }: JumpsListProps) {
           <span className="flex-1 truncate">{j.label ?? '—'}</span>
           <button
             type="button"
-            onClick={() => deleteJump.mutate(j.id)}
+            onClick={(e) => setDeleteConfirm({ x: e.clientX, y: e.clientY, message: `Delete jump p.${j.source_page} → p.${j.target_page}${j.label ? ` (${j.label})` : ''}?`, id: j.id })}
             className="text-muted-foreground hover:text-destructive p-0.5"
-            title="Delete"
+            title="Delete jump"
+            aria-label={`Delete jump from page ${j.source_page} to page ${j.target_page}`}
           >
             <Trash2 className="w-3.5 h-3.5" />
           </button>
         </li>
       ))}
     </ul>
+    <ConfirmPill
+      request={deleteConfirm}
+      busy={deleteJump.isPending}
+      onConfirm={() => { if (deleteConfirm) deleteJump.mutate(deleteConfirm.id, { onSettled: () => setDeleteConfirm(null) }); }}
+      onCancel={() => setDeleteConfirm(null)}
+    />
+    </>
   );
 }

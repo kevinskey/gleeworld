@@ -360,7 +360,7 @@ export default function GraduatesLanding() {
                         </span>
                       </div>
                     </div>
-                    <Button variant="ghost" size="icon" className="shrink-0">
+                    <Button variant="ghost" size="icon" className="shrink-0" aria-label={`Message ${update.name}`} title={`Message ${update.name}`}>
                       <MessageCircle className="h-5 w-5" />
                     </Button>
                   </div>

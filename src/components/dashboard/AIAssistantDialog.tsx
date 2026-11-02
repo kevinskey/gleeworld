@@ -313,6 +313,8 @@ export const AIAssistantDialog = ({ open, onOpenChange }: AIAssistantDialogProps
               size="icon" 
               className="h-10 w-10 md:h-9 md:w-9 flex-shrink-0"
               disabled={sendingMessage || !memberMessage.trim()}
+              aria-label="Send message"
+              title="Send message"
             >
               <Send className="h-4 w-4 md:h-3.5 md:w-3.5" />
             </Button>

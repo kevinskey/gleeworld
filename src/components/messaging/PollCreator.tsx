@@ -146,6 +146,8 @@ export const PollCreator: React.FC<PollCreatorProps> = ({ groupId, onPollCreated
                 variant="ghost"
                 size="icon"
                 onClick={() => removeOption(index)}
+                aria-label={`Remove option ${index + 1}`}
+                title={`Remove option ${index + 1}`}
               >
                 <X className="h-4 w-4" />
               </Button>

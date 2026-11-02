@@ -376,10 +376,10 @@ export const InterviewToolkit = () => {
                         <p className="text-sm text-muted-foreground mt-2">{interview.notes}</p>
                       </div>
                       <div className="flex gap-1 ml-4">
-                        <Button variant="ghost" size="sm">
+                        <Button variant="ghost" size="sm" aria-label="Edit interview" title="Edit interview">
                           <Edit className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="sm">
+                        <Button variant="ghost" size="sm" aria-label="Delete interview" title="Delete interview">
                           <Trash className="h-4 w-4" />
                         </Button>
                       </div>

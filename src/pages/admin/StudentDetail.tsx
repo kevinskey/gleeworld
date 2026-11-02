@@ -16,6 +16,7 @@ import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
 import { DashboardShell } from '@/components/dashboard/DashboardShell';
 import { GuardianList } from '@/components/travel-manager/GuardianList';
+import { ConfirmPill, type ConfirmPillRequest } from '@/components/ui/confirm-pill';
 
 export default function StudentDetail() {
   const { id } = useParams<{ id: string }>();
@@ -120,6 +121,7 @@ function NotesTab({ studentId }: { studentId: string }) {
   const qc = useQueryClient();
   const { toast } = useToast();
   const [body, setBody] = useState('');
+  const [deleteConfirm, setDeleteConfirm] = useState<(ConfirmPillRequest & { id: string }) | null>(null);
 
   const { data: notes = [], isLoading } = useQuery({
     queryKey: ['student-notes', studentId],
@@ -183,10 +185,10 @@ function NotesTab({ studentId }: { studentId: string }) {
               <div className="flex items-center justify-between mt-2 text-xs text-muted-foreground">
                 <span>{new Date(n.created_at).toLocaleString()}</span>
                 <div className="flex gap-2">
-                  <Button variant="ghost" size="sm" onClick={() => togglePin.mutate({ id: n.id, pinned: !n.is_pinned })}>
+                  <Button variant="ghost" size="sm" onClick={() => togglePin.mutate({ id: n.id, pinned: !n.is_pinned })} aria-label={n.is_pinned ? 'Unpin note' : 'Pin note'} aria-pressed={!!n.is_pinned} title={n.is_pinned ? 'Unpin note' : 'Pin note'}>
                     <Pin className={`w-3 h-3 ${n.is_pinned ? 'fill-current' : ''}`} />
                   </Button>
-                  <Button variant="ghost" size="sm" onClick={() => deleteNote.mutate(n.id)}>
+                  <Button variant="ghost" size="sm" onClick={(e) => setDeleteConfirm({ x: e.clientX, y: e.clientY, message: 'Delete this note?', id: n.id })} aria-label="Delete note" title="Delete note">
                     <Trash2 className="w-3 h-3" />
                   </Button>
                 </div>
@@ -195,6 +197,12 @@ function NotesTab({ studentId }: { studentId: string }) {
           ))}
         </div>
       </CardContent>
+      <ConfirmPill
+        request={deleteConfirm}
+        busy={deleteNote.isPending}
+        onConfirm={() => { if (deleteConfirm) deleteNote.mutate(deleteConfirm.id, { onSettled: () => setDeleteConfirm(null) }); }}
+        onCancel={() => setDeleteConfirm(null)}
+      />
     </Card>
   );
 }

@@ -17,6 +17,7 @@ import { useRoomAssignments, RoomAssignment, TourHotel } from "@/hooks/useRoomAs
 import { format } from "date-fns";
 import jsPDF from "jspdf";
 import { getOrgName } from '@/lib/orgName';
+import { ConfirmPill, type ConfirmPillRequest } from '@/components/ui/confirm-pill';
 
 export const RoomingAssignmentsSection = () => {
   const {
@@ -25,6 +26,8 @@ export const RoomingAssignmentsSection = () => {
   } = useRoomAssignments();
 
   const [selectedHotel, setSelectedHotel] = useState<TourHotel | null>(null);
+  const [confirmDeleteRoom, setConfirmDeleteRoom] = useState<(ConfirmPillRequest & { id: string }) | null>(null);
+  const [deletingRoom, setDeletingRoom] = useState(false);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showBatchDialog, setShowBatchDialog] = useState(false);
   const [memberSearch, setMemberSearch] = useState("");
@@ -309,7 +312,7 @@ export const RoomingAssignmentsSection = () => {
     <div className="space-y-4">
       {/* Back + header */}
       <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => setSelectedHotel(null)}>
+        <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => setSelectedHotel(null)} aria-label="Back to hotels" title="Back to hotels">
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div className="min-w-0 flex-1">
@@ -384,7 +387,14 @@ export const RoomingAssignmentsSection = () => {
                         </span>
                         <Button
                           variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-destructive"
-                          onClick={() => deleteRoom(room.id)}
+                          aria-label={`Delete room ${room.room_number}`}
+                          title="Delete room"
+                          onClick={(e) => setConfirmDeleteRoom({
+                            x: e.clientX, y: e.clientY, id: room.id,
+                            message: room.occupants.length > 0
+                              ? `Delete Room ${room.room_number}? Also removes its ${room.occupants.length} occupant${room.occupants.length === 1 ? '' : 's'}.`
+                              : `Delete Room ${room.room_number}?`,
+                          })}
                         >
                           <Trash2 className="h-3 w-3" />
                         </Button>
@@ -410,6 +420,8 @@ export const RoomingAssignmentsSection = () => {
                           <Button
                             variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-destructive shrink-0"
                             onClick={() => removeOccupant(occ.id)}
+                            aria-label={`Remove ${occ.profile?.full_name || 'occupant'} from room`}
+                            title="Remove from room"
                           >
                             <X className="h-3 w-3" />
                           </Button>
@@ -639,6 +651,17 @@ export const RoomingAssignmentsSection = () => {
           </div>
         </DialogContent>
       </Dialog>
+      <ConfirmPill
+        request={confirmDeleteRoom}
+        busy={deletingRoom}
+        onConfirm={async () => {
+          if (!confirmDeleteRoom) return;
+          setDeletingRoom(true);
+          try { await deleteRoom(confirmDeleteRoom.id); }
+          finally { setDeletingRoom(false); setConfirmDeleteRoom(null); }
+        }}
+        onCancel={() => setConfirmDeleteRoom(null)}
+      />
     </div>
   );
 };

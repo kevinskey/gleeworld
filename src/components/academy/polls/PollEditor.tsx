@@ -198,6 +198,8 @@ export const PollEditor: React.FC<PollEditorProps> = ({ poll, onClose }) => {
                       size="sm"
                       onClick={() => removeQuestion(qIdx)}
                       className="text-destructive hover:text-destructive"
+                      aria-label={`Remove question ${qIdx + 1}`}
+                      title={`Remove question ${qIdx + 1}`}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -233,6 +235,8 @@ export const PollEditor: React.FC<PollEditorProps> = ({ poll, onClose }) => {
                           size="sm"
                           onClick={() => removeOption(qIdx, oIdx)}
                           className="text-destructive"
+                          aria-label={`Remove option ${String.fromCharCode(65 + oIdx)}`}
+                          title={`Remove option ${String.fromCharCode(65 + oIdx)}`}
                         >
                           <Trash2 className="h-3 w-3" />
                         </Button>

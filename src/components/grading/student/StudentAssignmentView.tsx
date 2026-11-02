@@ -173,6 +173,8 @@ export const StudentAssignmentView: React.FC<StudentAssignmentViewProps> = ({ as
           variant="ghost" 
           size="icon" 
           onClick={() => navigate(`/grading/student/course/${assignment?.course_id}`)}
+          aria-label="Back to course"
+          title="Back to course"
         >
           <ArrowLeft className="h-5 w-5" />
         </Button>

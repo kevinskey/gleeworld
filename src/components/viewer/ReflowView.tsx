@@ -63,17 +63,17 @@ export function ReflowView({ pdfRef, totalPages, onClose, initialPage }: ReflowV
   return (
     <div className="fixed inset-x-0 bottom-0 bg-background z-[60] flex flex-col" style={{ top: 'var(--gw-demo-bar-h, 0px)' }}>
       <div className="h-10 flex items-center gap-2 px-2 border-b bg-background/95 backdrop-blur shrink-0">
-        <Button size="icon" variant="ghost" className="h-8 w-8" onClick={onClose}>
+        <Button size="icon" variant="ghost" className="h-8 w-8" onClick={onClose} aria-label="Close reflow view" title="Close reflow view">
           <X className="w-4 h-4" />
         </Button>
         <div className="text-xs text-muted-foreground flex-1 text-center">
           Reflow · strip {stripIndex + 1} / {strips.length}
           <span className="ml-2 opacity-70">page {Math.floor(stripIndex / STRIPS_PER_PAGE) + 1}</span>
         </div>
-        <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => setStripIndex((i) => Math.max(0, i - 1))} disabled={stripIndex === 0}>
+        <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => setStripIndex((i) => Math.max(0, i - 1))} disabled={stripIndex === 0} aria-label="Previous strip" title="Previous strip">
           <ChevronLeft className="w-4 h-4" />
         </Button>
-        <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => setStripIndex((i) => Math.min(strips.length - 1, i + 1))} disabled={stripIndex >= strips.length - 1}>
+        <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => setStripIndex((i) => Math.min(strips.length - 1, i + 1))} disabled={stripIndex >= strips.length - 1} aria-label="Next strip" title="Next strip">
           <ChevronRight className="w-4 h-4" />
         </Button>
       </div>

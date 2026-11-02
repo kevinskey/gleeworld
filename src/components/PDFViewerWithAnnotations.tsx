@@ -1828,6 +1828,8 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
                 onClick={handleUndo}
                 disabled={paths.length === 0}
                 className="h-8 w-8 p-0 sm:h-9 sm:w-9"
+                aria-label="Undo last stroke"
+                title="Undo last stroke"
               >
                 <Undo className="h-3 w-3 sm:h-4 sm:w-4" />
               </Button>
@@ -1837,6 +1839,8 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
                 onClick={handleClear}
                 disabled={paths.length === 0}
                 className="h-8 w-8 p-0 sm:h-9 sm:w-9"
+                aria-label="Clear annotations"
+                title="Clear annotations"
               >
                 <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
               </Button>
@@ -2173,6 +2177,8 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
                   onClick={prevPage}
                   onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); prevPage(); }}
                   disabled={isLoading || currentPage <= 1}
+                  aria-label="Previous page"
+                  title="Previous page"
                 >
                   <ChevronLeft className="h-3.5 w-3.5" />
                 </Button>
@@ -2186,6 +2192,8 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
                   onClick={nextPage}
                   onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); nextPage(); }}
                   disabled={isLoading || currentPage >= (totalPages || (pdf?.numPages ?? 0) || 1)}
+                  aria-label="Next page"
+                  title="Next page"
                 >
                   <ChevronRight className="h-3.5 w-3.5" />
                 </Button>
@@ -2248,6 +2256,8 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
                   onClick={prevPage}
                   onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); prevPage(); }}
                   disabled={isLoading || currentPage <= 1}
+                  aria-label="Previous page"
+                  title="Previous page"
                 >
                   <ChevronLeft className="h-4 w-4" />
                 </Button>
@@ -2261,6 +2271,8 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
                   onClick={nextPage}
                   onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); nextPage(); }}
                   disabled={isLoading || currentPage >= (totalPages || (pdf?.numPages ?? 0) || 1)}
+                  aria-label="Next page"
+                  title="Next page"
                 >
                   <ChevronRight className="h-4 w-4" />
                 </Button>

@@ -4,9 +4,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Trash2, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription,
+  AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 export const CleanupDuplicatesCard = () => {
   const [isLoading, setIsLoading] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const { toast } = useToast();
 
   const handleCleanup = async () => {
@@ -47,7 +52,7 @@ export const CleanupDuplicatesCard = () => {
           Click the button below to remove duplicate "Bucket of Love" entries from your account.
         </p>
         <Button 
-          onClick={handleCleanup}
+          onClick={() => setConfirmOpen(true)}
           disabled={isLoading}
           className="w-full"
         >
@@ -63,6 +68,25 @@ export const CleanupDuplicatesCard = () => {
             </>
           )}
         </Button>
+        <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Clean up duplicate buckets?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Permanently deletes the duplicate "Bucket of Love" entries from your account. This cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                onClick={() => { setConfirmOpen(false); void handleCleanup(); }}
+              >
+                Clean up
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </CardContent>
     </Card>
   );

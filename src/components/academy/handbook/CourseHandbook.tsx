@@ -297,7 +297,7 @@ export const CourseHandbook: React.FC<CourseHandbookProps> = ({ courseCode }) =>
               <h3 className="font-semibold">
                 {sidebarView === 'history' ? 'Edit History' : 'Handbook Sections'}
               </h3>
-              <Button variant="ghost" size="icon" onClick={() => setMobileNavOpen(false)}>
+              <Button variant="ghost" size="icon" onClick={() => setMobileNavOpen(false)} aria-label="Close navigation" title="Close navigation">
                 <X className="h-4 w-4" />
               </Button>
             </div>

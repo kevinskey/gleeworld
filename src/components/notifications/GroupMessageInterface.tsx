@@ -341,6 +341,8 @@ export const GroupMessageInterface: React.FC = () => {
                   size="icon" 
                   className="text-primary-foreground hover:bg-white/20 h-6 w-6 -ml-1"
                   onClick={() => navigate(-1)}
+                  aria-label="Back"
+                  title="Back"
                 >
                   <ArrowLeft className="h-4 w-4" />
                 </Button>
@@ -539,6 +541,8 @@ export const GroupMessageInterface: React.FC = () => {
                       size="icon" 
                       className="text-primary-foreground hover:bg-white/20 h-6 w-6 -ml-1 mr-1"
                       onClick={() => navigate(-1)}
+                      aria-label="Back"
+                      title="Back"
                     >
                       <ArrowLeft className="h-4 w-4" />
                     </Button>
