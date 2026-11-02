@@ -17,6 +17,7 @@ import { lazy, Suspense, useMemo, useState } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { toViewerScoreId } from '@/lib/viewerScoreId';
+import { useAuth } from '@/contexts/AuthContext';
 import { PERSONAL_SCORES_BUCKET } from '@/lib/personalLibrary';
 import { supabase } from '@/integrations/supabase/client';
 import { Input } from '@/components/ui/input';
@@ -129,6 +130,7 @@ function ViewerLanding({
 }: {
   onOpenScore: (scoreId: string, setlistId?: string) => void;
 }) {
+  const { user } = useAuth();
   const [tab, setTab] = useState<Tab>('library');
   const [search, setSearch] = useState('');
   const [sort, setSort] = useState<SortKey>('title');
@@ -142,16 +144,11 @@ function ViewerLanding({
   // the personal-scores bucket and have no legacy pdf_url, so the reader's
   // existing storage_bucket + storage_path signing path handles them unchanged.
   const { data: rows = [], isLoading } = useQuery<ScoreRow[]>({
-    queryKey: ['viewer-library'],
+    queryKey: ['viewer-library', user?.id],
+    enabled: !!user?.id,
     queryFn: async () => {
       const [library, personal] = await Promise.all([
-        // gw_sheet_music_browse, NOT gw_sheet_music. The base table's SELECT
-        // is deliberately open to tenant members so deep links and setlists
-        // keep working by id (20260803140000) — listing off it handed every
-        // member the whole library, shared or not. The view applies the same
-        // lanes the Music Library listing uses (security_invoker, so tenant
-        // isolation still fires) and keeps returning everything for
-        // librarians and admins.
+        // Same server-side sharing rules as Music Library and the reader.
         supabase
           .from('gw_sheet_music_browse')
           .select('id, title, composer, voicing, key_signature, time_signature, tags, pdf_url, storage_path, storage_bucket, audio_url, created_at')
@@ -168,6 +165,8 @@ function ViewerLanding({
           .limit(500),
       ]);
 
+      if (library.error) throw library.error;
+      if (personal.error) throw personal.error;
       const libraryRows = (library.data ?? []) as ScoreRow[];
       const personalRows: ScoreRow[] = ((personal.data ?? []) as PersonalRow[])
         // Repertoire saves (IMSLP/external) have no file of their own; the
