@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Rnd } from 'react-rnd';
 import { X, Minimize2, Maximize2, GripHorizontal, Music } from 'lucide-react';
@@ -18,31 +18,53 @@ interface Geometry {
   height: number;
 }
 
+const MARGIN = 16;
+const PREFERRED_WIDTH = 400;
+
+/** Widest the player may be and still leave a margin on both sides. */
+const availableWidth = () => Math.max(220, window.innerWidth - MARGIN * 2);
+
+/**
+ * Pull a geometry back inside the window.
+ *
+ * The saved size and position outlive the window they were made in: a player
+ * sized on a desktop is replayed verbatim inside the iOS app, and 400px
+ * (never mind a resized 800px) does not fit a 390pt phone. Clamp the width
+ * first, then the origin against that width, so the box can never start
+ * off-screen or end past the right edge.
+ */
+function clamp(g: Geometry): Geometry {
+  const width = Math.min(g.width, availableWidth());
+  const height = Math.min(g.height, Math.max(MIN_HEIGHT, window.innerHeight - MARGIN * 2));
+  return {
+    width,
+    height,
+    x: Math.min(Math.max(MARGIN, g.x), Math.max(MARGIN, window.innerWidth - width - MARGIN)),
+    y: Math.min(Math.max(MARGIN, g.y), Math.max(MARGIN, window.innerHeight - MIN_HEIGHT - MARGIN)),
+  };
+}
+
 // Free-floating by design: the player spawns bottom-center and the user can
 // drag it anywhere in the window — deliberately NOT pinned to a corner like
 // the old floating players.
 function initialGeometry(url: string): Geometry {
-  const width = 400;
+  const width = Math.min(PREFERRED_WIDTH, availableWidth());
   const height = (isSoundCloudSet(url) ? 420 : 220) + MIN_HEIGHT;
   const saved = localStorage.getItem(POS_KEY);
   if (saved) {
     try {
       const g = JSON.parse(saved) as Geometry;
-      if (
-        Number.isFinite(g.x) && Number.isFinite(g.y) &&
-        g.x >= 0 && g.y >= 0 &&
-        g.x < window.innerWidth - 100 && g.y < window.innerHeight - 48
-      ) {
-        return { ...g, height };
+      if (Number.isFinite(g.x) && Number.isFinite(g.y) && Number.isFinite(g.width)) {
+        return clamp({ ...g, height });
       }
     } catch { /* fall through to default spawn */ }
   }
-  return {
-    x: Math.max(16, (window.innerWidth - width) / 2),
-    y: Math.max(16, window.innerHeight - height - 96),
+  return clamp({
+    x: Math.max(MARGIN, (window.innerWidth - width) / 2),
+    y: Math.max(MARGIN, window.innerHeight - height - 96),
     width,
     height,
-  };
+  });
 }
 
 function FloatingSoundCloudPlayer({ track }: { track: SoundCloudTrack }) {
@@ -51,17 +73,32 @@ function FloatingSoundCloudPlayer({ track }: { track: SoundCloudTrack }) {
   const [isDragging, setIsDragging] = useState(false);
 
   const persist = (g: Geometry) => {
-    setGeo(g);
-    localStorage.setItem(POS_KEY, JSON.stringify(g));
+    const next = clamp(g);
+    setGeo(next);
+    localStorage.setItem(POS_KEY, JSON.stringify(next));
   };
+
+  // Rotating the phone, or the keyboard opening, resizes the window under a
+  // box that was already placed. `bounds="window"` only constrains dragging.
+  useEffect(() => {
+    const onResize = () => setGeo((g) => clamp(g));
+    window.addEventListener('resize', onResize);
+    window.addEventListener('orientationchange', onResize);
+    return () => {
+      window.removeEventListener('resize', onResize);
+      window.removeEventListener('orientationchange', onResize);
+    };
+  }, []);
 
   const content = (
     <Rnd
       position={{ x: geo.x, y: geo.y }}
       size={{ width: geo.width, height: isMinimized ? MIN_HEIGHT : geo.height }}
-      minWidth={320}
+      // A 320px floor is wider than the usable area on a 320pt phone, which
+      // left the box unshrinkable and hanging off the edge.
+      minWidth={Math.min(320, availableWidth())}
       minHeight={isMinimized ? MIN_HEIGHT : 180}
-      maxWidth={800}
+      maxWidth={Math.min(800, availableWidth())}
       maxHeight={700}
       bounds="window"
       dragHandleClassName="sc-drag-handle"
