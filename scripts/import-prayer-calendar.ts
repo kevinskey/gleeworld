@@ -18,7 +18,8 @@
 import { writeFileSync } from 'node:fs';
 import { normalizeLitCalYear } from '../src/lib/prayer/litcal';
 import { normalizeReadingsDay } from '../src/lib/prayer/readings';
-import { lit, arrayLit, header, FOOTER } from './prayer-sql';
+import { parseCitation } from '../src/lib/prayer/citation';
+import { lit, arrayLit, jsonbLit, header, FOOTER } from './prayer-sql';
 
 const LITCAL = 'https://litcal.johnromanodorazio.com/api/dev/calendar/nation/US';
 const READINGS = 'https://cpbjr.github.io/catholic-readings-api/readings';
@@ -109,16 +110,26 @@ ON CONFLICT (rite, day_date, event_key) DO UPDATE SET
     // picks the solemnity/feast over a concurrent optional memorial.
     for (const r of day.readings) {
       readingRows++;
+      // Parsed once, here, at import time — not again inside an edge
+      // function. See 20260928120000_prayer_readings_parsed_refs.sql for why.
+      const parsed = parseCitation(r.citation);
+      if (parsed.unparsed.length) {
+        console.log(`  ${day.dayDate} ${r.slot} "${r.citation}": unparsed segment(s) ${JSON.stringify(parsed.unparsed)}`);
+      }
       statements.push(
-        `INSERT INTO public.gw_prayer_readings (calendar_day_id, slot, citation, schema_label, sort_order, source)
-SELECT d.id, ${lit(r.slot)}, ${lit(r.citation)}, ${lit(r.schemaLabel)}, ${lit(r.sortOrder)}, ${lit(r.source)}
+        `INSERT INTO public.gw_prayer_readings
+  (calendar_day_id, slot, citation, schema_label, sort_order, source,
+   usfm_code, ranges, unparsed_segments)
+SELECT d.id, ${lit(r.slot)}, ${lit(r.citation)}, ${lit(r.schemaLabel)}, ${lit(r.sortOrder)}, ${lit(r.source)},
+       ${lit(parsed.usfmCode)}, ${jsonbLit(parsed.ranges)}, ${arrayLit(parsed.unparsed)}
 FROM public.gw_prayer_calendar_days d
 WHERE d.rite = 'roman_catholic' AND d.day_date = ${lit(day.dayDate)}
 ORDER BY d.rank_grade DESC NULLS LAST, d.event_key
 LIMIT 1
 ON CONFLICT (calendar_day_id, slot, schema_label) DO UPDATE SET
   citation = EXCLUDED.citation, sort_order = EXCLUDED.sort_order,
-  source = EXCLUDED.source;`,
+  source = EXCLUDED.source, usfm_code = EXCLUDED.usfm_code,
+  ranges = EXCLUDED.ranges, unparsed_segments = EXCLUDED.unparsed_segments;`,
       );
     }
     await new Promise((r) => setTimeout(r, 40)); // be polite; parallel gets throttled
