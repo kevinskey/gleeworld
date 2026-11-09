@@ -84,3 +84,7 @@ Deploy to iOS: `npm run build && npx cap sync ios`, then archive/upload from Xco
 3. `--delete` is deliberately absent — per-tenant bootstrap files live under `/var/www/gleeworld/html/tenants/` on the droplet and are not in `dist/`.
 
 Skip the build if you already have a fresh dist: `bash scripts/deploy-frontend.sh --skip-build`.
+
+## Glossary
+
+- **TSB** = T-Shirt Brothers, Kevin's separate project at `kevinskey/tshirtbrothers` (not `shirt-bros-welcome-hub`). In a cloud session, attach it with `add_repo` and clone to `/home/user/tshirtbrothers`.
