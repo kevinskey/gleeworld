@@ -1,4 +1,4 @@
-From 542e1dccb56b7fd6b1d9a874425112c5b3c5f8d0 Mon Sep 17 00:00:00 2001
+From 09ccdf84a79088fcd1f377e91861fa563115442c Mon Sep 17 00:00:00 2001
 From: Claude <noreply@anthropic.com>
 Date: Wed, 25 Nov 2026 10:33:44 +0000
 Subject: [PATCH 1/4] Order process: close out invoices, legible product
@@ -46,12 +46,12 @@ Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>
 Claude-Session: https://claude.ai/code/session_01LYEMaMZPU19bz29YxAMBh6
 ---
  client/src/components/admin/OpsDashboard.tsx  |  11 +-
- .../src/components/admin/QuickBillModal.tsx   | 332 +++++++++++++++++
- .../src/components/admin/QuoteItemsEditor.tsx | 117 ++++--
+ .../src/components/admin/QuickBillModal.tsx   | 330 ++++++++++++++++++
+ .../src/components/admin/QuoteItemsEditor.tsx | 117 +++++--
  .../src/components/layout/StickyMobileCTA.tsx |   4 +-
  client/src/lib/api.ts                         |  25 +-
  client/src/pages/AdminOrderDetailPage.tsx     |   9 +-
- client/src/pages/AdminPage.tsx                | 338 ++++++++++++++----
+ client/src/pages/AdminPage.tsx                | 329 +++++++++++++----
  client/src/pages/InvoiceViewPage.tsx          |  41 ++-
  client/src/pages/PaymentPage.tsx              |  63 +++-
  server/lib/orderMoney.js                      |   2 +-
@@ -61,7 +61,7 @@ Claude-Session: https://claude.ai/code/session_01LYEMaMZPU19bz29YxAMBh6
  server/routes/payments.js                     |  38 ++
  server/routes/payments.test.js                |  31 +-
  server/routes/quotes.js                       |  55 ++-
- 16 files changed, 1081 insertions(+), 128 deletions(-)
+ 16 files changed, 1074 insertions(+), 124 deletions(-)
  create mode 100644 client/src/components/admin/QuickBillModal.tsx
  create mode 100644 server/migrations/invoices_customer_email_optional_20261125.sql
 
@@ -101,10 +101,10 @@ index d8394b5..f3380c3 100644
              <Plus className="h-4 w-4" /> New Order
 diff --git a/client/src/components/admin/QuickBillModal.tsx b/client/src/components/admin/QuickBillModal.tsx
 new file mode 100644
-index 0000000..ba163c6
+index 0000000..7e22cc0
 --- /dev/null
 +++ b/client/src/components/admin/QuickBillModal.tsx
-@@ -0,0 +1,332 @@
+@@ -0,0 +1,330 @@
 +// Quick Bill — bill a customer right now, in one screen.
 +//
 +// The full invoice editor assumes a job: order link, mockup, catalog lines,
@@ -125,6 +125,7 @@ index 0000000..ba163c6
 +  createInvoice, sendInvoice, sendInvoiceSms, recordPayment,
 +  type Customer, type Invoice, type InvoiceItem,
 +} from '@/lib/api';
++import { PAYMENT_METHODS } from '@/lib/paymentMethods';
 +
 +// Same rate the invoice editor starts from. Off by default here: the
 +// amount the admin types at the counter is the amount being charged.
@@ -133,9 +134,6 @@ index 0000000..ba163c6
 +type Outcome = 'emailed' | 'texted' | 'paid' | 'draft';
 +type Line = { description: string; quantity: string; unit_price: string };
 +
-+const METHODS: Array<[string, string]> = [
-+  ['cash', 'Cash'], ['zelle', 'Zelle'], ['cashapp', 'Cash App'], ['card', 'Card'], ['check', 'Check'], ['other', 'Other'],
-+];
 +
 +function money(n: number) { return `$${n.toFixed(2)}`; }
 +
@@ -409,14 +407,14 @@ index 0000000..ba163c6
 +              <div className="rounded-xl border border-green-200 bg-green-50 p-3">
 +                <p className="text-xs font-semibold text-green-900 mb-2">They paid just now — record it</p>
 +                <div className="flex flex-wrap gap-1.5 mb-3">
-+                  {METHODS.map(([v, label]) => (
++                  {PAYMENT_METHODS.map((m) => (
 +                    <button
-+                      key={v}
++                      key={m.value}
 +                      type="button"
-+                      onClick={() => setMethod(v)}
-+                      className={`px-3 py-1.5 rounded-full text-xs font-medium border transition ${method === v ? 'bg-green-700 text-white border-green-700' : 'bg-white text-gray-700 border-gray-200 hover:border-green-400'}`}
++                      onClick={() => setMethod(m.value)}
++                      className={`px-3 py-1.5 rounded-full text-xs font-medium border transition ${method === m.value ? 'bg-green-700 text-white border-green-700' : 'bg-white text-gray-700 border-gray-200 hover:border-green-400'}`}
 +                    >
-+                      {label}
++                      {m.label}
 +                    </button>
 +                  ))}
 +                </div>
@@ -679,10 +677,10 @@ index 9accc08..d4ed580 100644
  export interface BlogPost {
    id: string;
 diff --git a/client/src/pages/AdminOrderDetailPage.tsx b/client/src/pages/AdminOrderDetailPage.tsx
-index b30dd4a..8c3dc28 100644
+index ac425d7..200e7ee 100644
 --- a/client/src/pages/AdminOrderDetailPage.tsx
 +++ b/client/src/pages/AdminOrderDetailPage.tsx
-@@ -444,7 +444,12 @@ export default function AdminOrderDetailPage() {
+@@ -445,7 +445,12 @@ export default function AdminOrderDetailPage() {
                final payment" hops. Mark Ready emails+texts that the order
                is done (with a pay-balance button when money is due); the
                balance request can be re-sent on its own any time. */}
@@ -696,7 +694,7 @@ index b30dd4a..8c3dc28 100644
              <div className="mt-3 pt-3 border-t border-gray-200 flex flex-wrap items-center gap-2">
                <span className="text-sm font-medium text-gray-700">Notify customer:</span>
                {quote.status !== 'ready' && (
-@@ -477,7 +482,7 @@ export default function AdminOrderDetailPage() {
+@@ -478,7 +483,7 @@ export default function AdminOrderDetailPage() {
                and no toggle. Calls the fulfill endpoint: sets status to
                completed, stamps the date, notifies the customer, and sends
                the review request. */}
@@ -706,7 +704,7 @@ index b30dd4a..8c3dc28 100644
                <span className="text-sm font-medium text-gray-700">Complete this order:</span>
                <button
 diff --git a/client/src/pages/AdminPage.tsx b/client/src/pages/AdminPage.tsx
-index 96b6515..5cc4468 100644
+index 0a52220..da8ebcb 100644
 --- a/client/src/pages/AdminPage.tsx
 +++ b/client/src/pages/AdminPage.tsx
 @@ -55,6 +55,7 @@ import {
@@ -733,7 +731,7 @@ index 96b6515..5cc4468 100644
    recordPayment,
    type BlogPost,
    fetchAdminBlogPosts,
-@@ -320,6 +323,7 @@ const STATUS_COLORS: Record<string, string> = {
+@@ -321,6 +324,7 @@ const STATUS_COLORS: Record<string, string> = {
    draft: 'bg-gray-100 text-gray-800',
    sent: 'bg-blue-100 text-blue-800',
    paid: 'bg-green-100 text-green-800',
@@ -741,7 +739,7 @@ index 96b6515..5cc4468 100644
    overdue: 'bg-red-100 text-red-800',
    // The order ladder between deposit and done. in_production and ready are
    // shared with the gang sheet queue — same word, same meaning, same colour.
-@@ -367,7 +371,7 @@ const PRODUCTION_CHECKLIST = [
+@@ -368,7 +372,7 @@ const PRODUCTION_CHECKLIST = [
  // already tax-inclusive.
  const DEFAULT_INVOICE_TAX_RATE = '7.75';
  
@@ -750,7 +748,7 @@ index 96b6515..5cc4468 100644
  type InvoiceView = 'list' | 'create' | 'preview';
  
  // Customer private asset library panel — admin uploads graphics that only this
-@@ -1191,32 +1195,111 @@ export default function AdminPage() {
+@@ -1192,32 +1196,111 @@ export default function AdminPage() {
      window.open(`/invoice/view/${id}?print=1`, '_blank', 'noopener');
    }
  
@@ -878,7 +876,7 @@ index 96b6515..5cc4468 100644
      setInvoiceQuoteId(Number(q.id) || null);
      setActiveSection('invoices');
      setInvoiceView('create');
-@@ -1239,7 +1322,7 @@ export default function AdminPage() {
+@@ -1240,7 +1323,7 @@ export default function AdminPage() {
    const [ratesError, setRatesError] = useState('');
    const [recordPaymentInvoice, setRecordPaymentInvoice] = useState<Invoice | null>(null);
    const [paymentAmount, setPaymentAmount] = useState('');
@@ -887,7 +885,7 @@ index 96b6515..5cc4468 100644
    // Deliberate overpayment. The server refuses anything that takes an invoice
    // past its total unless this is set — two invoices drifted that way by
    // recording a Stripe payment a second time by hand.
-@@ -2234,6 +2317,24 @@ export default function AdminPage() {
+@@ -2235,6 +2318,24 @@ export default function AdminPage() {
      onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admin', 'invoices'] }),
    });
  
@@ -912,7 +910,7 @@ index 96b6515..5cc4468 100644
    const recordPaymentMutation = useMutation({
      mutationFn: ({ id, amount, method, overpay_ok }: { id: string; amount: number; method: string; overpay_ok?: boolean }) => recordPayment(id, { amount, method, overpay_ok }),
      onSuccess: (updated) => {
-@@ -2246,15 +2347,16 @@ export default function AdminPage() {
+@@ -2247,15 +2348,16 @@ export default function AdminPage() {
        }
        setRecordPaymentInvoice(null);
        setPaymentAmount('');
@@ -932,7 +930,7 @@ index 96b6515..5cc4468 100644
        queryClient.invalidateQueries({ queryKey: ['admin', 'quotes'] });
        queryClient.invalidateQueries({ queryKey: ['admin', 'orders'] });
        setPriceModalQuote(null);
-@@ -2263,10 +2365,17 @@ export default function AdminPage() {
+@@ -2264,10 +2366,17 @@ export default function AdminPage() {
        setPriceDesignFee('0');
        setPriceRushFee('0');
        setPriceMessage('');
@@ -952,7 +950,7 @@ index 96b6515..5cc4468 100644
      },
    });
  
-@@ -2610,8 +2719,10 @@ export default function AdminPage() {
+@@ -2611,8 +2720,10 @@ export default function AdminPage() {
    // will see amount_due === 0 and email a receipt instead of a payment link.
    async function handleSaveAndMarkPaid() {
      if (!previewInvoice) return;
@@ -965,7 +963,7 @@ index 96b6515..5cc4468 100644
      try {
        // Same duplicate guard as handleSendPreviewedInvoice: update in place
        // when editing an existing invoice.
-@@ -3636,6 +3747,7 @@ export default function AdminPage() {
+@@ -3639,6 +3750,7 @@ export default function AdminPage() {
              onOpenInvoices={() => setActiveSection('invoices')}
              onOpenCustomers={() => setActiveSection('customers')}
              onNewInvoice={() => { setActiveSection('invoices'); setInvoiceView('create'); }}
@@ -973,7 +971,7 @@ index 96b6515..5cc4468 100644
              onNewCustomer={() => { setActiveSection('customers'); setShowCustomerForm(true); }}
              onNewJob={() => setActiveSection('gangsheet')}
              toast={toast}
-@@ -5824,7 +5936,7 @@ export default function AdminPage() {
+@@ -5827,7 +5939,7 @@ export default function AdminPage() {
                      )}
                    </div>
                    <div className="flex items-center gap-2 overflow-x-auto">
@@ -982,7 +980,7 @@ index 96b6515..5cc4468 100644
                        <button
                          key={f}
                          onClick={() => setInvoiceFilter(f)}
-@@ -5835,6 +5947,14 @@ export default function AdminPage() {
+@@ -5838,6 +5950,14 @@ export default function AdminPage() {
                          {f}
                        </button>
                      ))}
@@ -997,7 +995,7 @@ index 96b6515..5cc4468 100644
                      <button
                        onClick={() => { resetInvoiceForm(); setInvoiceView('create'); }}
                        className="flex items-center gap-1 bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded-lg text-xs font-medium transition-colors whitespace-nowrap"
-@@ -5886,10 +6006,20 @@ export default function AdminPage() {
+@@ -5889,10 +6009,20 @@ export default function AdminPage() {
                                {textInvoiceMutation.isPending && textInvoiceMutation.variables === inv.id ? 'Texting…' : 'Text'}
                              </button>
                            )}
@@ -1020,7 +1018,7 @@ index 96b6515..5cc4468 100644
                          </div>
                        </div>
                      ))}
-@@ -5962,15 +6092,23 @@ export default function AdminPage() {
+@@ -5965,15 +6095,23 @@ export default function AdminPage() {
                                      <MessageSquare className="w-4 h-4" />
                                    </button>
                                  )}
@@ -1049,7 +1047,7 @@ index 96b6515..5cc4468 100644
                                  <button
                                    title="Print invoice"
                                    onClick={() => printInvoice(inv.id)}
-@@ -5987,7 +6125,7 @@ export default function AdminPage() {
+@@ -5990,7 +6128,7 @@ export default function AdminPage() {
                                  </button>
                                  <button
                                    title="Delete"
@@ -1058,7 +1056,7 @@ index 96b6515..5cc4468 100644
                                    className="p-1.5 text-red-600 hover:text-red-700 hover:bg-red-50 rounded transition-colors"
                                  >
                                    <Trash2 className="w-4 h-4" />
-@@ -6376,7 +6514,7 @@ export default function AdminPage() {
+@@ -6379,7 +6517,7 @@ export default function AdminPage() {
                                      placeholder={item.item_type === 'fee' ? 'Fee / charge (pick one or type your own)' : 'Item description or search catalog…'}
                                    />
                                    {invoiceLineSearchIdx === idx && item.item_type !== 'fee' && (item.description || '').length >= 2 && (invoiceSearchProducts.length > 0 || matchingCustomProducts.length > 0) && (
@@ -1067,7 +1065,7 @@ index 96b6515..5cc4468 100644
                                        {matchingCustomProducts.slice(0, 5).map((cp: CustomProduct) => (
                                          <button
                                            key={`line-custom-${cp.id}`}
-@@ -6409,10 +6547,18 @@ export default function AdminPage() {
+@@ -6412,10 +6550,18 @@ export default function AdminPage() {
                                                openProductConfigurator(p, idx);
                                                setInvoiceLineSearchIdx(null);
                                              }}
@@ -1089,7 +1087,7 @@ index 96b6515..5cc4468 100644
                                            </button>
                                          );
                                        })}
-@@ -6728,12 +6874,20 @@ export default function AdminPage() {
+@@ -6731,12 +6877,20 @@ export default function AdminPage() {
                            {due > 0 && (
                              <button
                                type="button"
@@ -1113,7 +1111,7 @@ index 96b6515..5cc4468 100644
                            {due > 0 && editingInvoice.status !== 'draft' && (
                              <button
                                type="button"
-@@ -6907,15 +7061,30 @@ export default function AdminPage() {
+@@ -6910,15 +7064,25 @@ export default function AdminPage() {
                    <button onClick={() => setInvoiceView('create')} className="px-6 py-2.5 rounded-lg border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
                      Edit
                    </button>
@@ -1133,12 +1131,7 @@ index 96b6515..5cc4468 100644
 +                      aria-label="How the customer paid"
 +                      className="bg-green-50 text-green-900 text-sm px-2 border-r border-green-700 focus:outline-none"
 +                    >
-+                      <option value="cash">Cash</option>
-+                      <option value="zelle">Zelle</option>
-+                      <option value="cashapp">Cash App</option>
-+                      <option value="check">Check</option>
-+                      <option value="card">Card (in person)</option>
-+                      <option value="other">Other</option>
++                      {PAYMENT_METHODS.map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}
 +                    </select>
 +                    <button
 +                      onClick={handleSaveAndMarkPaid}
@@ -1153,7 +1146,7 @@ index 96b6515..5cc4468 100644
                    <button
                      onClick={handleSendPreviewedInvoice}
                      disabled={createInvoiceMutation.isPending || sendInvoiceMutation.isPending}
-@@ -7078,13 +7247,13 @@ export default function AdminPage() {
+@@ -7081,13 +7245,13 @@ export default function AdminPage() {
                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
                  <div className="bg-white rounded-2xl max-w-md w-full">
                    <div className="border-b border-gray-200 px-6 py-4 flex items-center justify-between">
@@ -1169,28 +1162,24 @@ index 96b6515..5cc4468 100644
                      </div>
                      <div>
                        <label className="block text-xs text-gray-500 mb-1">Amount</label>
-@@ -7094,20 +7263,25 @@ export default function AdminPage() {
+@@ -7097,16 +7261,25 @@ export default function AdminPage() {
                        </div>
                      </div>
                      <div>
 -                      <label className="block text-xs text-gray-500 mb-1">Payment Method</label>
 -                      <select value={paymentMethod} onChange={e => setPaymentMethod(e.target.value)} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500">
--                        <option value="card">Credit Card</option>
--                        <option value="cash">Cash</option>
--                        <option value="check">Check</option>
--                        <option value="transfer">Bank Transfer</option>
--                        <option value="other">Other</option>
+-                        {PAYMENT_METHODS.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
 -                      </select>
 +                      <label className="block text-xs text-gray-500 mb-1">Paid by</label>
 +                      <div className="flex flex-wrap gap-1.5">
-+                        {([['cash', 'Cash'], ['zelle', 'Zelle'], ['cashapp', 'Cash App'], ['card', 'Card'], ['check', 'Check'], ['transfer', 'Transfer'], ['other', 'Other']] as const).map(([v, label]) => (
++                        {PAYMENT_METHODS.map((m) => (
 +                          <button
-+                            key={v}
++                            key={m.value}
 +                            type="button"
-+                            onClick={() => setPaymentMethod(v)}
-+                            className={`px-3 py-1.5 rounded-full text-xs font-medium border transition ${paymentMethod === v ? 'bg-gray-900 text-white border-gray-900' : 'bg-white text-gray-700 border-gray-200 hover:border-gray-400'}`}
++                            onClick={() => setPaymentMethod(m.value)}
++                            className={`px-3 py-1.5 rounded-full text-xs font-medium border transition ${paymentMethod === m.value ? 'bg-gray-900 text-white border-gray-900' : 'bg-white text-gray-700 border-gray-200 hover:border-gray-400'}`}
 +                          >
-+                            {label}
++                            {m.label}
 +                          </button>
 +                        ))}
 +                      </div>
@@ -1205,7 +1194,7 @@ index 96b6515..5cc4468 100644
                            Check that it wasn't already recorded when it cleared Stripe, then tick to record it anyway.
                          </span>
                        </label>
-@@ -7123,7 +7297,7 @@ export default function AdminPage() {
+@@ -7122,7 +7295,7 @@ export default function AdminPage() {
                          className="flex-1 flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2.5 rounded-lg text-sm font-medium transition disabled:opacity-50"
                        >
                          {recordPaymentMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <DollarSign className="w-4 h-4" />}
@@ -1214,7 +1203,7 @@ index 96b6515..5cc4468 100644
                        </button>
                      </div>
                    </div>
-@@ -7133,6 +7307,28 @@ export default function AdminPage() {
+@@ -7132,6 +7305,28 @@ export default function AdminPage() {
            </div>
          )}
  
@@ -1243,7 +1232,7 @@ index 96b6515..5cc4468 100644
          {/* Settings Section */}
          {activeSection === 'blog' && (
            <div>
-@@ -9970,7 +10166,10 @@ export default function AdminPage() {
+@@ -9969,7 +10164,10 @@ export default function AdminPage() {
          {/* Send Price Modal */}
          {priceModalQuote && (
            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
@@ -1255,7 +1244,7 @@ index 96b6515..5cc4468 100644
                <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between rounded-t-2xl">
                  <h3 className="font-display font-semibold text-gray-900">Send Price Quote</h3>
                  <button
-@@ -11656,6 +11855,17 @@ function mayOweMoney(inv: Invoice & { may_owe_money?: boolean }): boolean {
+@@ -11655,6 +11853,17 @@ function mayOweMoney(inv: Invoice & { may_owe_money?: boolean }): boolean {
    return Number(inv.total) > 0 && Number(inv.amount_paid) < Number(inv.total);
  }
  

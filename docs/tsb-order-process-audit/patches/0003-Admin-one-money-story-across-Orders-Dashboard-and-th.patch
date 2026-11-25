@@ -1,4 +1,4 @@
-From 1cf2b9339541de390c25ea3622147cd9daa25cc8 Mon Sep 17 00:00:00 2001
+From b706f66584263ace39a1ae8bdcab7ec3be3177fe Mon Sep 17 00:00:00 2001
 From: Claude <noreply@anthropic.com>
 Date: Wed, 25 Nov 2026 10:43:58 +0000
 Subject: [PATCH 3/4] Admin: one money story across Orders, Dashboard and the
@@ -57,10 +57,10 @@ index a6e84d9..d15a9af 100644
            onClose={() => setBrowsing(false)}
          />
 diff --git a/client/src/pages/AdminOrderDetailPage.tsx b/client/src/pages/AdminOrderDetailPage.tsx
-index 8c3dc28..ed903bc 100644
+index 200e7ee..2762720 100644
 --- a/client/src/pages/AdminOrderDetailPage.tsx
 +++ b/client/src/pages/AdminOrderDetailPage.tsx
-@@ -283,8 +283,13 @@ export default function AdminOrderDetailPage() {
+@@ -284,8 +284,13 @@ export default function AdminOrderDetailPage() {
    const invoicePaid = invoices.reduce((s, i) => s + Number(i.amount_paid || 0), 0);
    const quoteDeposit = quote.accepted_at ? Number((quote as { deposit_amount?: string | null }).deposit_amount || 0) : 0;
    const totalPaid = invoicePaid > 0 ? invoicePaid : quoteDeposit;
@@ -76,7 +76,7 @@ index 8c3dc28..ed903bc 100644
    const stages = quote.order_stages || {};
  
 diff --git a/client/src/pages/AdminPage.tsx b/client/src/pages/AdminPage.tsx
-index f93299b..25a9e7d 100644
+index b0a8593..72c62f0 100644
 --- a/client/src/pages/AdminPage.tsx
 +++ b/client/src/pages/AdminPage.tsx
 @@ -95,6 +95,7 @@ import {
@@ -87,7 +87,7 @@ index f93299b..25a9e7d 100644
    orderNumber,
    fetchInvoices,
    fetchInvoice,
-@@ -1011,7 +1012,7 @@ export default function AdminPage() {
+@@ -1012,7 +1013,7 @@ export default function AdminPage() {
              shipping: String(inv.shipping || 0),
              discount: String(inv.discount || 0),
              notes: inv.notes || '',
@@ -96,7 +96,7 @@ index f93299b..25a9e7d 100644
              mockup_id: inv.mockup_id ?? null,
              mockup_preview_url: inv.mockup_preview_url ?? null,
              mockup_preview_url_back: inv.mockup_preview_url_back ?? null, extra_mockups: (inv.extra_mockups ?? []),
-@@ -1057,15 +1058,21 @@ export default function AdminPage() {
+@@ -1058,15 +1059,21 @@ export default function AdminPage() {
          ? { top: r.bottom + 4, right, maxHeight: Math.max(160, below) }
          : { bottom: window.innerHeight - r.top + 4, right, maxHeight: Math.max(160, above) }
      );
@@ -119,7 +119,7 @@ index f93299b..25a9e7d 100644
        setOpenActionMenu(null);
      };
      window.addEventListener('scroll', close, true);
-@@ -2625,7 +2632,7 @@ export default function AdminPage() {
+@@ -2626,7 +2633,7 @@ export default function AdminPage() {
        shipping: String(inv.shipping || 0),
        discount: String(inv.discount || 0),
        notes: inv.notes || '',
@@ -128,7 +128,7 @@ index f93299b..25a9e7d 100644
        mockup_id: inv.mockup_id ?? null,
        mockup_preview_url: inv.mockup_preview_url ?? null,
        mockup_preview_url_back: inv.mockup_preview_url_back ?? null, extra_mockups: (inv.extra_mockups ?? []),
-@@ -5805,13 +5812,23 @@ export default function AdminPage() {
+@@ -5808,13 +5815,23 @@ export default function AdminPage() {
                              ? `$${Number(o.estimated_price).toFixed(2)}`
                              : '--'}
                          </td>
@@ -155,7 +155,7 @@ index f93299b..25a9e7d 100644
                              const total = o.estimated_price != null ? Number(o.estimated_price) : 0;
                              if (total <= 0) return '--';
                              if (o.balance_paid_at) return '$0.00';
-@@ -5935,7 +5952,8 @@ export default function AdminPage() {
+@@ -5938,7 +5955,8 @@ export default function AdminPage() {
                        </button>
                      )}
                    </div>
@@ -165,7 +165,7 @@ index f93299b..25a9e7d 100644
                      {(['all', 'draft', 'sent', 'partial', 'paid', 'overdue', 'archived'] as InvoiceFilter[]).map(f => (
                        <button
                          key={f}
-@@ -5947,6 +5965,7 @@ export default function AdminPage() {
+@@ -5950,6 +5968,7 @@ export default function AdminPage() {
                          {f}
                        </button>
                      ))}
@@ -173,7 +173,7 @@ index f93299b..25a9e7d 100644
                      <button
                        onClick={() => setQuickBillOpen(true)}
                        title="Bill a customer right now — name, amount, send or mark paid"
-@@ -11850,6 +11869,14 @@ function MockupSideScroller({ images, alt }: { images: Array<{ src: string; labe
+@@ -11848,6 +11867,14 @@ function MockupSideScroller({ images, alt }: { images: Array<{ src: string; labe
   * look at the invoice and decide. Trusting `status` alone hid every control
   * on the 11 invoices marked paid that still show a balance.
   */

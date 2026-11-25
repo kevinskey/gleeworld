@@ -1,4 +1,4 @@
-From 6f6907f43fd7e78abddfe4dd924b5e453e970807 Mon Sep 17 00:00:00 2001
+From f85edecb7054a631cf4eed00e9fc29f037fe1bda Mon Sep 17 00:00:00 2001
 From: Claude <noreply@anthropic.com>
 Date: Wed, 25 Nov 2026 10:37:43 +0000
 Subject: [PATCH 2/4] Quick Bill: keep the description field wide; say when the
@@ -20,10 +20,10 @@ Claude-Session: https://claude.ai/code/session_01LYEMaMZPU19bz29YxAMBh6
  2 files changed, 13 insertions(+), 6 deletions(-)
 
 diff --git a/client/src/components/admin/QuickBillModal.tsx b/client/src/components/admin/QuickBillModal.tsx
-index ba163c6..35bc1b6 100644
+index 7e22cc0..3f1947c 100644
 --- a/client/src/components/admin/QuickBillModal.tsx
 +++ b/client/src/components/admin/QuickBillModal.tsx
-@@ -23,7 +23,7 @@ import {
+@@ -24,7 +24,7 @@ import { PAYMENT_METHODS } from '@/lib/paymentMethods';
  // amount the admin types at the counter is the amount being charged.
  const TAX_RATE_PCT = 7.75;
  
@@ -31,8 +31,8 @@ index ba163c6..35bc1b6 100644
 +type Outcome = 'emailed' | 'texted' | 'paid' | 'paid_receipt_failed' | 'draft';
  type Line = { description: string; quantity: string; unit_price: string };
  
- const METHODS: Array<[string, string]> = [
-@@ -124,7 +124,9 @@ export default function QuickBillModal({ customers, onClose, onDone, onOpenInvoi
+ 
+@@ -122,7 +122,9 @@ export default function QuickBillModal({ customers, onClose, onDone, onOpenInvoi
          if (emailOk) {
            // Nothing owed → the send route emails a receipt, not a pay link.
            try { invoice = await sendInvoice(invoice.id); } catch (err) {
@@ -43,7 +43,7 @@ index ba163c6..35bc1b6 100644
            }
          }
        }
-@@ -136,7 +138,10 @@ export default function QuickBillModal({ customers, onClose, onDone, onOpenInvoi
+@@ -134,7 +136,10 @@ export default function QuickBillModal({ customers, onClose, onDone, onOpenInvoi
      }
    }
  
@@ -55,7 +55,7 @@ index ba163c6..35bc1b6 100644
  
    return (
      <div className="fixed inset-0 z-50 bg-black/50 flex items-end sm:items-center justify-center" onClick={onClose}>
-@@ -230,7 +235,7 @@ export default function QuickBillModal({ customers, onClose, onDone, onOpenInvoi
+@@ -228,7 +233,7 @@ export default function QuickBillModal({ customers, onClose, onDone, onOpenInvoi
                        value={l.description}
                        onChange={(e) => updateLine(i, { description: e.target.value })}
                        placeholder={i === 0 ? '3 black tees, front print' : 'Another item'}
@@ -64,7 +64,7 @@ index ba163c6..35bc1b6 100644
                        style={{ fontSize: '16px' }}
                      />
                      <input
-@@ -238,10 +243,10 @@ export default function QuickBillModal({ customers, onClose, onDone, onOpenInvoi
+@@ -236,10 +241,10 @@ export default function QuickBillModal({ customers, onClose, onDone, onOpenInvoi
                        onChange={(e) => updateLine(i, { quantity: e.target.value })}
                        inputMode="numeric"
                        aria-label="Quantity"
@@ -78,10 +78,10 @@ index ba163c6..35bc1b6 100644
                        <input
                          value={l.unit_price}
 diff --git a/client/src/pages/AdminPage.tsx b/client/src/pages/AdminPage.tsx
-index 5cc4468..f93299b 100644
+index da8ebcb..b0a8593 100644
 --- a/client/src/pages/AdminPage.tsx
 +++ b/client/src/pages/AdminPage.tsx
-@@ -7318,6 +7318,8 @@ export default function AdminPage() {
+@@ -7316,6 +7316,8 @@ export default function AdminPage() {
                queryClient.invalidateQueries({ queryKey: ['admin', 'orders'] });
                toast(what === 'paid'
                  ? `${inv.invoice_number} paid in full — receipt ${inv.customer_email ? 'emailed' : 'ready to print'}`

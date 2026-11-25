@@ -6,7 +6,7 @@ session that produced them could not push to that repository.
 - `report.html` — the audit: findings from the customer and admin walkthroughs,
   what was fixed, what is still open, verification results.
 - `patches/0001..0004-*.patch` — four commits against tshirtbrothers `main`
-  @ `cc90404` (branch `fix/order-process-vetting`). Apply with:
+  @ `5a79033` (branch `fix/order-process-vetting`). Apply with:
 
       git checkout -b fix/order-process-vetting origin/main
       git am docs/tsb-order-process-audit/patches/*.patch

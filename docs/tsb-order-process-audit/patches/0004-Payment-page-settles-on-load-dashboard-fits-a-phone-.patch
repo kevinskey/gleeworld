@@ -1,4 +1,4 @@
-From 4b810b527efb7daf5c780aa2850d76df98d27f6a Mon Sep 17 00:00:00 2001
+From c01a22de8ec0f90310870f28ce281653b02237de Mon Sep 17 00:00:00 2001
 From: Claude <noreply@anthropic.com>
 Date: Wed, 25 Nov 2026 11:10:55 +0000
 Subject: [PATCH 4/4] Payment page settles on load; dashboard fits a phone;
@@ -56,10 +56,10 @@ index d15a9af..9f7ea7a 100644
            onClose={() => setBrowsing(false)}
          />
 diff --git a/client/src/pages/AdminOrderDetailPage.tsx b/client/src/pages/AdminOrderDetailPage.tsx
-index ed903bc..6d92958 100644
+index 2762720..b93c645 100644
 --- a/client/src/pages/AdminOrderDetailPage.tsx
 +++ b/client/src/pages/AdminOrderDetailPage.tsx
-@@ -288,7 +288,8 @@ export default function AdminOrderDetailPage() {
+@@ -289,7 +289,8 @@ export default function AdminOrderDetailPage() {
    // invoice due still includes it. Net it out, as lib/orderMoney.js does,
    // so the header stops reading "Paid $336 / Due $690".
    const invoiceDue = invoices.reduce((s, i) => s + Math.max(0, Number(i.amount_due || 0)), 0);
@@ -70,10 +70,10 @@ index ed903bc..6d92958 100644
      : Math.max(0, Number(quote.estimated_price || 0) - totalPaid);
    const stages = quote.order_stages || {};
 diff --git a/client/src/pages/AdminPage.tsx b/client/src/pages/AdminPage.tsx
-index 25a9e7d..ce49614 100644
+index 72c62f0..c170bea 100644
 --- a/client/src/pages/AdminPage.tsx
 +++ b/client/src/pages/AdminPage.tsx
-@@ -5953,7 +5953,7 @@ export default function AdminPage() {
+@@ -5956,7 +5956,7 @@ export default function AdminPage() {
                      )}
                    </div>
                    <div className="flex items-center gap-2 w-full md:w-auto">
