@@ -1,0 +1,95 @@
+From 6f6907f43fd7e78abddfe4dd924b5e453e970807 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Wed, 25 Nov 2026 10:37:43 +0000
+Subject: [PATCH 2/4] Quick Bill: keep the description field wide; say when the
+ receipt email failed
+
+The line-item row gave the quantity box both w-full and w-14, and w-full
+won, squeezing the description input to nothing. Width now lives on the
+row's cells, not the shared input class.
+
+A paid-but-no-receipt outcome used to toast "receipt emailed" on top of
+the failure toast; it now says the payment is recorded and leaves the
+printable invoice as the receipt.
+
+Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01LYEMaMZPU19bz29YxAMBh6
+---
+ client/src/components/admin/QuickBillModal.tsx | 17 +++++++++++------
+ client/src/pages/AdminPage.tsx                 |  2 ++
+ 2 files changed, 13 insertions(+), 6 deletions(-)
+
+diff --git a/client/src/components/admin/QuickBillModal.tsx b/client/src/components/admin/QuickBillModal.tsx
+index ba163c6..35bc1b6 100644
+--- a/client/src/components/admin/QuickBillModal.tsx
++++ b/client/src/components/admin/QuickBillModal.tsx
+@@ -23,7 +23,7 @@ import {
+ // amount the admin types at the counter is the amount being charged.
+ const TAX_RATE_PCT = 7.75;
+ 
+-type Outcome = 'emailed' | 'texted' | 'paid' | 'draft';
++type Outcome = 'emailed' | 'texted' | 'paid' | 'paid_receipt_failed' | 'draft';
+ type Line = { description: string; quantity: string; unit_price: string };
+ 
+ const METHODS: Array<[string, string]> = [
+@@ -124,7 +124,9 @@ export default function QuickBillModal({ customers, onClose, onDone, onOpenInvoi
+         if (emailOk) {
+           // Nothing owed → the send route emails a receipt, not a pay link.
+           try { invoice = await sendInvoice(invoice.id); } catch (err) {
+-            toast(`Paid and recorded, but the receipt email failed: ${err instanceof Error ? err.message : 'mail error'}`, 'error');
++            toast(`Receipt email failed: ${err instanceof Error ? err.message : 'mail error'}. The payment is recorded — print the invoice as a receipt.`, 'error');
++            onDone(invoice, 'paid_receipt_failed');
++            return;
+           }
+         }
+       }
+@@ -136,7 +138,10 @@ export default function QuickBillModal({ customers, onClose, onDone, onOpenInvoi
+     }
+   }
+ 
+-  const field = 'w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 bg-white';
++  // No width here: the line-item row sizes its own cells (a `w-full` on
++  // the quantity box out-ranked `w-14` and squeezed the description to 0).
++  const box = 'border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 bg-white';
++  const field = `w-full ${box}`;
+ 
+   return (
+     <div className="fixed inset-0 z-50 bg-black/50 flex items-end sm:items-center justify-center" onClick={onClose}>
+@@ -230,7 +235,7 @@ export default function QuickBillModal({ customers, onClose, onDone, onOpenInvoi
+                       value={l.description}
+                       onChange={(e) => updateLine(i, { description: e.target.value })}
+                       placeholder={i === 0 ? '3 black tees, front print' : 'Another item'}
+-                      className={`${field} flex-1 min-w-0`}
++                      className={`${box} flex-1 min-w-0`}
+                       style={{ fontSize: '16px' }}
+                     />
+                     <input
+@@ -238,10 +243,10 @@ export default function QuickBillModal({ customers, onClose, onDone, onOpenInvoi
+                       onChange={(e) => updateLine(i, { quantity: e.target.value })}
+                       inputMode="numeric"
+                       aria-label="Quantity"
+-                      className={`${field} w-14 text-center px-1`}
++                      className={`${box} w-14 flex-none text-center px-1`}
+                       style={{ fontSize: '16px' }}
+                     />
+-                    <div className="relative w-24">
++                    <div className="relative w-24 flex-none">
+                       <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-sm">$</span>
+                       <input
+                         value={l.unit_price}
+diff --git a/client/src/pages/AdminPage.tsx b/client/src/pages/AdminPage.tsx
+index 5cc4468..f93299b 100644
+--- a/client/src/pages/AdminPage.tsx
++++ b/client/src/pages/AdminPage.tsx
+@@ -7318,6 +7318,8 @@ export default function AdminPage() {
+               queryClient.invalidateQueries({ queryKey: ['admin', 'orders'] });
+               toast(what === 'paid'
+                 ? `${inv.invoice_number} paid in full — receipt ${inv.customer_email ? 'emailed' : 'ready to print'}`
++                : what === 'paid_receipt_failed'
++                  ? `${inv.invoice_number} paid in full and recorded`
+                 : what === 'texted'
+                   ? `${inv.invoice_number} texted to ${inv.customer_phone}`
+                   : what === 'emailed'
+-- 
+2.43.0
+

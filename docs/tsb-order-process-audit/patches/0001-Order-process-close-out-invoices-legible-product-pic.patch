@@ -1,0 +1,1918 @@
+From 542e1dccb56b7fd6b1d9a874425112c5b3c5f8d0 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Wed, 25 Nov 2026 10:33:44 +0000
+Subject: [PATCH 1/4] Order process: close out invoices, legible product
+ picker, Quick Bill, money-safety on quote links
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Admin
+- Invoices: "Mark paid" / "Collect balance" on every row including drafts
+  (drafts hid Record Payment, so cash taken before the bill was sent could
+  not be recorded); "Close out" / "Void" archive buttons on the list and in
+  the editor; partial + archived filters; in-app confirm instead of
+  window.confirm; payment-method chips instead of window.prompt.
+- Quick Bill (dashboard + Invoices): who, how much, then email link / text
+  link / mark paid, in one screen. Lands as a normal invoice with an order
+  number. Phone-only customers allowed (invoices.customer_email nullable).
+- Quote → invoice keeps the quote's line items (product · color · sizes,
+  fees, quoted total reconciled) and opens the existing invoice when the
+  deposit webhook already created one, instead of minting a duplicate.
+- Quote product picker suggestions render in a portal (no longer clipped
+  by the drawer / Send Price modal), with 56px photos, brand, style, price;
+  Send Price modal widens when line items are open.
+
+Server
+- First invoice for an accepted quote starts with the quote's collected
+  deposit recorded (no second deposit ask). Guarded against orders whose
+  invoices already carry payments.
+- Re-sending a partially paid invoice keeps status 'partial'.
+- send-price: accept_token kept on resend; quote_items prices synced to the
+  sent total; email failure reported in the response, not thrown after the
+  quote was already flipped.
+- create-checkout / create-full-checkout refuse accepted, paid, declined
+  and expired quotes (409/410) — the emailed link could pay a deposit twice.
+
+Customer
+- Payment page: friendly provider errors with retry, settled states
+  ("already underway", "declined") instead of "Payment Error"; 3% fee
+  disclosed; sticky mobile CTA hidden on /payment and /invoice.
+- Invoice page: "Balance" + "Due now (deposit)", payment history, PDF /
+  receipt download.
+- Order page: no balance request / complete controls on declined orders.
+
+Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01LYEMaMZPU19bz29YxAMBh6
+---
+ client/src/components/admin/OpsDashboard.tsx  |  11 +-
+ .../src/components/admin/QuickBillModal.tsx   | 332 +++++++++++++++++
+ .../src/components/admin/QuoteItemsEditor.tsx | 117 ++++--
+ .../src/components/layout/StickyMobileCTA.tsx |   4 +-
+ client/src/lib/api.ts                         |  25 +-
+ client/src/pages/AdminOrderDetailPage.tsx     |   9 +-
+ client/src/pages/AdminPage.tsx                | 338 ++++++++++++++----
+ client/src/pages/InvoiceViewPage.tsx          |  41 ++-
+ client/src/pages/PaymentPage.tsx              |  63 +++-
+ server/lib/orderMoney.js                      |   2 +-
+ ...oices_customer_email_optional_20261125.sql |   5 +
+ server/routes/invoicePaymentState.test.js     |  46 ++-
+ server/routes/invoices.js                     |  92 ++++-
+ server/routes/payments.js                     |  38 ++
+ server/routes/payments.test.js                |  31 +-
+ server/routes/quotes.js                       |  55 ++-
+ 16 files changed, 1081 insertions(+), 128 deletions(-)
+ create mode 100644 client/src/components/admin/QuickBillModal.tsx
+ create mode 100644 server/migrations/invoices_customer_email_optional_20261125.sql
+
+diff --git a/client/src/components/admin/OpsDashboard.tsx b/client/src/components/admin/OpsDashboard.tsx
+index d8394b5..f3380c3 100644
+--- a/client/src/components/admin/OpsDashboard.tsx
++++ b/client/src/components/admin/OpsDashboard.tsx
+@@ -405,12 +405,14 @@ function WorkBoard({ rows, onChanged, toast }: {
+   );
+ }
+ 
+-export default function OpsDashboard({ onOpenQuotes, onOpenInvoices, onOpenCustomers, onNewInvoice, onNewCustomer, onNewJob, toast }: {
++export default function OpsDashboard({ onOpenQuotes, onOpenInvoices, onOpenCustomers, onNewInvoice, onQuickBill, onNewCustomer, onNewJob, toast }: {
+   onOpenQuotes: (filter?: string) => void;
+   onOpenQuoteId?: (id: number) => void;
+   onOpenInvoices: () => void;
+   onOpenCustomers: () => void;
+   onNewInvoice: () => void;
++  /** One-screen bill: who, how much, send / text / already paid. */
++  onQuickBill?: () => void;
+   onNewCustomer: () => void;
+   onNewJob: () => void;
+   toast?: (msg: string, type?: 'error' | 'success') => void;
+@@ -767,6 +769,13 @@ export default function OpsDashboard({ onOpenQuotes, onOpenInvoices, onOpenCusto
+             className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-orange-500 px-4 py-2.5 text-sm font-bold text-white hover:bg-orange-600">
+             <Plus className="h-4 w-4" /> New Quote
+           </button>
++          {onQuickBill && (
++            <button onClick={onQuickBill}
++              title="Bill a customer right now — name, amount, send it or mark it paid"
++              className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-green-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-green-700">
++              <DollarSign className="h-4 w-4" /> Quick Bill
++            </button>
++          )}
+           <button onClick={onNewInvoice}
+             className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-orange-300 bg-white px-4 py-2.5 text-sm font-bold text-orange-600 hover:bg-orange-50">
+             <Plus className="h-4 w-4" /> New Order
+diff --git a/client/src/components/admin/QuickBillModal.tsx b/client/src/components/admin/QuickBillModal.tsx
+new file mode 100644
+index 0000000..ba163c6
+--- /dev/null
++++ b/client/src/components/admin/QuickBillModal.tsx
+@@ -0,0 +1,332 @@
++// Quick Bill — bill a customer right now, in one screen.
++//
++// The full invoice editor assumes a job: order link, mockup, catalog lines,
++// deposit, preview, then send. A customer at the counter paying $45 for
++// three shirts, or someone on the phone who just wants a pay link, needs
++// none of that. This asks for who + how much + what for, then does ONE of:
++//   • email a pay link      (POST /invoices, then /send)
++//   • text a pay link       (POST /invoices, then /send-sms)
++//   • record cash/Zelle/etc (POST /invoices, then /record-payment, then a
++//                            receipt email if there is an address)
++// Everything lands as a normal invoice with an order number, so the list,
++// the order page and the customer page all see it. If a provider step
++// fails (mail/SMS down) the invoice still exists and is offered to open.
++
++import { useEffect, useMemo, useRef, useState } from 'react';
++import { DollarSign, Loader2, Mail, MessageSquare, X, ExternalLink, Plus, Trash2 } from 'lucide-react';
++import {
++  createInvoice, sendInvoice, sendInvoiceSms, recordPayment,
++  type Customer, type Invoice, type InvoiceItem,
++} from '@/lib/api';
++
++// Same rate the invoice editor starts from. Off by default here: the
++// amount the admin types at the counter is the amount being charged.
++const TAX_RATE_PCT = 7.75;
++
++type Outcome = 'emailed' | 'texted' | 'paid' | 'draft';
++type Line = { description: string; quantity: string; unit_price: string };
++
++const METHODS: Array<[string, string]> = [
++  ['cash', 'Cash'], ['zelle', 'Zelle'], ['cashapp', 'Cash App'], ['card', 'Card'], ['check', 'Check'], ['other', 'Other'],
++];
++
++function money(n: number) { return `$${n.toFixed(2)}`; }
++
++export default function QuickBillModal({ customers, onClose, onDone, onOpenInvoice, toast }: {
++  customers: Customer[];
++  onClose: () => void;
++  onDone: (invoice: Invoice, outcome: Outcome) => void;
++  onOpenInvoice: (invoice: Invoice) => void;
++  toast: (msg: string, tone?: 'success' | 'error') => void;
++}) {
++  const [name, setName] = useState('');
++  const [email, setEmail] = useState('');
++  const [phone, setPhone] = useState('');
++  const [suggestOpen, setSuggestOpen] = useState(false);
++  const [lines, setLines] = useState<Line[]>([{ description: '', quantity: '1', unit_price: '' }]);
++  const [addTax, setAddTax] = useState(false);
++  const [note, setNote] = useState('');
++  const [method, setMethod] = useState('cash');
++  const [busy, setBusy] = useState<Outcome | null>(null);
++  // Set when the invoice saved but the send/text/receipt step failed —
++  // the admin needs to know the bill exists and get to it.
++  const [saved, setSaved] = useState<{ invoice: Invoice; problem: string } | null>(null);
++  const nameRef = useRef<HTMLInputElement | null>(null);
++
++  useEffect(() => { nameRef.current?.focus(); }, []);
++  useEffect(() => {
++    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
++    document.addEventListener('keydown', onKey);
++    return () => document.removeEventListener('keydown', onKey);
++  }, [onClose]);
++
++  const matches = useMemo(() => {
++    const q = name.trim().toLowerCase();
++    if (q.length < 2) return [];
++    return customers
++      .filter((c) => (c.name || '').toLowerCase().includes(q) || (c.email || '').toLowerCase().includes(q) || (c.phone || '').includes(q))
++      .slice(0, 6);
++  }, [customers, name]);
++
++  const subtotal = lines.reduce((n, l) => n + (parseFloat(l.quantity) || 0) * (parseFloat(l.unit_price) || 0), 0);
++  const tax = addTax ? +(subtotal * (TAX_RATE_PCT / 100)).toFixed(2) : 0;
++  const total = +(subtotal + tax).toFixed(2);
++
++  const emailOk = /\S+@\S+\.\S+/.test(email.trim());
++  const phoneDigits = phone.replace(/\D/g, '');
++  const phoneOk = phoneDigits.length >= 10;
++  const ready = name.trim().length > 0 && total > 0 && lines.some((l) => l.description.trim()) && (emailOk || phoneOk);
++
++  function updateLine(i: number, patch: Partial<Line>) {
++    setLines((prev) => prev.map((l, j) => (j === i ? { ...l, ...patch } : l)));
++  }
++
++  async function createBill(): Promise<Invoice> {
++    const items: InvoiceItem[] = lines
++      .filter((l) => l.description.trim() && (parseFloat(l.unit_price) || 0) >= 0)
++      .map((l) => ({ description: l.description.trim(), quantity: Math.max(1, parseInt(l.quantity, 10) || 1), unit_price: +(parseFloat(l.unit_price) || 0).toFixed(2) }));
++    return createInvoice({
++      customer_name: name.trim(),
++      customer_email: email.trim(),
++      customer_phone: phone.trim() || undefined,
++      items,
++      subtotal: +subtotal.toFixed(2),
++      tax,
++      shipping: 0,
++      discount: 0,
++      total,
++      notes: note.trim() || undefined,
++      // Pay-in-full link: a counter sale is not a job that takes a deposit.
++      deposit_percent: 0,
++    });
++  }
++
++  async function run(outcome: Outcome) {
++    if (!ready || busy) return;
++    if (outcome === 'emailed' && !emailOk) { toast('Add an email address to email the link', 'error'); return; }
++    if (outcome === 'texted' && !phoneOk) { toast('Add a mobile number to text the link', 'error'); return; }
++    setBusy(outcome);
++    let invoice: Invoice | null = null;
++    try {
++      invoice = await createBill();
++    } catch (err) {
++      setBusy(null);
++      toast(`Could not save the bill: ${err instanceof Error ? err.message : 'Unknown error'}`, 'error');
++      return;
++    }
++    try {
++      if (outcome === 'emailed') {
++        invoice = await sendInvoice(invoice.id);
++      } else if (outcome === 'texted') {
++        await sendInvoiceSms(invoice.id);
++      } else if (outcome === 'paid') {
++        invoice = await recordPayment(invoice.id, { amount: total, method });
++        if (emailOk) {
++          // Nothing owed → the send route emails a receipt, not a pay link.
++          try { invoice = await sendInvoice(invoice.id); } catch (err) {
++            toast(`Paid and recorded, but the receipt email failed: ${err instanceof Error ? err.message : 'mail error'}`, 'error');
++          }
++        }
++      }
++      onDone(invoice, outcome);
++    } catch (err) {
++      setSaved({ invoice, problem: err instanceof Error ? err.message : 'Unknown error' });
++    } finally {
++      setBusy(null);
++    }
++  }
++
++  const field = 'w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 bg-white';
++
++  return (
++    <div className="fixed inset-0 z-50 bg-black/50 flex items-end sm:items-center justify-center" onClick={onClose}>
++      <div
++        role="dialog"
++        aria-modal="true"
++        aria-labelledby="quick-bill-title"
++        className="bg-white w-full sm:max-w-lg sm:rounded-2xl rounded-t-2xl max-h-[95vh] overflow-y-auto shadow-2xl"
++        onClick={(e) => e.stopPropagation()}
++      >
++        <div className="sticky top-0 bg-white border-b border-gray-200 px-5 py-3 flex items-center justify-between z-10">
++          <div className="flex items-center gap-2">
++            <span className="w-8 h-8 rounded-full bg-green-600 text-white flex items-center justify-center"><DollarSign className="w-4 h-4" /></span>
++            <div>
++              <h3 id="quick-bill-title" className="font-display font-semibold text-gray-900 leading-tight">Quick bill</h3>
++              <p className="text-[11px] text-gray-500 leading-tight">Who, how much — then send it or mark it paid.</p>
++            </div>
++          </div>
++          <button type="button" onClick={onClose} aria-label="Close" className="p-2 text-gray-400 hover:text-gray-700 rounded-lg hover:bg-gray-100"><X className="w-5 h-5" /></button>
++        </div>
++
++        {saved ? (
++          <div className="p-5 space-y-4">
++            <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
++              <p className="font-semibold">{saved.invoice.invoice_number} is saved, but the last step failed.</p>
++              <p className="mt-1">{saved.problem}</p>
++            </div>
++            <div className="flex flex-wrap gap-2">
++              <button type="button" onClick={() => onOpenInvoice(saved.invoice)} className="flex items-center gap-1.5 px-4 py-2.5 rounded-lg bg-gray-900 text-white text-sm font-medium"><ExternalLink className="w-4 h-4" /> Open the invoice</button>
++              {emailOk && <button type="button" disabled={busy !== null} onClick={async () => { setBusy('emailed'); try { const inv = await sendInvoice(saved.invoice.id); onDone(inv, 'emailed'); } catch (err) { setSaved({ invoice: saved.invoice, problem: err instanceof Error ? err.message : 'Unknown error' }); } finally { setBusy(null); } }} className="px-4 py-2.5 rounded-lg border border-gray-300 text-sm font-medium text-gray-700">Retry email</button>}
++              {phoneOk && <button type="button" disabled={busy !== null} onClick={async () => { setBusy('texted'); try { await sendInvoiceSms(saved.invoice.id); onDone(saved.invoice, 'texted'); } catch (err) { setSaved({ invoice: saved.invoice, problem: err instanceof Error ? err.message : 'Unknown error' }); } finally { setBusy(null); } }} className="px-4 py-2.5 rounded-lg border border-gray-300 text-sm font-medium text-gray-700">Retry text</button>}
++              <button type="button" onClick={() => onDone(saved.invoice, 'draft')} className="px-4 py-2.5 rounded-lg text-sm font-medium text-gray-500">Keep as draft</button>
++            </div>
++          </div>
++        ) : (
++          <div className="p-5 space-y-5">
++            {/* Who */}
++            <div className="space-y-3">
++              <div className="relative">
++                <label className="block text-xs font-semibold text-gray-600 mb-1">Customer</label>
++                <input
++                  ref={nameRef}
++                  value={name}
++                  onChange={(e) => { setName(e.target.value); setSuggestOpen(true); }}
++                  onFocus={() => setSuggestOpen(true)}
++                  onBlur={() => setTimeout(() => setSuggestOpen(false), 150)}
++                  placeholder="Name — start typing to find a past customer"
++                  autoComplete="off"
++                  className={field}
++                  style={{ fontSize: '16px' }}
++                />
++                {suggestOpen && matches.length > 0 && (
++                  <div className="absolute z-20 left-0 right-0 top-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden">
++                    {matches.map((c) => (
++                      <button
++                        key={c.id}
++                        type="button"
++                        onMouseDown={(e) => e.preventDefault()}
++                        onClick={() => { setName(c.name || ''); setEmail(c.email || ''); setPhone(c.phone || ''); setSuggestOpen(false); }}
++                        className="w-full text-left px-3 py-2.5 hover:bg-green-50 flex items-center justify-between gap-3"
++                      >
++                        <span className="text-sm font-medium text-gray-900 truncate">{c.name}</span>
++                        <span className="text-xs text-gray-500 truncate">{c.email}{c.phone ? ` · ${c.phone}` : ''}</span>
++                      </button>
++                    ))}
++                  </div>
++                )}
++              </div>
++              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
++                <div>
++                  <label className="block text-xs font-semibold text-gray-600 mb-1">Email <span className="font-normal text-gray-400">(for the link or receipt)</span></label>
++                  <input type="email" inputMode="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="name@example.com" className={field} style={{ fontSize: '16px' }} />
++                </div>
++                <div>
++                  <label className="block text-xs font-semibold text-gray-600 mb-1">Mobile <span className="font-normal text-gray-400">(to text the link)</span></label>
++                  <input type="tel" inputMode="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="(404) 555-0123" className={field} style={{ fontSize: '16px' }} />
++                </div>
++              </div>
++              {!emailOk && !phoneOk && (name.trim().length > 0) && (
++                <p className="text-[11px] text-gray-500">An email or a mobile number is needed to get the bill to them.</p>
++              )}
++            </div>
++
++            {/* What */}
++            <div>
++              <label className="block text-xs font-semibold text-gray-600 mb-1">What for</label>
++              <div className="space-y-2">
++                {lines.map((l, i) => (
++                  <div key={i} className="flex gap-2 items-center">
++                    <input
++                      value={l.description}
++                      onChange={(e) => updateLine(i, { description: e.target.value })}
++                      placeholder={i === 0 ? '3 black tees, front print' : 'Another item'}
++                      className={`${field} flex-1 min-w-0`}
++                      style={{ fontSize: '16px' }}
++                    />
++                    <input
++                      value={l.quantity}
++                      onChange={(e) => updateLine(i, { quantity: e.target.value })}
++                      inputMode="numeric"
++                      aria-label="Quantity"
++                      className={`${field} w-14 text-center px-1`}
++                      style={{ fontSize: '16px' }}
++                    />
++                    <div className="relative w-24">
++                      <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-sm">$</span>
++                      <input
++                        value={l.unit_price}
++                        onChange={(e) => updateLine(i, { unit_price: e.target.value })}
++                        inputMode="decimal"
++                        aria-label="Price each"
++                        placeholder="0.00"
++                        className={`${field} pl-6 pr-2`}
++                        style={{ fontSize: '16px' }}
++                      />
++                    </div>
++                    {lines.length > 1 && (
++                      <button type="button" aria-label="Remove line" onClick={() => setLines((p) => p.filter((_, j) => j !== i))} className="p-2 text-gray-400 hover:text-red-600"><Trash2 className="w-4 h-4" /></button>
++                    )}
++                  </div>
++                ))}
++              </div>
++              <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
++                <button type="button" onClick={() => setLines((p) => [...p, { description: '', quantity: '1', unit_price: '' }])} className="text-xs font-medium text-gray-600 hover:text-gray-900 flex items-center gap-1"><Plus className="w-3.5 h-3.5" /> Add a line</button>
++                <label className="flex items-center gap-2 text-xs text-gray-600 cursor-pointer">
++                  <input type="checkbox" checked={addTax} onChange={(e) => setAddTax(e.target.checked)} className="rounded border-gray-300" />
++                  Add {TAX_RATE_PCT}% sales tax
++                </label>
++              </div>
++              <p className="text-[11px] text-gray-400 mt-1">Quantity × price each. Leave tax off if the price you typed already includes it.</p>
++            </div>
++
++            <input value={note} onChange={(e) => setNote(e.target.value)} placeholder="Note on the bill (optional)" className={field} style={{ fontSize: '16px' }} />
++
++            {/* Total */}
++            <div className="rounded-xl bg-gray-50 border border-gray-200 px-4 py-3 flex items-center justify-between">
++              <div className="text-xs text-gray-500">
++                {addTax && subtotal > 0 ? <>Subtotal {money(subtotal)} · Tax {money(tax)}</> : <>Charged in full · no deposit</>}
++              </div>
++              <div className="text-xl font-bold text-gray-900">{money(total)}</div>
++            </div>
++
++            {/* Do it */}
++            <div className="space-y-3">
++              <div className="grid grid-cols-2 gap-2">
++                <button
++                  type="button"
++                  disabled={!ready || !emailOk || busy !== null}
++                  onClick={() => run('emailed')}
++                  className="flex items-center justify-center gap-2 px-3 py-3 rounded-lg bg-gray-900 text-white text-sm font-semibold disabled:opacity-40"
++                >
++                  {busy === 'emailed' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Mail className="w-4 h-4" />} Email pay link
++                </button>
++                <button
++                  type="button"
++                  disabled={!ready || !phoneOk || busy !== null}
++                  onClick={() => run('texted')}
++                  className="flex items-center justify-center gap-2 px-3 py-3 rounded-lg bg-purple-600 text-white text-sm font-semibold disabled:opacity-40"
++                >
++                  {busy === 'texted' ? <Loader2 className="w-4 h-4 animate-spin" /> : <MessageSquare className="w-4 h-4" />} Text pay link
++                </button>
++              </div>
++              <div className="rounded-xl border border-green-200 bg-green-50 p-3">
++                <p className="text-xs font-semibold text-green-900 mb-2">They paid just now — record it</p>
++                <div className="flex flex-wrap gap-1.5 mb-3">
++                  {METHODS.map(([v, label]) => (
++                    <button
++                      key={v}
++                      type="button"
++                      onClick={() => setMethod(v)}
++                      className={`px-3 py-1.5 rounded-full text-xs font-medium border transition ${method === v ? 'bg-green-700 text-white border-green-700' : 'bg-white text-gray-700 border-gray-200 hover:border-green-400'}`}
++                    >
++                      {label}
++                    </button>
++                  ))}
++                </div>
++                <button
++                  type="button"
++                  disabled={!ready || busy !== null}
++                  onClick={() => run('paid')}
++                  className="w-full flex items-center justify-center gap-2 px-3 py-3 rounded-lg bg-green-600 hover:bg-green-700 text-white text-sm font-semibold disabled:opacity-40"
++                >
++                  {busy === 'paid' ? <Loader2 className="w-4 h-4 animate-spin" /> : <DollarSign className="w-4 h-4" />}
++                  Mark paid {total > 0 ? money(total) : ''}{emailOk ? ' & email receipt' : ''}
++                </button>
++              </div>
++            </div>
++          </div>
++        )}
++      </div>
++    </div>
++  );
++}
+diff --git a/client/src/components/admin/QuoteItemsEditor.tsx b/client/src/components/admin/QuoteItemsEditor.tsx
+index 654ec6c..a6e84d9 100644
+--- a/client/src/components/admin/QuoteItemsEditor.tsx
++++ b/client/src/components/admin/QuoteItemsEditor.tsx
+@@ -1,4 +1,5 @@
+-import { useEffect, useMemo, useRef, useState } from 'react';
++import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
++import { createPortal } from 'react-dom';
+ import { Plus, Trash2, Copy, Loader2, Search, Calculator, LayoutGrid, X } from 'lucide-react';
+ import type { Product, Quote, QuoteItem } from '@/lib/api';
+ import { fetchAdminProducts, replaceQuoteItems, calculateInstantPrice } from '@/lib/api';
+@@ -1118,6 +1119,7 @@ function ProductPicker({
+   const [loading, setLoading] = useState(false);
+   const [browsing, setBrowsing] = useState(false);
+   const rootRef = useRef<HTMLDivElement | null>(null);
++  const anchorRef = useRef<HTMLDivElement | null>(null);
+ 
+   // Keep the input in sync if the parent draft changes the product_name from
+   // outside (e.g. when initial draft is loaded from server).
+@@ -1145,7 +1147,9 @@ function ProductPicker({
+   useEffect(() => {
+     if (!open) return;
+     const onDocClick = (e: MouseEvent) => {
+-      if (rootRef.current && !rootRef.current.contains(e.target as Node)) setOpen(false);
++      const t = e.target as Node;
++      if ((t as Element).closest?.('[data-qie-suggestions]')) return;
++      if (rootRef.current && !rootRef.current.contains(t)) setOpen(false);
+     };
+     document.addEventListener('mousedown', onDocClick);
+     return () => document.removeEventListener('mousedown', onDocClick);
+@@ -1160,7 +1164,7 @@ function ProductPicker({
+   return (
+     <div ref={rootRef} className="relative">
+       <div className="flex items-center gap-2">
+-        <div className="relative flex-1">
++        <div ref={anchorRef} className="relative flex-1">
+           <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
+           <input
+             type="text"
+@@ -1199,40 +1203,95 @@ function ProductPicker({
+         </p>
+       )}
+       {open && (results.length > 0 || loading) && (
+-        <div className="absolute z-20 left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-72 overflow-auto">
++        <SuggestionLayer anchor={anchorRef.current}>
+           {loading && results.length === 0 && (
+             <div className="px-3 py-2 text-xs text-gray-400 flex items-center gap-1.5">
+               <Loader2 className="w-3 h-3 animate-spin" /> Searching…
+             </div>
+           )}
+-          {results.map((p) => (
+-            <button
+-              key={p.id}
+-              type="button"
+-              onClick={() => pick(p)}
+-              className="w-full text-left px-3 py-2 hover:bg-red-50 flex items-center gap-2 border-b border-gray-100 last:border-b-0"
+-            >
+-              {('image_url' in p && (p as Product & { image_url?: string }).image_url) ? (
+-                <img
+-                  src={(p as Product & { image_url?: string }).image_url}
+-                  alt=""
+-                  className="w-8 h-8 object-cover rounded border border-gray-100 flex-shrink-0"
+-                />
+-              ) : (
+-                <div className="w-8 h-8 rounded bg-gray-100 flex-shrink-0" />
+-              )}
+-              <div className="min-w-0 flex-1">
+-                <p className="text-sm text-gray-900 truncate">{p.name}</p>
+-                {('category' in p && (p as Product & { category?: string }).category) && (
++          {results.map((p) => {
++            const rich = p as Product & { image_url?: string; category?: string; style_number?: string; base_price?: number | string; retail_price?: number | string };
++            const blank = Number(rich.base_price);
++            const retail = Number(rich.retail_price ?? rich.custom_price);
++            return (
++              <button
++                key={p.id}
++                type="button"
++                // mousedown + preventDefault so the pick wins over the input's blur
++                onMouseDown={(e) => { e.preventDefault(); pick(p); }}
++                className="w-full text-left px-3 py-2 hover:bg-red-50 flex items-center gap-3 border-b border-gray-100 last:border-b-0"
++              >
++                {rich.image_url ? (
++                  <img
++                    src={rich.image_url}
++                    alt=""
++                    loading="lazy"
++                    className="w-14 h-14 object-contain rounded bg-gray-50 border border-gray-100 flex-shrink-0"
++                  />
++                ) : (
++                  <div className="w-14 h-14 rounded bg-gray-100 flex-shrink-0 flex items-center justify-center text-[10px] text-gray-400">No photo</div>
++                )}
++                <div className="min-w-0 flex-1">
++                  <p className="text-sm text-gray-900 leading-snug line-clamp-2">{p.name}</p>
+                   <p className="text-[11px] text-gray-500 truncate">
+-                    {(p as Product & { category?: string }).category}
++                    {[rich.brand, rich.style_number ? `Style ${rich.style_number}` : null, rich.category].filter(Boolean).join(' · ')}
+                   </p>
+-                )}
+-              </div>
+-            </button>
+-          ))}
+-        </div>
++                </div>
++                <div className="text-right flex-shrink-0 leading-tight">
++                  {Number.isFinite(retail) && retail > 0 && <p className="text-sm font-semibold text-gray-900">${retail.toFixed(2)}</p>}
++                  {Number.isFinite(blank) && blank > 0 && <p className="text-[10px] text-gray-400">blank ${blank.toFixed(2)}</p>}
++                </div>
++              </button>
++            );
++          })}
++        </SuggestionLayer>
+       )}
+     </div>
+   );
+ }
++
++// The suggestion list is rendered into <body>, positioned under its input.
++// Inside the quote drawer and the Send Price modal the picker sits in an
++// overflow-auto container, and an absolutely positioned list was clipped at
++// the container's edge — the admin saw two half rows and no photos. A fixed
++// layer in a portal is not subject to the ancestor's overflow, and it can be
++// wider than the input, so the product name, brand, style and price fit.
++function SuggestionLayer({ anchor, children }: { anchor: HTMLElement | null; children: ReactNode }) {
++  const [box, setBox] = useState<{ top: number; left: number; width: number; maxHeight: number } | null>(null);
++
++  useLayoutEffect(() => {
++    if (!anchor) return;
++    const place = () => {
++      const r = anchor.getBoundingClientRect();
++      const vw = window.innerWidth;
++      const vh = window.innerHeight;
++      const width = Math.min(Math.max(r.width, 440), vw - 16);
++      const left = Math.max(8, Math.min(r.left, vw - width - 8));
++      const below = vh - r.bottom - 8;
++      // Flip above the input when there is more room there than below.
++      const openUp = below < 220 && r.top > below;
++      const maxHeight = Math.max(160, Math.min(360, openUp ? r.top - 16 : below));
++      setBox({ top: openUp ? r.top - 4 - maxHeight : r.bottom + 4, left, width, maxHeight });
++    };
++    place();
++    window.addEventListener('resize', place);
++    // Scroll anywhere (the drawer, the modal, the page) must move it along.
++    document.addEventListener('scroll', place, true);
++    return () => {
++      window.removeEventListener('resize', place);
++      document.removeEventListener('scroll', place, true);
++    };
++  }, [anchor]);
++
++  if (!anchor || !box) return null;
++  return createPortal(
++    <div
++      data-qie-suggestions
++      className="fixed z-[70] bg-white border border-gray-200 rounded-lg shadow-xl overflow-auto"
++      style={{ top: box.top, left: box.left, width: box.width, maxHeight: box.maxHeight }}
++    >
++      {children}
++    </div>,
++    document.body,
++  );
++}
+diff --git a/client/src/components/layout/StickyMobileCTA.tsx b/client/src/components/layout/StickyMobileCTA.tsx
+index 1bec809..676cdff 100644
+--- a/client/src/components/layout/StickyMobileCTA.tsx
++++ b/client/src/components/layout/StickyMobileCTA.tsx
+@@ -17,7 +17,9 @@ import { Tag, Sparkles } from 'lucide-react';
+ //      would visually collide with this bar. Hiding here is cheaper than
+ //      conditionally not rendering Layout for those pages.
+ 
+-const HIDE_ON_PATHS = ['/quote', '/design', '/dtf'];
++// /payment and /invoice are money pages: the bar sat on top of the
++// "Pay in full" card and the Pay Now button on a phone.
++const HIDE_ON_PATHS = ['/quote', '/design', '/dtf', '/payment', '/invoice'];
+ 
+ export default function StickyMobileCTA() {
+   const { pathname } = useLocation();
+diff --git a/client/src/lib/api.ts b/client/src/lib/api.ts
+index 9accc08..d4ed580 100644
+--- a/client/src/lib/api.ts
++++ b/client/src/lib/api.ts
+@@ -180,6 +180,7 @@ export interface Quote {
+   } | null;
+   items?: QuoteItem[];
+   inputs_json?: unknown | null;
++  accepted_at?: string | null;
+   balance_paid_at?: string | null;
+   /** Production sub-stage timestamps: blanks_ordered / print_ordered /
+    *  press_in_progress / pressed, plus delivered ('pickup'|'mailed') and
+@@ -659,7 +660,9 @@ export interface SendQuotePricePayload {
+ }
+ 
+ export async function sendQuotePrice(data: SendQuotePricePayload) {
+-  return authRequest<{ success: boolean; quote: unknown }>('/quotes/admin/send-price', {
++  // emailError: the price was saved and the quote is live, but the email
++  // could not be sent (mail outage / bad address) — text the link instead.
++  return authRequest<{ success: boolean; quote: unknown; emailError?: string }>('/quotes/admin/send-price', {
+     method: 'POST',
+     body: JSON.stringify(data),
+   });
+@@ -1311,8 +1314,10 @@ export interface Invoice {
+   amount_due: number;
+   notes: string | null;
+   due_date: string | null;
+-  status: 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled';
++  status: 'draft' | 'sent' | 'partial' | 'paid' | 'overdue' | 'cancelled';
+   quote_id: string | null;
++  archived_at?: string | null;
++  archive_reason?: string | null;
+   mockup_id: number | null;
+   extra_mockups?: ExtraMockup[];
+   /** Additional addresses copied on every customer-facing send. */
+@@ -1346,6 +1351,7 @@ export function orderNumber(quoteId: string | number | null | undefined): string
+ 
+ export interface CreateInvoiceData {
+   customer_name: string;
++  /** Email or phone — the server needs at least one way to reach them. */
+   customer_email: string;
+   customer_phone?: string;
+   cc_emails?: string[];
+@@ -1440,6 +1446,21 @@ export async function deleteInvoice(id: string): Promise<{ deleted: boolean }> {
+   return authRequest<{ deleted: boolean }>(`/invoices/${id}`, { method: 'DELETE' });
+ }
+ 
++// Archive = "close this out without deleting it". The row leaves the normal
++// invoice list and the order pipeline but keeps its history; the server has
++// had these routes since the quote archive landed, the UI just never called
++// them.
++export async function archiveInvoice(id: string, reason = 'closed'): Promise<{ ok: boolean }> {
++  return authRequest<{ ok: boolean }>(`/invoices/${id}/archive`, {
++    method: 'POST',
++    body: JSON.stringify({ reason }),
++  });
++}
++
++export async function unarchiveInvoice(id: string): Promise<{ ok: boolean }> {
++  return authRequest<{ ok: boolean }>(`/invoices/${id}/unarchive`, { method: 'POST' });
++}
++
+ // Blog
+ export interface BlogPost {
+   id: string;
+diff --git a/client/src/pages/AdminOrderDetailPage.tsx b/client/src/pages/AdminOrderDetailPage.tsx
+index b30dd4a..8c3dc28 100644
+--- a/client/src/pages/AdminOrderDetailPage.tsx
++++ b/client/src/pages/AdminOrderDetailPage.tsx
+@@ -444,7 +444,12 @@ export default function AdminOrderDetailPage() {
+               final payment" hops. Mark Ready emails+texts that the order
+               is done (with a pay-balance button when money is due); the
+               balance request can be re-sent on its own any time. */}
+-          {quote.status !== 'completed' && (
++          {quote.status === 'rejected' && (
++            <div className="mt-3 pt-3 border-t border-gray-200 text-sm text-gray-600">
++              This quote was declined by the customer — nothing to collect or complete. Re-quote it from the Quotes list if they come back.
++            </div>
++          )}
++          {quote.status !== 'completed' && quote.status !== 'rejected' && (
+             <div className="mt-3 pt-3 border-t border-gray-200 flex flex-wrap items-center gap-2">
+               <span className="text-sm font-medium text-gray-700">Notify customer:</span>
+               {quote.status !== 'ready' && (
+@@ -477,7 +482,7 @@ export default function AdminOrderDetailPage() {
+               and no toggle. Calls the fulfill endpoint: sets status to
+               completed, stamps the date, notifies the customer, and sends
+               the review request. */}
+-          {quote.status !== 'completed' ? (
++          {quote.status === 'rejected' ? null : quote.status !== 'completed' ? (
+             <div className="mt-3 pt-3 border-t border-gray-200 flex flex-wrap items-center gap-2">
+               <span className="text-sm font-medium text-gray-700">Complete this order:</span>
+               <button
+diff --git a/client/src/pages/AdminPage.tsx b/client/src/pages/AdminPage.tsx
+index 96b6515..5cc4468 100644
+--- a/client/src/pages/AdminPage.tsx
++++ b/client/src/pages/AdminPage.tsx
+@@ -55,6 +55,7 @@ import {
+   Boxes,
+ } from 'lucide-react';
+ import { QUOTE_MARKUP } from '@/lib/pricing';
++import QuickBillModal from '@/components/admin/QuickBillModal';
+ import {
+   fetchQuotes,
+   fetchGangSheetOrders,
+@@ -93,6 +94,7 @@ import {
+   type Invoice,
+   type InvoiceItem,
+   type CreateInvoiceData,
++  type PriceBreakdown,
+   orderNumber,
+   fetchInvoices,
+   fetchInvoice,
+@@ -103,6 +105,7 @@ import {
+   sendInvoice,
+   sendInvoiceSms,
+   deleteInvoice,
++  archiveInvoice,
+   recordPayment,
+   type BlogPost,
+   fetchAdminBlogPosts,
+@@ -320,6 +323,7 @@ const STATUS_COLORS: Record<string, string> = {
+   draft: 'bg-gray-100 text-gray-800',
+   sent: 'bg-blue-100 text-blue-800',
+   paid: 'bg-green-100 text-green-800',
++  partial: 'bg-lime-100 text-lime-800',
+   overdue: 'bg-red-100 text-red-800',
+   // The order ladder between deposit and done. in_production and ready are
+   // shared with the gang sheet queue — same word, same meaning, same colour.
+@@ -367,7 +371,7 @@ const PRODUCTION_CHECKLIST = [
+ // already tax-inclusive.
+ const DEFAULT_INVOICE_TAX_RATE = '7.75';
+ 
+-type InvoiceFilter = 'all' | 'draft' | 'sent' | 'paid' | 'overdue';
++type InvoiceFilter = 'all' | 'draft' | 'sent' | 'partial' | 'paid' | 'overdue' | 'archived';
+ type InvoiceView = 'list' | 'create' | 'preview';
+ 
+ // Customer private asset library panel — admin uploads graphics that only this
+@@ -1191,32 +1195,111 @@ export default function AdminPage() {
+     window.open(`/invoice/view/${id}?print=1`, '_blank', 'noopener');
+   }
+ 
+-  function convertQuoteToInvoice(q: Quote) {
+-    const total = Number(q.estimated_price || 0);
+-    const qty = Number(q.quantity || 1);
+-    const unit = qty > 0 ? +(total / qty).toFixed(2) : 0;
++  // Build invoice line items from a quote. One line per quote item — product,
++  // color and the size run in the description, the quote's own quantity and
++  // unit price — plus its fee lines. The old conversion collapsed the whole
++  // quote into "Custom printing order × qty", so the invoice the customer
++  // got never showed what they'd actually ordered.
++  function quoteToInvoiceLines(q: Quote): { items: InvoiceItem[]; taxRate: string; shipping: number; discount: number } {
++    const items: InvoiceItem[] = [];
++    const sizesLabel = (sizes: unknown): string => {
++      if (!Array.isArray(sizes)) return '';
++      const parts = (sizes as Array<{ size?: string; quantity?: number }>)
++        .filter((x) => x && x.size && Number(x.quantity) > 0)
++        .map((x) => `${x.size}×${Number(x.quantity)}`);
++      return parts.join(', ');
++    };
++    const rows = Array.isArray(q.items) ? q.items : [];
++    for (const it of rows) {
++      const isFee = it.item_type === 'fee';
++      const fromSizes = Array.isArray(it.sizes)
++        ? (it.sizes as Array<{ quantity?: number }>).reduce((n, x) => n + (Number(x?.quantity) || 0), 0)
++        : 0;
++      const qty = Math.max(1, isFee ? 1 : (fromSizes || Number(it.quantity) || 1));
++      const lineTotal = Number(it.line_total);
++      const unit = Number.isFinite(Number(it.unit_price)) && Number(it.unit_price) > 0
++        ? Number(it.unit_price)
++        : (Number.isFinite(lineTotal) && lineTotal > 0 ? +(lineTotal / qty).toFixed(2) : 0);
++      const sizeStr = isFee ? '' : sizesLabel(it.sizes);
++      const desc = [it.product_name || (isFee ? 'Fee' : 'Custom printing'), !isFee && it.color ? it.color : '', sizeStr ? `(${sizeStr})` : '']
++        .filter(Boolean).join(' · ').replace(' · (', ' (');
++      items.push({
++        description: desc,
++        quantity: qty,
++        unit_price: unit,
++        ...(isFee ? { item_type: 'fee' as const } : {}),
++        ...(!isFee && it.color ? { color: String(it.color) } : {}),
++      });
++    }
++    const pb = (q.price_breakdown || null) as PriceBreakdown | null;
++    const quoted = Number(q.estimated_price || 0);
++    const shipping = Number(pb?.shipping || 0);
++    const discount = Number(pb?.discountAmount || 0);
++    // Only a priced line set is worth itemizing; otherwise fall back to one
++    // line carrying the quoted total so the customer is billed what they
++    // were quoted.
++    const lineSum = items.reduce((n, it) => n + it.quantity * it.unit_price, 0);
++    if (items.length === 0 || lineSum <= 0) {
++      const qty = Number(q.quantity || 1);
++      return {
++        items: [{ description: q.product_name || q.productName || 'Custom printing order', quantity: qty, unit_price: qty > 0 ? +(quoted / qty).toFixed(2) : 0 }],
++        taxRate: '0', shipping: 0, discount: 0,
++      };
++    }
++    const taxRate = pb && !pb.taxExempt && Number.isFinite(Number(pb.taxRate)) && Number(pb.taxRate) > 0
++      ? String(Number(pb.taxRate) <= 1 ? +(Number(pb.taxRate) * 100).toFixed(4) : Number(pb.taxRate))
++      : '0';
++    const tax = +(lineSum * (parseFloat(taxRate) / 100)).toFixed(2);
++    const computed = +(lineSum + tax + shipping - discount).toFixed(2);
++    // The quoted figure is the promise; reconcile any gap (print setup
++    // priced outside the lines, rounding) as a visible line rather than
++    // silently billing a different total.
++    const gap = +(quoted - computed).toFixed(2);
++    if (quoted > 0 && Math.abs(gap) >= 0.05) {
++      items.push({ description: gap > 0 ? 'Printing & setup (per quote)' : 'Quote adjustment', quantity: 1, unit_price: +(gap / (1 + parseFloat(taxRate) / 100)).toFixed(2), item_type: 'fee' });
++    }
++    return { items, taxRate, shipping, discount };
++  }
++
++  async function convertQuoteToInvoice(q: Quote) {
++    // Accepting a quote already books an invoice (the Stripe deposit webhook
++    // writes one), so "Invoice" on an accepted quote must OPEN that bill,
++    // not mint a second one next to it.
++    let existing: Invoice | undefined = invoiceByQuoteId.get(Number(q.id));
++    if (!existing) {
++      try {
++        const all = await fetchInvoices('all');
++        existing = all.find((inv) => inv.quote_id != null && Number(inv.quote_id) === Number(q.id));
++      } catch { /* fall through and build a fresh one */ }
++    }
++    if (existing) {
++      setActiveSection('invoices');
++      openInvoiceEditor(existing);
++      toast(`Opened ${existing.invoice_number} — this order already has an invoice`);
++      return;
++    }
++
++    const lines = quoteToInvoiceLines(q);
+     setInvoiceForm({
+       customer_name: q.customer_name || q.customerName || '',
+       customer_email: q.customer_email || q.customerEmail || '',
+       customer_phone: q.customer_phone || q.customerPhone || '',
+       cc_emails: (q.cc_emails || []).join(', '),
+       customer_address: '',
+-      items: [{
+-        description: q.product_name || q.productName || 'Custom printing order',
+-        quantity: qty,
+-        unit_price: unit,
+-      }],
+-      tax: '0', shipping: '0', discount: '0',
++      items: lines.items,
++      tax: '0', shipping: String(lines.shipping || 0), discount: String(lines.discount || 0),
+       notes: q.notes || '',
+       due_date: '',
+       mockup_id: null, mockup_preview_url: null, mockup_preview_url_back: null, extra_mockups: [],
+     });
+-    // A quote's estimated_price already contains its sales tax
+-    // (price_breakdown.tax), so the line items we just built are
+-    // tax-inclusive. Leaving the rate at the default would make the
+-    // auto-recompute effect add tax a second time — that's how quote #215
+-    // picked up $147.85 of phantom tax on a $1,848.17 order.
+-    setInvoiceTaxRate('0');
++    // The auto-recompute effect derives tax from this rate × the line
++    // subtotal, so the quote's own rate reproduces its tax exactly; a quote
++    // with no breakdown stays tax-inclusive at 0% (quote #215 once picked up
++    // $147.85 of phantom tax from the default rate).
++    setInvoiceTaxRate(lines.taxRate);
++    // A quote accepted with a deposit opens its invoice half-paid; the server
++    // seeds the payment on save, so no deposit ask on top of it.
++    setInvoiceRequireDeposit(!q.accepted_at);
+     setInvoiceQuoteId(Number(q.id) || null);
+     setActiveSection('invoices');
+     setInvoiceView('create');
+@@ -1239,7 +1322,7 @@ export default function AdminPage() {
+   const [ratesError, setRatesError] = useState('');
+   const [recordPaymentInvoice, setRecordPaymentInvoice] = useState<Invoice | null>(null);
+   const [paymentAmount, setPaymentAmount] = useState('');
+-  const [paymentMethod, setPaymentMethod] = useState('card');
++  const [paymentMethod, setPaymentMethod] = useState('cash');
+   // Deliberate overpayment. The server refuses anything that takes an invoice
+   // past its total unless this is set — two invoices drifted that way by
+   // recording a Stripe payment a second time by hand.
+@@ -2234,6 +2317,24 @@ export default function AdminPage() {
+     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admin', 'invoices'] }),
+   });
+ 
++  // Close out: the invoice leaves the list and the order pipeline but keeps
++  // its history. This is the "done with this" action that was missing — the
++  // only exits used to be Delete (destructive) or leaving it to sit forever.
++  const archiveInvoiceMutation = useMutation({
++    mutationFn: ({ id, reason }: { id: string; reason: string }) => archiveInvoice(id, reason),
++    onSuccess: () => {
++      queryClient.invalidateQueries({ queryKey: ['admin', 'invoices'] });
++      if (invoiceView !== 'list') { setInvoiceView('list'); resetInvoiceForm(); }
++      toast('Invoice closed and archived');
++    },
++    onError: (err) => toast(`Failed to archive: ${err instanceof Error ? err.message : 'Unknown error'}`, 'error'),
++  });
++
++  // Quick Bill — a one-screen bill for a customer at the counter or on the
++  // phone, with no quote behind it: who, how much, send it / text it / they
++  // already paid. The full invoice editor stays for everything else.
++  const [quickBillOpen, setQuickBillOpen] = useState(false);
++
+   const recordPaymentMutation = useMutation({
+     mutationFn: ({ id, amount, method, overpay_ok }: { id: string; amount: number; method: string; overpay_ok?: boolean }) => recordPayment(id, { amount, method, overpay_ok }),
+     onSuccess: (updated) => {
+@@ -2246,15 +2347,16 @@ export default function AdminPage() {
+       }
+       setRecordPaymentInvoice(null);
+       setPaymentAmount('');
+-      setPaymentMethod('card');
++      setPaymentMethod('cash');
+       setAllowOverpay(false);
++      toast(updated && Number(updated.amount_due) <= 0 ? `${updated.invoice_number} paid in full` : 'Payment recorded');
+     },
+-    onError: (err) => alert(`Failed: ${err instanceof Error ? err.message : 'Unknown error'}`),
++    onError: (err) => toast(`Failed: ${err instanceof Error ? err.message : 'Unknown error'}`, 'error'),
+   });
+ 
+   const sendPriceMutation = useMutation({
+     mutationFn: (data: SendQuotePricePayload) => sendQuotePrice(data),
+-    onSuccess: () => {
++    onSuccess: (result) => {
+       queryClient.invalidateQueries({ queryKey: ['admin', 'quotes'] });
+       queryClient.invalidateQueries({ queryKey: ['admin', 'orders'] });
+       setPriceModalQuote(null);
+@@ -2263,10 +2365,17 @@ export default function AdminPage() {
+       setPriceDesignFee('0');
+       setPriceRushFee('0');
+       setPriceMessage('');
+-      alert('Quote sent to customer!');
++      if (result?.emailError) {
++        // The price is saved and the accept link is live; only the email
++        // failed. Say exactly that, so the admin texts the link instead of
++        // re-sending (which used to re-mint the token) or re-typing the price.
++        toast(`Price saved — the email did not go out (${result.emailError}). Text the customer the quote link instead.`, 'error');
++      } else {
++        toast('Price sent to customer');
++      }
+     },
+     onError: (err) => {
+-      alert(`Failed to send quote: ${err instanceof Error ? err.message : 'Unknown error'}`);
++      toast(`Failed to send quote: ${err instanceof Error ? err.message : 'Unknown error'}`, 'error');
+     },
+   });
+ 
+@@ -2610,8 +2719,10 @@ export default function AdminPage() {
+   // will see amount_due === 0 and email a receipt instead of a payment link.
+   async function handleSaveAndMarkPaid() {
+     if (!previewInvoice) return;
+-    const method = window.prompt('How was this paid? (cash, check, zelle, cashapp, card)', 'cash');
+-    if (method === null) return;
++    // Method comes from the select beside the button (paymentMethod state),
++    // not a browser prompt — prompts are blocked inside the iOS wrapper and
++    // read as a bug on a phone at the counter.
++    const method = paymentMethod || 'cash';
+     try {
+       // Same duplicate guard as handleSendPreviewedInvoice: update in place
+       // when editing an existing invoice.
+@@ -3636,6 +3747,7 @@ export default function AdminPage() {
+             onOpenInvoices={() => setActiveSection('invoices')}
+             onOpenCustomers={() => setActiveSection('customers')}
+             onNewInvoice={() => { setActiveSection('invoices'); setInvoiceView('create'); }}
++            onQuickBill={() => setQuickBillOpen(true)}
+             onNewCustomer={() => { setActiveSection('customers'); setShowCustomerForm(true); }}
+             onNewJob={() => setActiveSection('gangsheet')}
+             toast={toast}
+@@ -5824,7 +5936,7 @@ export default function AdminPage() {
+                     )}
+                   </div>
+                   <div className="flex items-center gap-2 overflow-x-auto">
+-                    {(['all', 'draft', 'sent', 'paid', 'overdue'] as InvoiceFilter[]).map(f => (
++                    {(['all', 'draft', 'sent', 'partial', 'paid', 'overdue', 'archived'] as InvoiceFilter[]).map(f => (
+                       <button
+                         key={f}
+                         onClick={() => setInvoiceFilter(f)}
+@@ -5835,6 +5947,14 @@ export default function AdminPage() {
+                         {f}
+                       </button>
+                     ))}
++                    <button
++                      onClick={() => setQuickBillOpen(true)}
++                      title="Bill a customer right now — name, amount, send or mark paid"
++                      className="flex items-center gap-1 bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors whitespace-nowrap"
++                    >
++                      <DollarSign className="w-3.5 h-3.5" />
++                      Quick bill
++                    </button>
+                     <button
+                       onClick={() => { resetInvoiceForm(); setInvoiceView('create'); }}
+                       className="flex items-center gap-1 bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded-lg text-xs font-medium transition-colors whitespace-nowrap"
+@@ -5886,10 +6006,20 @@ export default function AdminPage() {
+                               {textInvoiceMutation.isPending && textInvoiceMutation.variables === inv.id ? 'Texting…' : 'Text'}
+                             </button>
+                           )}
+-                          {inv.status !== 'paid' && Number(inv.amount_due) > 0 && <button onClick={() => { setRecordPaymentInvoice(inv); setPaymentAmount(String(inv.amount_due)); }} className="text-xs font-medium text-green-600 bg-green-50 px-3 py-1.5 rounded-lg">Payment</button>}
++                          {canTakePayment(inv) && (
++                            <button onClick={() => { setRecordPaymentInvoice(inv); setPaymentAmount(String(Math.max(0, Number(inv.total) - Number(inv.amount_paid || 0)).toFixed(2))); setPaymentMethod('cash'); }} className="text-xs font-semibold text-white bg-green-600 px-3 py-1.5 rounded-lg">
++                              {Number(inv.amount_paid) > 0 ? 'Collect balance' : 'Mark paid'}
++                            </button>
++                          )}
+                           <button onClick={() => printInvoice(inv.id)} className="text-xs font-medium text-gray-600 bg-gray-100 px-3 py-1.5 rounded-lg">Print</button>
+                           <button onClick={() => { setPurchasingInvoiceId(inv.id); setActiveSection('purchasing'); }} className="text-xs font-medium text-gray-600 bg-gray-100 px-3 py-1.5 rounded-lg">Order blanks</button>
+-                          <button onClick={() => { if (confirm('Delete?')) deleteInvoiceMutation.mutate(inv.id); }} className="text-xs font-medium text-red-600 bg-red-50 px-3 py-1.5 rounded-lg">Delete</button>
++                          <button
++                            onClick={async () => { if (await confirmDestructive(`Close out ${inv.invoice_number}? It leaves the invoice list but keeps its history.`)) archiveInvoiceMutation.mutate({ id: inv.id, reason: inv.status === 'paid' ? 'closed' : 'void' }); }}
++                            className="text-xs font-medium text-gray-700 bg-gray-100 px-3 py-1.5 rounded-lg"
++                          >
++                            {inv.status === 'paid' ? 'Close out' : 'Void'}
++                          </button>
++                          <button onClick={async () => { if (await confirmDestructive('Delete this invoice? This cannot be undone.')) deleteInvoiceMutation.mutate(inv.id); }} className="text-xs font-medium text-red-600 bg-red-50 px-3 py-1.5 rounded-lg">Delete</button>
+                         </div>
+                       </div>
+                     ))}
+@@ -5962,15 +6092,23 @@ export default function AdminPage() {
+                                     <MessageSquare className="w-4 h-4" />
+                                   </button>
+                                 )}
+-                                {mayOweMoney(inv) && (
++                                {canTakePayment(inv) && (
+                                   <button
+-                                    title="Record payment"
+-                                    onClick={() => { setRecordPaymentInvoice(inv); setPaymentAmount(String(inv.amount_due)); }}
+-                                    className="p-1.5 text-green-600 hover:text-green-700 hover:bg-green-50 rounded transition-colors"
++                                    title={Number(inv.amount_paid) > 0 ? 'Collect the balance (cash, Zelle, card…)' : 'Mark paid — record cash, Zelle, check or card taken in person'}
++                                    onClick={() => { setRecordPaymentInvoice(inv); setPaymentAmount(String(Math.max(0, Number(inv.total) - Number(inv.amount_paid || 0)).toFixed(2))); setPaymentMethod('cash'); }}
++                                    className="flex items-center gap-1 px-2 py-1 text-xs font-semibold text-green-700 bg-green-50 hover:bg-green-100 rounded transition-colors whitespace-nowrap"
+                                   >
+-                                    <DollarSign className="w-4 h-4" />
++                                    <DollarSign className="w-3.5 h-3.5" />
++                                    {Number(inv.amount_paid) > 0 ? 'Collect' : 'Mark paid'}
+                                   </button>
+                                 )}
++                                <button
++                                  title={inv.status === 'paid' ? 'Close out — archive this paid invoice' : 'Void — archive this invoice without deleting it'}
++                                  onClick={async () => { if (await confirmDestructive(`Close out ${inv.invoice_number}? It leaves the invoice list but keeps its history.`)) archiveInvoiceMutation.mutate({ id: inv.id, reason: inv.status === 'paid' ? 'closed' : 'void' }); }}
++                                  className="p-1.5 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors"
++                                >
++                                  <Archive className="w-4 h-4" />
++                                </button>
+                                 <button
+                                   title="Print invoice"
+                                   onClick={() => printInvoice(inv.id)}
+@@ -5987,7 +6125,7 @@ export default function AdminPage() {
+                                 </button>
+                                 <button
+                                   title="Delete"
+-                                  onClick={() => { if (confirm('Delete this invoice? This cannot be undone.')) deleteInvoiceMutation.mutate(inv.id); }}
++                                  onClick={async () => { if (await confirmDestructive('Delete this invoice? This cannot be undone.')) deleteInvoiceMutation.mutate(inv.id); }}
+                                   className="p-1.5 text-red-600 hover:text-red-700 hover:bg-red-50 rounded transition-colors"
+                                 >
+                                   <Trash2 className="w-4 h-4" />
+@@ -6376,7 +6514,7 @@ export default function AdminPage() {
+                                     placeholder={item.item_type === 'fee' ? 'Fee / charge (pick one or type your own)' : 'Item description or search catalog…'}
+                                   />
+                                   {invoiceLineSearchIdx === idx && item.item_type !== 'fee' && (item.description || '').length >= 2 && (invoiceSearchProducts.length > 0 || matchingCustomProducts.length > 0) && (
+-                                    <div className="absolute left-0 right-0 top-full mt-1 z-30 bg-white border border-gray-200 rounded-lg shadow-lg max-h-56 overflow-y-auto divide-y divide-gray-100">
++                                    <div className="absolute left-0 top-full mt-1 z-30 bg-white border border-gray-200 rounded-lg shadow-lg max-h-72 overflow-y-auto divide-y divide-gray-100 w-full min-w-[22rem] max-w-[calc(100vw-2rem)]">
+                                       {matchingCustomProducts.slice(0, 5).map((cp: CustomProduct) => (
+                                         <button
+                                           key={`line-custom-${cp.id}`}
+@@ -6409,10 +6547,18 @@ export default function AdminPage() {
+                                               openProductConfigurator(p, idx);
+                                               setInvoiceLineSearchIdx(null);
+                                             }}
+-                                            className="w-full text-left px-3 py-2 hover:bg-gray-50 text-sm flex items-center justify-between gap-2"
++                                            className="w-full text-left px-3 py-2 hover:bg-gray-50 text-sm flex items-center gap-3"
+                                           >
+-                                            <span className="truncate">{p.name} <span className="text-[10px] text-gray-400">{p.brand}</span></span>
+-                                            {shown != null && <span className="text-xs font-semibold text-gray-700 flex-shrink-0">${shown.toFixed(2)}</span>}
++                                            {p.image_url ? (
++                                              <img src={String(p.image_url)} alt="" loading="lazy" className="h-12 w-12 rounded bg-gray-50 border border-gray-100 object-contain flex-shrink-0" />
++                                            ) : (
++                                              <div className="h-12 w-12 rounded bg-gray-100 flex-shrink-0" />
++                                            )}
++                                            <span className="min-w-0 flex-1">
++                                              <span className="block text-gray-900 leading-snug line-clamp-2">{p.name}</span>
++                                              <span className="block text-[11px] text-gray-500 truncate">{[p.brand, p.category].filter(Boolean).join(' · ')}</span>
++                                            </span>
++                                            {shown != null && <span className="text-sm font-semibold text-gray-800 flex-shrink-0">${shown.toFixed(2)}</span>}
+                                           </button>
+                                         );
+                                       })}
+@@ -6728,12 +6874,20 @@ export default function AdminPage() {
+                           {due > 0 && (
+                             <button
+                               type="button"
+-                              onClick={() => { setRecordPaymentInvoice(editingInvoice); setPaymentAmount(String(due)); }}
+-                              className="text-xs font-medium text-green-700 bg-green-50 border border-green-200 hover:bg-green-100 px-3 py-1.5 rounded-lg"
++                              onClick={() => { setRecordPaymentInvoice(editingInvoice); setPaymentAmount(due.toFixed(2)); setPaymentMethod('cash'); }}
++                              className="text-xs font-semibold text-white bg-green-600 hover:bg-green-700 px-3 py-1.5 rounded-lg"
++                              title={unsaved ? 'Records against the saved total — click Update Invoice first if you changed the lines' : undefined}
+                             >
+-                              <DollarSign className="w-3 h-3 inline mr-1" />Record Payment
++                              <DollarSign className="w-3 h-3 inline mr-1" />{paid > 0 ? 'Collect balance' : 'Mark paid'}
+                             </button>
+                           )}
++                          <button
++                            type="button"
++                            onClick={async () => { if (await confirmDestructive(`Close out ${editingInvoice.invoice_number}? It leaves the invoice list but keeps its history.`)) archiveInvoiceMutation.mutate({ id: editingInvoice.id, reason: due <= 0 ? 'closed' : 'void' }); }}
++                            className="text-xs font-medium text-gray-700 bg-white border border-gray-200 hover:bg-gray-50 px-3 py-1.5 rounded-lg"
++                          >
++                            <Archive className="w-3 h-3 inline mr-1" />{due <= 0 ? 'Close out' : 'Void invoice'}
++                          </button>
+                           {due > 0 && editingInvoice.status !== 'draft' && (
+                             <button
+                               type="button"
+@@ -6907,15 +7061,30 @@ export default function AdminPage() {
+                   <button onClick={() => setInvoiceView('create')} className="px-6 py-2.5 rounded-lg border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
+                     Edit
+                   </button>
+-                  <button
+-                    onClick={handleSaveAndMarkPaid}
+-                    disabled={createInvoiceMutation.isPending || sendInvoiceMutation.isPending || recordPaymentMutation.isPending}
+-                    title="Use this when the customer has already paid (cash, Zelle, etc.). Records the payment and emails a receipt."
+-                    className="flex items-center gap-2 px-6 py-2.5 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition disabled:opacity-50"
+-                  >
+-                    {(createInvoiceMutation.isPending || recordPaymentMutation.isPending) ? <Loader2 className="w-4 h-4 animate-spin" /> : <DollarSign className="w-4 h-4" />}
+-                    Save & Mark Paid
+-                  </button>
++                  <div className="flex items-stretch rounded-lg overflow-hidden border border-green-700">
++                    <select
++                      value={paymentMethod}
++                      onChange={(e) => setPaymentMethod(e.target.value)}
++                      aria-label="How the customer paid"
++                      className="bg-green-50 text-green-900 text-sm px-2 border-r border-green-700 focus:outline-none"
++                    >
++                      <option value="cash">Cash</option>
++                      <option value="zelle">Zelle</option>
++                      <option value="cashapp">Cash App</option>
++                      <option value="check">Check</option>
++                      <option value="card">Card (in person)</option>
++                      <option value="other">Other</option>
++                    </select>
++                    <button
++                      onClick={handleSaveAndMarkPaid}
++                      disabled={createInvoiceMutation.isPending || sendInvoiceMutation.isPending || recordPaymentMutation.isPending}
++                      title="Use this when the customer has already paid. Records the payment and emails a receipt."
++                      className="flex items-center gap-2 px-6 py-2.5 bg-green-600 text-white text-sm font-medium hover:bg-green-700 transition disabled:opacity-50"
++                    >
++                      {(createInvoiceMutation.isPending || recordPaymentMutation.isPending) ? <Loader2 className="w-4 h-4 animate-spin" /> : <DollarSign className="w-4 h-4" />}
++                      Save & Mark Paid
++                    </button>
++                  </div>
+                   <button
+                     onClick={handleSendPreviewedInvoice}
+                     disabled={createInvoiceMutation.isPending || sendInvoiceMutation.isPending}
+@@ -7078,13 +7247,13 @@ export default function AdminPage() {
+               <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                 <div className="bg-white rounded-2xl max-w-md w-full">
+                   <div className="border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+-                    <h3 className="font-display font-semibold text-gray-900">Record Payment</h3>
++                    <h3 className="font-display font-semibold text-gray-900">{Number(recordPaymentInvoice.amount_paid) > 0 ? 'Collect Balance' : 'Mark Paid'}</h3>
+                     <button onClick={() => setRecordPaymentInvoice(null)} className="text-gray-400 hover:text-gray-600"><X className="w-5 h-5" /></button>
+                   </div>
+                   <div className="p-6 space-y-4">
+                     <div className="bg-gray-50 rounded-lg p-3 text-sm">
+                       <p className="font-medium text-gray-900">{recordPaymentInvoice.invoice_number}</p>
+-                      <p className="text-gray-500">{recordPaymentInvoice.customer_name} - Amount due: ${Number(recordPaymentInvoice.amount_due).toFixed(2)}</p>
++                      <p className="text-gray-500">{recordPaymentInvoice.customer_name} · Total ${Number(recordPaymentInvoice.total).toFixed(2)}{Number(recordPaymentInvoice.amount_paid) > 0 ? ` · Paid $${Number(recordPaymentInvoice.amount_paid).toFixed(2)}` : ''} · Due ${Math.max(0, Number(recordPaymentInvoice.total) - Number(recordPaymentInvoice.amount_paid || 0)).toFixed(2)}</p>
+                     </div>
+                     <div>
+                       <label className="block text-xs text-gray-500 mb-1">Amount</label>
+@@ -7094,20 +7263,25 @@ export default function AdminPage() {
+                       </div>
+                     </div>
+                     <div>
+-                      <label className="block text-xs text-gray-500 mb-1">Payment Method</label>
+-                      <select value={paymentMethod} onChange={e => setPaymentMethod(e.target.value)} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500">
+-                        <option value="card">Credit Card</option>
+-                        <option value="cash">Cash</option>
+-                        <option value="check">Check</option>
+-                        <option value="transfer">Bank Transfer</option>
+-                        <option value="other">Other</option>
+-                      </select>
++                      <label className="block text-xs text-gray-500 mb-1">Paid by</label>
++                      <div className="flex flex-wrap gap-1.5">
++                        {([['cash', 'Cash'], ['zelle', 'Zelle'], ['cashapp', 'Cash App'], ['card', 'Card'], ['check', 'Check'], ['transfer', 'Transfer'], ['other', 'Other']] as const).map(([v, label]) => (
++                          <button
++                            key={v}
++                            type="button"
++                            onClick={() => setPaymentMethod(v)}
++                            className={`px-3 py-1.5 rounded-full text-xs font-medium border transition ${paymentMethod === v ? 'bg-gray-900 text-white border-gray-900' : 'bg-white text-gray-700 border-gray-200 hover:border-gray-400'}`}
++                          >
++                            {label}
++                          </button>
++                        ))}
++                      </div>
+                     </div>
+-                    {Number(paymentAmount) > Number(recordPaymentInvoice.amount_due) + 0.01 && (
++                    {Number(paymentAmount) > Math.max(0, Number(recordPaymentInvoice.total) - Number(recordPaymentInvoice.amount_paid || 0)) + 0.01 && (
+                       <label className="flex gap-2 items-start bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm text-amber-900">
+                         <input type="checkbox" checked={allowOverpay} onChange={e => setAllowOverpay(e.target.checked)} className="mt-0.5" />
+                         <span>
+-                          This is more than the ${Number(recordPaymentInvoice.amount_due).toFixed(2)} still due.
++                          This is more than the ${Math.max(0, Number(recordPaymentInvoice.total) - Number(recordPaymentInvoice.amount_paid || 0)).toFixed(2)} still due.
+                           Check that it wasn't already recorded when it cleared Stripe, then tick to record it anyway.
+                         </span>
+                       </label>
+@@ -7123,7 +7297,7 @@ export default function AdminPage() {
+                         className="flex-1 flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2.5 rounded-lg text-sm font-medium transition disabled:opacity-50"
+                       >
+                         {recordPaymentMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <DollarSign className="w-4 h-4" />}
+-                        Record Payment
++                        {Math.abs(Number(paymentAmount) - Math.max(0, Number(recordPaymentInvoice.total) - Number(recordPaymentInvoice.amount_paid || 0))) < 0.005 ? 'Mark Paid in Full' : 'Record Payment'}
+                       </button>
+                     </div>
+                   </div>
+@@ -7133,6 +7307,28 @@ export default function AdminPage() {
+           </div>
+         )}
+ 
++        {quickBillOpen && (
++          <QuickBillModal
++            customers={customers}
++            onClose={() => setQuickBillOpen(false)}
++            onDone={(inv, what) => {
++              setQuickBillOpen(false);
++              queryClient.invalidateQueries({ queryKey: ['admin', 'invoices'] });
++              queryClient.invalidateQueries({ queryKey: ['admin', 'quotes'] });
++              queryClient.invalidateQueries({ queryKey: ['admin', 'orders'] });
++              toast(what === 'paid'
++                ? `${inv.invoice_number} paid in full — receipt ${inv.customer_email ? 'emailed' : 'ready to print'}`
++                : what === 'texted'
++                  ? `${inv.invoice_number} texted to ${inv.customer_phone}`
++                  : what === 'emailed'
++                    ? `${inv.invoice_number} emailed to ${inv.customer_email}`
++                    : `${inv.invoice_number} saved as a draft`);
++            }}
++            onOpenInvoice={(inv) => { setQuickBillOpen(false); setActiveSection('invoices'); openInvoiceEditor(inv); }}
++            toast={toast}
++          />
++        )}
++
+         {/* Settings Section */}
+         {activeSection === 'blog' && (
+           <div>
+@@ -9970,7 +10166,10 @@ export default function AdminPage() {
+         {/* Send Price Modal */}
+         {priceModalQuote && (
+           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+-            <div className="bg-white rounded-2xl max-w-lg w-full max-h-[90vh] overflow-auto">
++            {/* Widens when the line-item editor is open: at max-w-lg the
++                product picker, color, and size columns were squeezed to the
++                point of truncating names and clipping the suggestion list. */}
++            <div className={`bg-white rounded-2xl w-full max-h-[90vh] overflow-auto ${priceItemsOpen ? 'max-w-4xl' : 'max-w-lg'}`}>
+               <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between rounded-t-2xl">
+                 <h3 className="font-display font-semibold text-gray-900">Send Price Quote</h3>
+                 <button
+@@ -11656,6 +11855,17 @@ function mayOweMoney(inv: Invoice & { may_owe_money?: boolean }): boolean {
+   return Number(inv.total) > 0 && Number(inv.amount_paid) < Number(inv.total);
+ }
+ 
++// Can money be recorded against this invoice? Broader than mayOweMoney: a
++// DRAFT is not yet a bill the customer owes, but a customer who pays cash
++// at the counter before the bill was ever sent still needs that payment
++// recorded — hiding the button on drafts was why "I couldn't close out an
++// invoice" happened.
++function canTakePayment(inv: Invoice & { may_owe_money?: boolean }): boolean {
++  if (inv.status === 'cancelled') return false;
++  if (inv.status === 'draft') return Number(inv.total) > 0 && Number(inv.amount_paid || 0) < Number(inv.total);
++  return mayOweMoney(inv);
++}
++
+ function paidState(q: Quote): { label: string; className: string } {
+   // The resolved money block is authoritative: it reads the invoice wherever
+   // one exists, which is where the money for an invoice-billed job actually
+diff --git a/client/src/pages/InvoiceViewPage.tsx b/client/src/pages/InvoiceViewPage.tsx
+index d8cf84e..85a5278 100644
+--- a/client/src/pages/InvoiceViewPage.tsx
++++ b/client/src/pages/InvoiceViewPage.tsx
+@@ -1,6 +1,6 @@
+ import { useEffect, useState } from 'react';
+ import { useParams, useSearchParams } from 'react-router-dom';
+-import { Printer, Loader2, XCircle, CheckCircle2, CreditCard, Mail } from 'lucide-react';
++import { Printer, Loader2, XCircle, CheckCircle2, CreditCard, Mail, Download } from 'lucide-react';
+ import { getToken } from '@/lib/session';
+ 
+ interface PublicInvoice {
+@@ -23,6 +23,7 @@ interface PublicInvoice {
+   // button and the Stripe session can never disagree.
+   amount_due_now?: number;
+   card_fee_now?: number;
++  payments?: Array<{ amount: number; method?: string | null; date?: string | null }>;
+   payment_type?: 'deposit' | 'balance' | 'full';
+   deposit_percent?: number | string | null;
+   status: string;
+@@ -494,9 +495,18 @@ export default function InvoiceViewPage() {
+               </div>
+             )}
+             <div className="flex justify-between pt-2 border-t-2 border-gray-900 text-lg font-bold">
+-              <span>{Number(inv.amount_due) <= 0 ? 'Balance' : 'Due'}</span>
+-              <span className={Number(inv.amount_due) <= 0 ? 'text-green-700' : 'text-orange-600'}>${fmt(inv.amount_due)}</span>
++              <span>Balance</span>
++              <span className={Number(inv.amount_due) <= 0 ? 'text-green-700' : 'text-gray-900'}>${fmt(inv.amount_due)}</span>
+             </div>
++            {/* What the Pay button will charge, when that is less than the
++                balance (a deposit). Read next to "Balance" it answers the
++                question the customer actually has: how much right now? */}
++            {!isPaid && inv.amount_due_now != null && Number(inv.amount_due_now) > 0 && Number(inv.amount_due_now) < Number(inv.amount_due) - 0.005 && (
++              <div className="flex justify-between text-base font-bold text-orange-600">
++                <span>Due now ({Number(inv.deposit_percent)}% deposit)</span>
++                <span>${fmt(inv.amount_due_now)}</span>
++              </div>
++            )}
+           </div>
+         </div>
+ 
+@@ -543,6 +553,31 @@ export default function InvoiceViewPage() {
+           </div>
+         )}
+ 
++        {Array.isArray(inv.payments) && inv.payments.length > 0 && (
++          <div className="mt-6 text-sm border-t border-gray-100 pt-4">
++            <p className="text-xs uppercase font-semibold text-gray-400 mb-2">Payments received</p>
++            <ul className="space-y-1">
++              {inv.payments.map((p, i) => (
++                <li key={i} className="flex justify-between text-gray-700">
++                  <span>{p.date ? new Date(p.date).toLocaleDateString() : ''}{p.method ? ` · ${String(p.method).replace(/^stripe$/i, 'card')}` : ''}</span>
++                  <span className="font-medium text-green-700">${fmt(p.amount)}</span>
++                </li>
++              ))}
++            </ul>
++          </div>
++        )}
++
++        <div className="mt-6 flex flex-wrap justify-center gap-3 print:hidden">
++          <a
++            href={`/api/invoices/${inv.id}/pdf${token ? `?token=${encodeURIComponent(token)}` : ''}`}
++            target="_blank"
++            rel="noopener"
++            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-50"
++          >
++            <Download className="w-4 h-4" /> {isPaid ? 'Download receipt (PDF)' : 'Download PDF'}
++          </a>
++        </div>
++
+         {inv.notes && (
+           <div className="text-xs text-gray-500 border-t border-gray-100 pt-4">
+             <p className="uppercase font-semibold text-gray-400 mb-1">Notes</p>
+diff --git a/client/src/pages/PaymentPage.tsx b/client/src/pages/PaymentPage.tsx
+index cade3ef..d67672b 100644
+--- a/client/src/pages/PaymentPage.tsx
++++ b/client/src/pages/PaymentPage.tsx
+@@ -45,6 +45,12 @@ export function PaymentCheckout() {
+   const token = searchParams.get('token');
+   const type = searchParams.get('type'); // 'balance' | 'full' | 'deposit' | null
+   const [error, setError] = useState<string | null>(null);
++  // Set when the server says this quote cannot take this payment any more
++  // (deposit already in, declined, expired) — a settled state, not an error.
++  const [blocked, setBlocked] = useState<{ code: string; message: string; redirectUrl?: string } | null>(null);
++  // The last checkout attempt failed at the provider; keep the chooser on
++  // screen with a retry rather than sending the customer back home.
++  const [checkoutError, setCheckoutError] = useState<string | null>(null);
+   const [quote, setQuote] = useState<QuoteSummary | null>(null);
+   const [redirecting, setRedirecting] = useState(false);
+ 
+@@ -69,6 +75,7 @@ export function PaymentCheckout() {
+     if (!quoteId) return;
+     setRedirecting(true);
+     setError(null);
++    setCheckoutError(null);
+     const endpoint =
+       paymentType === 'balance' ? '/api/payments/create-balance-checkout'
+       : paymentType === 'full'  ? '/api/payments/create-full-checkout'
+@@ -78,18 +85,29 @@ export function PaymentCheckout() {
+       headers: { 'Content-Type': 'application/json' },
+       body: JSON.stringify({ quoteId, token, fulfillment }),
+     })
+-      .then((res) => res.json())
+-      .then((data) => {
++      .then((res) => res.json().then((data) => ({ status: res.status, data })))
++      .then(({ status, data }) => {
+         if (data.checkoutUrl) {
+           window.location.href = data.checkoutUrl;
+-        } else {
+-          setError(data.error || 'Failed to create checkout session');
+-          setRedirecting(false);
++          return;
+         }
++        setRedirecting(false);
++        if ((status === 409 || status === 410) && data.code) {
++          setBlocked({ code: String(data.code), message: String(data.error || ''), redirectUrl: data.redirectUrl });
++          return;
++        }
++        // Provider hiccups read as raw SDK text ("An error occurred with
++        // our connection to Stripe…"). Say what to do instead.
++        const raw = String(data.error || '');
++        const friendly = /stripe|connection|retried|network|timeout|ECONN|ENOTFOUND/i.test(raw)
++          ? 'Our card processor didn\u2019t answer just now. Nothing was charged — please try again in a moment, or call us and we\u2019ll take payment over the phone.'
++          : (raw || 'We couldn\u2019t start checkout. Nothing was charged — please try again.');
++        if (skipChoice) setError(friendly); else setCheckoutError(friendly);
+       })
+       .catch(() => {
+-        setError('Failed to connect to payment server');
+         setRedirecting(false);
++        const friendly = 'We couldn\u2019t reach the payment server. Nothing was charged — check your connection and try again.';
++        if (skipChoice) setError(friendly); else setCheckoutError(friendly);
+       });
+   };
+ 
+@@ -148,12 +166,30 @@ export function PaymentCheckout() {
+   return (
+     <Layout>
+       <div className="min-h-[60vh] flex items-center justify-center px-4 py-12">
+-        {error ? (
+-          <div className="text-center">
++        {blocked ? (
++          <div className="text-center max-w-md">
++            {blocked.code === 'declined' ? <XCircle className="h-16 w-16 text-gray-400 mx-auto mb-4" /> : <CheckCircle2 className="h-16 w-16 text-emerald-500 mx-auto mb-4" />}
++            <h1 className="text-2xl font-display font-bold text-gray-900 mb-2">
++              {blocked.code === 'accepted' ? 'This order is already underway' : blocked.code === 'paid' ? 'Already paid in full' : blocked.code === 'declined' ? 'This quote was declined' : 'This quote has expired'}
++            </h1>
++            <p className="text-gray-500 mb-6">{blocked.message}</p>
++            <div className="flex flex-wrap justify-center gap-3">
++              {blocked.redirectUrl && <a href={blocked.redirectUrl} className="px-5 py-2.5 rounded-lg bg-gray-900 text-white text-sm font-medium">See order status</a>}
++              {blocked.code === 'declined' || blocked.code === 'expired' ? <Link to="/quote" className="px-5 py-2.5 rounded-lg bg-orange-500 text-white text-sm font-medium">Get a new quote</Link> : null}
++              <Link to="/" className="px-5 py-2.5 rounded-lg border border-gray-300 text-gray-700 text-sm font-medium">Home</Link>
++            </div>
++          </div>
++        ) : error ? (
++          <div className="text-center max-w-md">
+             <XCircle className="h-16 w-16 text-red-500 mx-auto mb-4" />
+-            <h1 className="text-2xl font-display font-bold text-gray-900 mb-2">Payment Error</h1>
++            <h1 className="text-2xl font-display font-bold text-gray-900 mb-2">Payment didn\u2019t start</h1>
+             <p className="text-gray-500 mb-6">{error}</p>
+-            <Link to="/" className="text-blue-600 font-medium hover:underline">Return Home</Link>
++            <div className="flex flex-wrap justify-center gap-3">
++              {skipChoice && quoteId && (
++                <button type="button" onClick={() => beginCheckout(type as 'deposit' | 'full')} className="px-5 py-2.5 rounded-lg bg-orange-500 text-white text-sm font-medium">Try again</button>
++              )}
++              <Link to="/" className="px-5 py-2.5 rounded-lg border border-gray-300 text-gray-700 text-sm font-medium">Return Home</Link>
++            </div>
+           </div>
+         ) : skipChoice || redirecting || checkingDelivered ? (
+           <div className="text-center">
+@@ -285,6 +321,12 @@ export function PaymentCheckout() {
+               </div>
+             ) : null}
+ 
++            {checkoutError && (
++              <div role="alert" className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
++                {checkoutError}
++              </div>
++            )}
++
+             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+               {/* Pay deposit (50%) */}
+               <button
+@@ -315,6 +357,7 @@ export function PaymentCheckout() {
+ 
+             <p className="text-center text-xs text-gray-400 mt-6">
+               Secure payment by Stripe. Cards, Apple Pay, and Google Pay accepted.
++              A 3% card processing fee is added at checkout; paying by cash or check in the shop has no fee.
+             </p>
+           </div>
+         )}
+diff --git a/server/lib/orderMoney.js b/server/lib/orderMoney.js
+index 273058c..0f9d189 100644
+--- a/server/lib/orderMoney.js
++++ b/server/lib/orderMoney.js
+@@ -67,7 +67,7 @@ function invoiceSettled(invoice) {
+ // So it counts only once something proves money arrived. Treating the
+ // pre-acceptance ask as revenue is how a quote nobody paid showed up under
+ // "Deposit Paid".
+-function quoteCollected(quote) {
++export function quoteCollected(quote) {
+   if (!quote) return 0;
+   if (quote.balance_paid_at) return round2(quote.estimated_price);
+   if (quote.accepted_at) return round2(quote.deposit_amount);
+diff --git a/server/migrations/invoices_customer_email_optional_20261125.sql b/server/migrations/invoices_customer_email_optional_20261125.sql
+new file mode 100644
+index 0000000..b6927e3
+--- /dev/null
++++ b/server/migrations/invoices_customer_email_optional_20261125.sql
+@@ -0,0 +1,5 @@
++-- Quick Bill: a walk-in paying by text link may give a phone number and no
++-- email. The create route now requires name + (email OR phone); the column
++-- must allow NULL for that path. Every send-by-email path already checks
++-- customer_email before using it.
++ALTER TABLE invoices ALTER COLUMN customer_email DROP NOT NULL;
+diff --git a/server/routes/invoicePaymentState.test.js b/server/routes/invoicePaymentState.test.js
+index a8e4ce7..e1540db 100644
+--- a/server/routes/invoicePaymentState.test.js
++++ b/server/routes/invoicePaymentState.test.js
+@@ -180,7 +180,10 @@ test('new standalone invoice creates an unpaid quote and then synchronizes it',
+   database(t, [
+     { match: /SELECT invoice_number FROM invoices/ },
+     { match: /INSERT INTO invoices/, rows: [created], check(args, sql) {
+-      assert.match(sql, /\$11,0,\$12/); assert.match(sql, /'draft'/);
++      // amount_paid is a parameter now (a quote's collected deposit is
++      // carried onto its first invoice); with no quote behind it, it is 0.
++      assert.match(sql, /\$11,\$20,\$12/); assert.match(sql, /'draft'/);
++      assert.equal(args[19], 0); assert.equal(args[20], '[]');
+     } },
+     { match: syncSql, rows: [quote()] },
+   ]);
+@@ -232,3 +235,44 @@ test('order page cannot net an invoice overpayment against another invoice due o
+   assert.match(source, /invoices\.reduce\(\(s, i\) => s \+ Math\.max\(0, Number\(i\.amount_due \|\| 0\)\), 0\)/);
+   assert.match(source, /label: 'Final payment', done: totalDue <= 0 && totalPaid > 0/);
+ });
++
++test('first invoice for an accepted quote opens with the quote deposit already recorded', async (t) => {
++  const created = invoice({ quote_id: 801, amount_paid: '150.00', amount_due: '150.00' });
++  database(t, [
++    { match: /SELECT invoice_number FROM invoices/ },
++    { match: /SELECT estimated_price, deposit_amount, accepted_at, balance_paid_at FROM quotes/, rows: [
++      { estimated_price: '300.00', deposit_amount: '150.00', accepted_at: '2026-11-01T00:00:00Z', balance_paid_at: null },
++    ] },
++    { match: /SELECT status, amount_paid FROM invoices WHERE quote_id/, rows: [] },
++    { match: /INSERT INTO invoices/, rows: [created], check(args) {
++      assert.equal(args[19], 150);
++      const payments = JSON.parse(args[20]);
++      assert.equal(payments.length, 1);
++      assert.equal(payments[0].amount, 150);
++      assert.match(payments[0].method, /deposit on quote/);
++      assert.equal(args[11], 150); // amount_due = total - carried
++    } },
++    { match: syncSql, rows: [quote({ status: 'accepted' })] },
++  ]);
++  const res = await call(invoicesRouter, 'post', '/', {
++    customer_name: 'Deposit Payer', customer_email: 'dep@example.test', total: 300, items: [], quote_id: 801,
++  });
++  assert.equal(res.statusCode, 201);
++});
++
++test('a second invoice on an order whose first already holds the deposit does not carry it again', async (t) => {
++  const created = invoice({ quote_id: 801 });
++  database(t, [
++    { match: /SELECT invoice_number FROM invoices/ },
++    { match: /SELECT estimated_price, deposit_amount, accepted_at, balance_paid_at FROM quotes/, rows: [
++      { estimated_price: '300.00', deposit_amount: '150.00', accepted_at: '2026-11-01T00:00:00Z', balance_paid_at: null },
++    ] },
++    { match: /SELECT status, amount_paid FROM invoices WHERE quote_id/, rows: [{ status: 'draft', amount_paid: '150.00' }] },
++    { match: /INSERT INTO invoices/, rows: [created], check(args) { assert.equal(args[19], 0); } },
++    { match: syncSql, rows: [quote({ status: 'accepted' })] },
++  ]);
++  const res = await call(invoicesRouter, 'post', '/', {
++    customer_name: 'Deposit Payer', customer_email: 'dep@example.test', total: 100, items: [], quote_id: 801,
++  });
++  assert.equal(res.statusCode, 201);
++});
+diff --git a/server/routes/invoices.js b/server/routes/invoices.js
+index dbf1362..5ea2f70 100644
+--- a/server/routes/invoices.js
++++ b/server/routes/invoices.js
+@@ -7,7 +7,7 @@ import { Resend } from 'resend';
+ import PDFDocument from 'pdfkit';
+ import { authenticate, adminOnly } from '../middleware/auth.js';
+ import { tokenMatches } from '../lib/acceptToken.js';
+-import { invoiceMayOweMoney } from '../lib/orderMoney.js';
++import { invoiceMayOweMoney, quoteCollected, billableInvoices } from '../lib/orderMoney.js';
+ import { invoiceViewUrl, invoicePdfUrl } from '../lib/invoiceLinks.js';
+ import pool from '../db.js';
+ import { ensureOrderForInvoice, promoteOrderForInvoicePayment, syncInvoiceArtworkToOrder } from '../lib/orderFromInvoice.js';
+@@ -477,6 +477,15 @@ router.post('/public/:id/verify', invoiceVerifyLimiter, async (req, res, next) =
+   } catch (err) { next(err); }
+ });
+ 
++function publicPayments(raw) {
++  let list = raw;
++  if (typeof list === 'string') { try { list = JSON.parse(list); } catch { list = []; } }
++  if (!Array.isArray(list)) return [];
++  return list
++    .filter((p) => p && Number(p.amount) > 0)
++    .map((p) => ({ amount: Number(p.amount), method: p.method || null, date: p.date || null }));
++}
++
+ // Public: minimal invoice view (for customer print/share link). Returns only
+ // customer-visible fields. Needs ?token= (or an admin/owner session).
+ router.get('/public/:id', async (req, res, next) => {
+@@ -528,6 +537,8 @@ router.get('/public/:id', async (req, res, next) => {
+       mockup_preview_url_sleeve_left: i.mockup_preview_url_sleeve_left,
+       // Linked order, shown as TSB-<id> next to the invoice number.
+       quote_id: i.quote_id,
++      // Payment history — amount/method/date only; no provider refs or notes.
++      payments: publicPayments(i.payments),
+     });
+   } catch (err) { next(err); }
+ });
+@@ -895,6 +906,43 @@ function cleanExtraMockups(v) {
+     }));
+ }
+ 
++// What a quote has already collected that a NEW invoice for it should start
++// from. Zero unless the quote shows money actually arrived (accepted_at /
++// balance_paid_at — see quoteCollected) AND no other billable invoice is
++// already carrying that order's money.
++async function carriedQuotePayment(quoteId) {
++  const none = { amount: 0, method: 'quote', date: new Date().toISOString() };
++  const id = parseInt(quoteId, 10);
++  if (!Number.isInteger(id)) return none;
++  try {
++    const { rows: qrows } = await pool.query(
++      'SELECT estimated_price, deposit_amount, accepted_at, balance_paid_at FROM quotes WHERE id = $1',
++      [id],
++    );
++    if (qrows.length === 0) return none;
++    const collected = quoteCollected(qrows[0]);
++    if (!(collected > 0)) return none;
++    // Another invoice on this order already carries its money — either a
++    // sent/partial/paid bill, or a draft the Stripe webhook booked the
++    // deposit onto (payments.js writes the deposit to the newest invoice
++    // for the quote whatever its status). Seeding again would double it.
++    const { rows: irows } = await pool.query(
++      'SELECT status, amount_paid FROM invoices WHERE quote_id = $1 AND archived_at IS NULL',
++      [id],
++    );
++    if (billableInvoices(irows).length > 0) return none;
++    if (irows.some((r) => Number(r.amount_paid) > 0)) return none;
++    return {
++      amount: +collected.toFixed(2),
++      method: qrows[0].balance_paid_at ? 'card (paid on quote)' : 'card (deposit on quote)',
++      date: new Date(qrows[0].balance_paid_at || qrows[0].accepted_at || Date.now()).toISOString(),
++    };
++  } catch (err) {
++    console.error('[invoices] could not read quote money for invoice seed:', err.message);
++    return none;
++  }
++}
++
+ // POST / - Create invoice
+ router.post('/', async (req, res, next) => {
+   try {
+@@ -904,32 +952,53 @@ router.post('/', async (req, res, next) => {
+       deposit_percent, mockup_id, extra_mockups, cc_emails,
+     } = req.body;
+ 
+-    if (!customer_name || !customer_email) {
+-      return res.status(400).json({ error: 'customer_name and customer_email are required' });
++    // A bill needs a name and SOME way to reach the customer. Email is the
++    // norm, but a walk-in paying by text link may only give a phone number
++    // — the Quick Bill path sends the pay link by SMS in that case.
++    const email = typeof customer_email === 'string' ? customer_email.trim() : '';
++    const phone = typeof customer_phone === 'string' ? customer_phone.trim() : '';
++    if (!customer_name || (!email && !phone)) {
++      return res.status(400).json({ error: 'customer_name and an email or phone number are required' });
+     }
+ 
+     const cc = normalizeCcEmails(cc_emails);
+     if (cc.error) return res.status(400).json({ error: cc.error });
+ 
+     const invoice_number = await generateInvoiceNumber();
+-    const amount_due = Number(total) || 0;
++    const totalNum = Number(total) || 0;
+     const depositPct = Math.max(0, Math.min(100, parseInt(deposit_percent, 10) || 0));
+ 
++    // Money already collected on the order this bill is written against.
++    // A customer who accepted a quote paid its deposit through Stripe on
++    // the QUOTE; when the admin later converts that quote into an invoice,
++    // the invoice used to open with amount_paid 0 and the emailed Pay Now
++    // asked for the deposit a second time. Seed the invoice with what the
++    // quote already collected — but only on the first bill for the order,
++    // so a second invoice on the same job doesn't double-credit it.
++    const carried = await carriedQuotePayment(quote_id);
++    const amountPaid = Math.min(totalNum, carried.amount);
++    const amount_due = +(totalNum - amountPaid).toFixed(2);
++    const seedPayments = amountPaid > 0
++      ? [{ amount: amountPaid, method: carried.method, date: carried.date, note: 'Collected on the quote before this invoice was written' }]
++      : [];
++
+     const { rows } = await pool.query(
+       `INSERT INTO invoices
+         (invoice_number, customer_name, customer_email, customer_phone, customer_address,
+          items, subtotal, tax, shipping, discount, total, amount_paid, amount_due,
+-         notes, due_date, quote_id, status, deposit_percent, mockup_id, extra_mockups, cc_emails)
+-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,0,$12,$13,$14,$15,'draft',$16,$17,$18::jsonb,$19::jsonb)
++         notes, due_date, quote_id, status, deposit_percent, mockup_id, extra_mockups, cc_emails, payments)
++       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$20,$12,$13,$14,$15,'draft',$16,$17,$18::jsonb,$19::jsonb,$21::jsonb)
+        RETURNING *`,
+       [
+-        invoice_number, customer_name, customer_email, customer_phone || null,
++        invoice_number, customer_name, email || null, phone || null,
+         (customer_address && customer_address !== '') ? (typeof customer_address === 'string' ? JSON.stringify({ address: customer_address }) : JSON.stringify(customer_address)) : null,
+-        JSON.stringify(items || []), Number(subtotal) || 0, Number(tax) || 0, Number(shipping) || 0, Number(discount) || 0, Number(total) || 0,
++        JSON.stringify(items || []), Number(subtotal) || 0, Number(tax) || 0, Number(shipping) || 0, Number(discount) || 0, totalNum,
+         amount_due, notes || null, due_date || null, quote_id || null, depositPct,
+         mockup_id ? Number(mockup_id) : null,
+         JSON.stringify(cleanExtraMockups(extra_mockups)),
+         JSON.stringify(cc.emails),
++        amountPaid,
++        JSON.stringify(seedPayments),
+       ]
+     );
+ 
+@@ -1150,7 +1219,12 @@ router.post('/:id/send', async (req, res, next) => {
+     const updated = await pool.query(
+       isReceipt
+         ? `UPDATE invoices SET sent_at = NOW(), updated_at = NOW() WHERE id = $1 RETURNING *`
+-        : `UPDATE invoices SET status = 'sent', sent_at = NOW(), updated_at = NOW() WHERE id = $1 RETURNING *`,
++        // Re-sending a balance request must not relabel a 'partial' invoice
++        // as merely 'sent' — the badge would then hide that money came in.
++        : `UPDATE invoices
++              SET status = CASE WHEN amount_paid > 0 AND amount_due > 0 THEN 'partial' ELSE 'sent' END,
++                  sent_at = NOW(), updated_at = NOW()
++            WHERE id = $1 RETURNING *`,
+       [id]
+     );
+ 
+diff --git a/server/routes/payments.js b/server/routes/payments.js
+index 91178e2..9e0705d 100644
+--- a/server/routes/payments.js
++++ b/server/routes/payments.js
+@@ -455,6 +455,38 @@ async function applyPaymentToInvoice({ invoiceId, amount, paymentIntentId, metho
+ 
+ export { applyPaymentToInvoice };
+ 
++
++// A quote accepts money exactly once per stage. The emailed accept link kept
++// working after the deposit was paid (and after a decline), so a parent
++// re-tapping the email could pay the deposit twice. Checked here — the
++// client calls these routes directly, never the guarded /quotes/accept.
++// Returns a { status, body } to send, or null when checkout may proceed.
++export function quoteCheckoutBlock(quote, { kind } = { kind: 'deposit' }) {
++  const domain = process.env.DOMAIN || 'https://tshirtbrothers.com';
++  if (!quote) return { status: 404, body: { error: 'Quote not found' } };
++  if (quote.archived_at || quote.status === 'rejected' || quote.status === 'declined') {
++    return { status: 410, body: {
++      code: 'declined',
++      error: quote.status === 'rejected' || quote.status === 'declined'
++        ? 'This quote was declined, so it can no longer be paid. Call us if you changed your mind — we\u2019ll be glad to re-quote it.'
++        : 'This quote has expired (quotes are valid for 14 days). Please request a new quote — we\u2019d love to work with you.',
++    } };
++  }
++  if (quote.balance_paid_at) {
++    return { status: 409, body: { code: 'paid', error: 'This order is already paid in full. Nothing more is due.' } };
++  }
++  const underway = Boolean(quote.accepted_at)
++    || ['accepted', 'paid', 'awaiting_approval', 'in_production', 'ready', 'completed'].includes(String(quote.status));
++  if (underway && kind !== 'balance') {
++    return { status: 409, body: {
++      code: 'accepted',
++      error: 'Your deposit is already in and this order is underway. Any remaining balance is collected when it\u2019s ready.',
++      redirectUrl: `${domain}/quote/accepted/${quote.id}`,
++    } };
++  }
++  return null;
++}
++
+ // POST /create-checkout - Create Stripe Checkout session for deposit payment
+ router.post('/create-checkout', async (req, res, next) => {
+   try {
+@@ -484,6 +516,9 @@ router.post('/create-checkout', async (req, res, next) => {
+       return res.status(403).json({ error: 'Invalid token' });
+     }
+ 
++    const blocked = quoteCheckoutBlock(quote, { kind: 'deposit' });
++    if (blocked) return res.status(blocked.status).json(blocked.body);
++
+     // Calculate deposit amount
+     const total = parseFloat(quote.estimated_price || 0);
+     if (total <= 0) {
+@@ -573,6 +608,9 @@ router.post('/create-full-checkout', async (req, res, next) => {
+       return res.status(403).json({ error: 'Invalid token' });
+     }
+ 
++    const blocked = quoteCheckoutBlock(quote, { kind: 'full' });
++    if (blocked) return res.status(blocked.status).json(blocked.body);
++
+     const total = parseFloat(quote.estimated_price || 0);
+     if (total <= 0) {
+       return res.status(400).json({ error: 'Quote has no price set' });
+diff --git a/server/routes/payments.test.js b/server/routes/payments.test.js
+index 0e5e145..6e3685e 100644
+--- a/server/routes/payments.test.js
++++ b/server/routes/payments.test.js
+@@ -18,7 +18,7 @@
+ 
+ import { test } from 'node:test';
+ import assert from 'node:assert/strict';
+-import { reconcileInvoicePayments } from './payments.js';
++import { reconcileInvoicePayments, quoteCheckoutBlock } from './payments.js';
+ 
+ const DATE = '2026-10-13T18:00:21.093Z';
+ 
+@@ -214,3 +214,32 @@ test('zero-total invoice does not divide by zero', () => {
+   assert.equal(book.amountDue, 0);
+   assert.equal(book.settled, true);
+ });
++
++// The emailed accept link must stop taking deposits once one is in — a
++// parent re-tapping the email paid twice before this guard existed.
++test('quoteCheckoutBlock lets a priced, open quote through', () => {
++  assert.equal(quoteCheckoutBlock({ id: 1, status: 'quoted', accepted_at: null }), null);
++  assert.equal(quoteCheckoutBlock({ id: 1, status: 'pending', accepted_at: null }, { kind: 'full' }), null);
++});
++
++test('quoteCheckoutBlock refuses a second deposit on an accepted order and points at the status page', () => {
++  const r = quoteCheckoutBlock({ id: 7, status: 'accepted', accepted_at: '2026-11-01' });
++  assert.equal(r.status, 409);
++  assert.equal(r.body.code, 'accepted');
++  assert.match(r.body.redirectUrl, /\/quote\/accepted\/7$/);
++  // status alone is enough — accepted_at can be missing on older rows
++  assert.equal(quoteCheckoutBlock({ id: 7, status: 'in_production', accepted_at: null }).status, 409);
++});
++
++test('quoteCheckoutBlock still allows the balance on an accepted order, but not once paid in full', () => {
++  assert.equal(quoteCheckoutBlock({ id: 7, status: 'ready', accepted_at: 'x' }, { kind: 'balance' }), null);
++  const r = quoteCheckoutBlock({ id: 7, status: 'ready', accepted_at: 'x', balance_paid_at: 'y' }, { kind: 'balance' });
++  assert.equal(r.status, 409);
++  assert.equal(r.body.code, 'paid');
++});
++
++test('quoteCheckoutBlock refuses declined and expired quotes', () => {
++  assert.equal(quoteCheckoutBlock({ id: 7, status: 'rejected' }).status, 410);
++  assert.equal(quoteCheckoutBlock({ id: 7, status: 'rejected' }).body.code, 'declined');
++  assert.equal(quoteCheckoutBlock({ id: 7, status: 'quoted', archived_at: '2026-10-01' }).status, 410);
++});
+diff --git a/server/routes/quotes.js b/server/routes/quotes.js
+index dba6d20..0609cc8 100644
+--- a/server/routes/quotes.js
++++ b/server/routes/quotes.js
+@@ -852,7 +852,9 @@ router.post('/admin/send-price', authenticate, adminOnly, async (req, res, next)
+     // the accept page and the invoice all read back.
+     const { basePrice, printingCost, designFee, rushFee, shipping, tax, taxExempt, taxRate, total, discountPct, discountReason, discountAmount, lineFees, lineFeesTotal } = priceBreakdown;
+ 
+-    // Generate an accept token
++    // Accept token: minted once, then kept. Re-sending a price used to mint
++    // a fresh token, which silently killed the link in the email the
++    // customer already had.
+     const acceptToken = crypto.randomBytes(32).toString('hex');
+     const depositAmount = (Number(total) * 0.5).toFixed(2);
+ 
+@@ -864,7 +866,7 @@ router.post('/admin/send-price', authenticate, adminOnly, async (req, res, next)
+        SET estimated_price = $1,
+            calculated_price = $1,
+            status = 'quoted',
+-           accept_token = $2,
++           accept_token = COALESCE(accept_token, $2),
+            price_breakdown = $3,
+            admin_message = $4,
+            deposit_amount = $5
+@@ -886,7 +888,20 @@ router.post('/admin/send-price', authenticate, adminOnly, async (req, res, next)
+ 
+     const quote = result.rows[0];
+ 
+-    // Send the price quote email to the customer
++    // The admin's total is the price; make the line items say the same
++    // thing. The customer's checkout page and the order page both list
++    // quote_items, so an override that touched only estimated_price showed
++    // "$666.90" on the line and "$642.00" in the total for the same shirts.
++    await syncQuoteItemPricesToTotal(quoteId, {
++      total: Number(total), tax: Number(tax) || 0, shipping: Number(shipping) || 0,
++      lineFeesTotal: Number(lineFeesTotal) || 0,
++    }).catch((err) => console.error(`[send-price] item price sync failed for quote ${quoteId}:`, err.message));
++
++    // Send the price quote email to the customer. The price is saved either
++    // way — a mail outage must not read as "the price didn't take", and the
++    // admin can text the link instead. Reported, not thrown.
++    let emailError = null;
++    try {
+     await sendQuotePriceToCustomer(quote, {
+       basePrice,
+       printingCost,
+@@ -904,6 +919,10 @@ router.post('/admin/send-price', authenticate, adminOnly, async (req, res, next)
+       total,
+       message,
+     });
++    } catch (err) {
++      emailError = err?.message || 'The mail provider rejected the message.';
++      console.error(`[send-price] email failed for quote ${quoteId}:`, err);
++    }
+     smsQuotePriceToCustomer(quote, total).catch(() => {});
+     sendPushToUser(quote.user_id, {
+       title: 'Your quote is ready',
+@@ -911,12 +930,40 @@ router.post('/admin/send-price', authenticate, adminOnly, async (req, res, next)
+       data: { type: 'quote-priced', id: quote.id },
+     }).catch(() => {});
+ 
+-    res.json({ success: true, quote });
++    res.json({ success: true, quote, ...(emailError ? { emailError } : {}) });
+   } catch (err) {
+     next(err);
+   }
+ });
+ 
++// Spread the admin's garment total across the quote's product lines so the
++// per-line prices the customer sees add up to the figure they were sent.
++// Fee lines keep their own totals; tax/shipping sit outside the lines.
++async function syncQuoteItemPricesToTotal(quoteId, { total, tax, shipping, lineFeesTotal }) {
++  const { rows } = await pool.query(
++    `SELECT id, quantity, item_type FROM quote_items WHERE quote_id = $1 AND item_type <> 'fee' ORDER BY position`,
++    [quoteId],
++  );
++  const garments = rows.filter((r) => Number(r.quantity) > 0);
++  const qty = garments.reduce((n, r) => n + Number(r.quantity), 0);
++  if (qty <= 0) return;
++  const net = Math.max(0, Number(total) - Number(tax) - Number(shipping) - Number(lineFeesTotal));
++  const unit = Math.round((net / qty) * 100) / 100;
++  // Rounding remainder lands on the last line so the lines sum exactly.
++  let remaining = Math.round(net * 100);
++  for (let i = 0; i < garments.length; i++) {
++    const r = garments[i];
++    const q = Number(r.quantity);
++    let lineCents = i === garments.length - 1 ? remaining : Math.round(unit * q * 100);
++    lineCents = Math.max(0, Math.min(lineCents, remaining));
++    remaining -= lineCents;
++    await pool.query(
++      'UPDATE quote_items SET unit_price = $1, line_total = $2, updated_at = NOW() WHERE id = $3',
++      [Math.round((lineCents / q)) / 100, lineCents / 100, r.id],
++    );
++  }
++}
++
+ // POST /accept/:id - Redirect customer to payment checkout (deposit required to accept)
+ router.post('/accept/:id', async (req, res, next) => {
+   try {
+-- 
+2.43.0
+

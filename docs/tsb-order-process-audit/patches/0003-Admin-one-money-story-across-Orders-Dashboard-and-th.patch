@@ -1,0 +1,258 @@
+From 1cf2b9339541de390c25ea3622147cd9daa25cc8 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Wed, 25 Nov 2026 10:43:58 +0000
+Subject: [PATCH 3/4] Admin: one money story across Orders, Dashboard and the
+ order page; row menu, due date, Browse fixes
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+- /admin/orders rows carry the resolved money block (invoice wins), and
+  the Orders list reads Collected / Balance Due from it instead of the
+  quote's deposit_amount, which said "$336 due" on paid-in-full orders.
+- Dashboard "Unpaid balance" no longer adds a quote's balance on top of
+  the invoice balance for the same order.
+- Order page nets a quote-collected deposit out of invoice due when the
+  invoices never booked it ("Paid $336 / Due $690").
+- Row Actions menu opened on the second click: the click's own scroll
+  of the overflow-x wrapper closed it. Scrolls in the first 350ms after
+  opening are ignored.
+- Invoice editor Due Date was blank: ISO timestamp → yyyy-MM-dd.
+- Invoices header: filters scroll on their own so Quick bill / New stay
+  on screen at phone width.
+- Quote line Browse opens clean for a picked product (its full name
+  searched to zero results); Browse is icon-only on phones so the
+  product field keeps its width.
+
+Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01LYEMaMZPU19bz29YxAMBh6
+---
+ .../src/components/admin/QuoteItemsEditor.tsx |  8 +++-
+ client/src/pages/AdminOrderDetailPage.tsx     |  7 +++-
+ client/src/pages/AdminPage.tsx                | 41 +++++++++++++++----
+ server/routes/admin.js                        | 29 +++++++++++--
+ 4 files changed, 72 insertions(+), 13 deletions(-)
+
+diff --git a/client/src/components/admin/QuoteItemsEditor.tsx b/client/src/components/admin/QuoteItemsEditor.tsx
+index a6e84d9..d15a9af 100644
+--- a/client/src/components/admin/QuoteItemsEditor.tsx
++++ b/client/src/components/admin/QuoteItemsEditor.tsx
+@@ -1187,12 +1187,16 @@ function ProductPicker({
+           title="Browse the catalog with photos"
+           className="flex-shrink-0 flex items-center gap-1.5 text-xs font-medium border border-gray-200 rounded px-2.5 py-2 text-gray-700 hover:bg-gray-50 hover:border-gray-300"
+         >
+-          <LayoutGrid className="w-3.5 h-3.5" /> Browse
++          <LayoutGrid className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Browse</span>
+         </button>
+       </div>
+       {browsing && (
+         <ProductBrowser
+-          initialQuery={query}
++          // A line that already holds a catalog product carries its full
++          // name, and the search treats the whole name as the query ("Gildan
++          // Heavy Cotton T-Shirt" → 0 results). Browse starts clean for those;
++          // free text the admin typed is still worth searching.
++          initialQuery={productId ? '' : query}
+           onPick={pick}
+           onClose={() => setBrowsing(false)}
+         />
+diff --git a/client/src/pages/AdminOrderDetailPage.tsx b/client/src/pages/AdminOrderDetailPage.tsx
+index 8c3dc28..ed903bc 100644
+--- a/client/src/pages/AdminOrderDetailPage.tsx
++++ b/client/src/pages/AdminOrderDetailPage.tsx
+@@ -283,8 +283,13 @@ export default function AdminOrderDetailPage() {
+   const invoicePaid = invoices.reduce((s, i) => s + Number(i.amount_paid || 0), 0);
+   const quoteDeposit = quote.accepted_at ? Number((quote as { deposit_amount?: string | null }).deposit_amount || 0) : 0;
+   const totalPaid = invoicePaid > 0 ? invoicePaid : quoteDeposit;
++  // When the invoices never booked the deposit the quote collected (older
++  // orders: deposit via quote, invoice written later at full price), the
++  // invoice due still includes it. Net it out, as lib/orderMoney.js does,
++  // so the header stops reading "Paid $336 / Due $690".
++  const invoiceDue = invoices.reduce((s, i) => s + Math.max(0, Number(i.amount_due || 0)), 0);
+   const totalDue = invoices.length > 0
+-    ? invoices.reduce((s, i) => s + Math.max(0, Number(i.amount_due || 0)), 0)
++    ? Math.max(0, invoiceDue - (invoicePaid > 0 ? 0 : quoteDeposit))
+     : Math.max(0, Number(quote.estimated_price || 0) - totalPaid);
+   const stages = quote.order_stages || {};
+ 
+diff --git a/client/src/pages/AdminPage.tsx b/client/src/pages/AdminPage.tsx
+index f93299b..25a9e7d 100644
+--- a/client/src/pages/AdminPage.tsx
++++ b/client/src/pages/AdminPage.tsx
+@@ -95,6 +95,7 @@ import {
+   type InvoiceItem,
+   type CreateInvoiceData,
+   type PriceBreakdown,
++  type OrderMoney,
+   orderNumber,
+   fetchInvoices,
+   fetchInvoice,
+@@ -1011,7 +1012,7 @@ export default function AdminPage() {
+             shipping: String(inv.shipping || 0),
+             discount: String(inv.discount || 0),
+             notes: inv.notes || '',
+-            due_date: inv.due_date || '',
++            due_date: dateInputValue(inv.due_date),
+             mockup_id: inv.mockup_id ?? null,
+             mockup_preview_url: inv.mockup_preview_url ?? null,
+             mockup_preview_url_back: inv.mockup_preview_url_back ?? null, extra_mockups: (inv.extra_mockups ?? []),
+@@ -1057,15 +1058,21 @@ export default function AdminPage() {
+         ? { top: r.bottom + 4, right, maxHeight: Math.max(160, below) }
+         : { bottom: window.innerHeight - r.top + 4, right, maxHeight: Math.max(160, above) }
+     );
++    actionMenuOpenedAt.current = Date.now();
+     setOpenActionMenu(id);
+   };
++  const actionMenuOpenedAt = useRef(0);
+   useEffect(() => {
+     if (!openActionMenu) return;
+     // Scrolling the menu's own overflow must not count as the page moving
+-    // out from under it.
++    // out from under it. Nor does the scroll the opening click itself
++    // causes: focusing the button nudges the table's overflow-x wrapper,
++    // which fired this listener and closed the menu before it was seen —
++    // every row menu took two clicks.
+     const close = (e: Event) => {
+       const t = e.target as HTMLElement | null;
+       if (t?.closest?.('[data-row-action-menu]')) return;
++      if (Date.now() - actionMenuOpenedAt.current < 350) return;
+       setOpenActionMenu(null);
+     };
+     window.addEventListener('scroll', close, true);
+@@ -2625,7 +2632,7 @@ export default function AdminPage() {
+       shipping: String(inv.shipping || 0),
+       discount: String(inv.discount || 0),
+       notes: inv.notes || '',
+-      due_date: inv.due_date || '',
++      due_date: dateInputValue(inv.due_date),
+       mockup_id: inv.mockup_id ?? null,
+       mockup_preview_url: inv.mockup_preview_url ?? null,
+       mockup_preview_url_back: inv.mockup_preview_url_back ?? null, extra_mockups: (inv.extra_mockups ?? []),
+@@ -5805,13 +5812,23 @@ export default function AdminPage() {
+                             ? `$${Number(o.estimated_price).toFixed(2)}`
+                             : '--'}
+                         </td>
++                        {/* Collected / due come from the resolved money block
++                            (invoice wins when one exists) — the quote's
++                            deposit_amount alone showed "$336 due" on orders
++                            the invoice list said were paid in full. */}
+                         <td className="px-4 py-3 text-green-600 font-medium text-right whitespace-nowrap">
+-                          {o.accepted_at && o.deposit_amount != null && Number(o.deposit_amount) > 0
+-                            ? `$${Number(o.deposit_amount).toFixed(2)}`
+-                            : '--'}
++                          {(() => {
++                            const m = (o as { money?: OrderMoney }).money;
++                            if (m) return m.collected > 0 ? `$${m.collected.toFixed(2)}` : '--';
++                            return o.accepted_at && o.deposit_amount != null && Number(o.deposit_amount) > 0
++                              ? `$${Number(o.deposit_amount).toFixed(2)}`
++                              : '--';
++                          })()}
+                         </td>
+                         <td className="px-4 py-3 text-red-600 font-medium text-right whitespace-nowrap">
+                           {(() => {
++                            const m = (o as { money?: OrderMoney }).money;
++                            if (m) return m.total <= 0 ? '--' : `$${m.due.toFixed(2)}`;
+                             const total = o.estimated_price != null ? Number(o.estimated_price) : 0;
+                             if (total <= 0) return '--';
+                             if (o.balance_paid_at) return '$0.00';
+@@ -5935,7 +5952,8 @@ export default function AdminPage() {
+                       </button>
+                     )}
+                   </div>
+-                  <div className="flex items-center gap-2 overflow-x-auto">
++                  <div className="flex items-center gap-2 w-full md:w-auto">
++                   <div className="flex items-center gap-2 overflow-x-auto flex-1 min-w-0 pb-0.5">
+                     {(['all', 'draft', 'sent', 'partial', 'paid', 'overdue', 'archived'] as InvoiceFilter[]).map(f => (
+                       <button
+                         key={f}
+@@ -5947,6 +5965,7 @@ export default function AdminPage() {
+                         {f}
+                       </button>
+                     ))}
++                   </div>
+                     <button
+                       onClick={() => setQuickBillOpen(true)}
+                       title="Bill a customer right now — name, amount, send or mark paid"
+@@ -11850,6 +11869,14 @@ function MockupSideScroller({ images, alt }: { images: Array<{ src: string; labe
+  * look at the invoice and decide. Trusting `status` alone hid every control
+  * on the 11 invoices marked paid that still show a balance.
+  */
++// <input type="date"> only accepts yyyy-MM-dd; the API hands back a full
++// timestamp, which the field rejected and rendered blank.
++function dateInputValue(v: string | null | undefined): string {
++  if (!v) return '';
++  const m = /^(\d{4}-\d{2}-\d{2})/.exec(String(v));
++  return m?.[1] ?? '';
++}
++
+ function mayOweMoney(inv: Invoice & { may_owe_money?: boolean }): boolean {
+   if (typeof inv.may_owe_money === 'boolean') return inv.may_owe_money;
+   if (inv.status === 'cancelled' || inv.status === 'draft') return false;
+diff --git a/server/routes/admin.js b/server/routes/admin.js
+index 84e51c4..92493c5 100644
+--- a/server/routes/admin.js
++++ b/server/routes/admin.js
+@@ -5,6 +5,7 @@ import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+ import { authenticate, adminOnly } from '../middleware/auth.js';
+ import { fetchProducts, fetchStyleSizes, fetchStyleSkuData, fetchAllStylePrices } from '../services/ssActivewear.js';
+ import pool from '../db.js';
++import { resolveOrderMoney } from '../lib/orderMoney.js';
+ 
+ const router = Router();
+ 
+@@ -912,18 +913,34 @@ router.get('/orders', async (req, res, next) => {
+       orderClause = 'ORDER BY q.created_at DESC';
+     }
+ 
++    // Every invoice on the order rides along so the Collected / Balance
++    // Due columns can be resolved the same way the quotes list and the
++    // order page resolve them (lib/orderMoney.js: the invoice wins). Read
++    // from deposit_amount alone, the list said "$336 due" on orders whose
++    // invoice was paid in full.
+     const { rows } = await pool.query(
+       `SELECT
+          q.id, q.product_name, q.quantity, q.status, q.estimated_price, q.deposit_amount, q.accepted_at,
++         q.balance_paid_at,
+          q.created_at, q.date_needed, q.notes, q.admin_notes, q.shipping_method,
+-         q.customer_name, q.customer_email, q.customer_phone
++         q.customer_name, q.customer_email, q.customer_phone,
++         COALESCE((
++           SELECT json_agg(json_build_object(
++             'id', i.id, 'status', i.status, 'total', i.total,
++             'amount_paid', i.amount_paid, 'amount_due', i.amount_due
++           ) ORDER BY i.id)
++           FROM invoices i WHERE i.quote_id = q.id AND i.archived_at IS NULL
++         ), '[]'::json) AS invoice_rows
+        FROM quotes q
+        ${whereClause}
+        ${orderClause}`,
+       params
+     );
+ 
+-    res.json(rows);
++    res.json(rows.map(({ invoice_rows: invoiceRows, ...row }) => ({
++      ...row,
++      money: resolveOrderMoney(row, invoiceRows || []),
++    })));
+   } catch (err) {
+     next(err);
+   }
+@@ -1439,8 +1456,14 @@ router.get('/dashboard-ops', async (req, res, next) => {
+           COUNT(*) FILTER (WHERE status IN ('accepted', 'completed', 'rejected')
+             OR (archived_at IS NOT NULL AND status NOT IN ('accepted', 'completed')))::int AS decided,
+           COALESCE(SUM(estimated_price) FILTER (WHERE archived_at IS NULL AND status = 'accepted' AND deposit_amount IS NULL), 0)::numeric(12,2) AS approved_unpaid,
++          -- Only jobs with no bill yet: once an invoice exists it is the
++          -- record (lib/orderMoney.js), and the invoices query below already
++          -- counts its balance. Summing both showed "Unpaid $666" for orders
++          -- whose invoice was paid in full.
+           COALESCE(SUM(GREATEST(estimated_price - COALESCE(deposit_amount, 0), 0))
+-            FILTER (WHERE archived_at IS NULL AND status = 'accepted' AND balance_paid_at IS NULL AND deposit_amount IS NOT NULL), 0)::numeric(12,2) AS balances_outstanding,
++            FILTER (WHERE archived_at IS NULL AND status = 'accepted' AND balance_paid_at IS NULL AND deposit_amount IS NOT NULL
++              AND NOT EXISTS (SELECT 1 FROM invoices i WHERE i.quote_id = quotes.id AND i.archived_at IS NULL
++                                AND i.status NOT IN ('draft', 'cancelled'))), 0)::numeric(12,2) AS balances_outstanding,
+           -- status must be 'awaiting_approval', not 'accepted': mockups.js
+           -- sets BOTH in the same UPDATE that stamps mockup_sent_at, so the
+           -- old filter was mutually exclusive and this tile read 0 forever
+-- 
+2.43.0
+

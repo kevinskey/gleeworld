@@ -1,0 +1,124 @@
+From 4b810b527efb7daf5c780aa2850d76df98d27f6a Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Wed, 25 Nov 2026 11:10:55 +0000
+Subject: [PATCH 4/4] Payment page settles on load; dashboard fits a phone;
+ declined orders owe nothing
+
+- Public quote carries accepted_at / archived_at, and the payment page
+  shows "already underway" / "paid in full" / "declined" on load instead
+  of offering Pay deposit until the server refuses it.
+- Admin dashboard at phone width laid out 530px wide (grid children could
+  not shrink around the scrolling Open Orders table), so taps landed on
+  the wrong element. min-w-0 on the grid and card.
+- Declined order page header no longer shows a balance due.
+- Browse seeds at most the first two words of a name-only line, so a
+  pasted full product name no longer searches to zero results.
+- Invoice filter chips wrap on phones instead of hiding Partial/Archived
+  behind an unmarked scroll.
+
+Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01LYEMaMZPU19bz29YxAMBh6
+---
+ client/src/components/admin/OpsDashboard.tsx     |  4 ++--
+ client/src/components/admin/QuoteItemsEditor.tsx |  2 +-
+ client/src/pages/AdminOrderDetailPage.tsx        |  3 ++-
+ client/src/pages/AdminPage.tsx                   |  2 +-
+ client/src/pages/PaymentPage.tsx                 | 13 +++++++++++++
+ server/routes/quotes.js                          |  2 +-
+ 6 files changed, 20 insertions(+), 6 deletions(-)
+
+diff --git a/client/src/components/admin/OpsDashboard.tsx b/client/src/components/admin/OpsDashboard.tsx
+index f3380c3..e20606f 100644
+--- a/client/src/components/admin/OpsDashboard.tsx
++++ b/client/src/components/admin/OpsDashboard.tsx
+@@ -555,8 +555,8 @@ export default function OpsDashboard({ onOpenQuotes, onOpenInvoices, onOpenCusto
+       </div>
+ 
+       {/* Schedule + Attention */}
+-      <div className="mb-4 grid gap-4 lg:grid-cols-[1.6fr_1fr]">
+-        <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
++      <div className="mb-4 grid gap-4 lg:grid-cols-[1.6fr_1fr] min-w-0">
++        <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm min-w-0">
+           <CardHeader icon={CalendarDays} title={`Open Orders${d.schedule.length ? ` (${d.schedule.length})` : ''}`} linkText="View All" onLink={() => onOpenQuotes('accepted')} />
+           {d.schedule.length === 0 ? (
+             <p className="py-8 text-center text-sm text-gray-400">No open orders — this fills in as quotes are accepted.</p>
+diff --git a/client/src/components/admin/QuoteItemsEditor.tsx b/client/src/components/admin/QuoteItemsEditor.tsx
+index d15a9af..9f7ea7a 100644
+--- a/client/src/components/admin/QuoteItemsEditor.tsx
++++ b/client/src/components/admin/QuoteItemsEditor.tsx
+@@ -1196,7 +1196,7 @@ function ProductPicker({
+           // name, and the search treats the whole name as the query ("Gildan
+           // Heavy Cotton T-Shirt" → 0 results). Browse starts clean for those;
+           // free text the admin typed is still worth searching.
+-          initialQuery={productId ? '' : query}
++          initialQuery={productId ? '' : query.trim().split(/\s+/).slice(0, 2).join(' ')}
+           onPick={pick}
+           onClose={() => setBrowsing(false)}
+         />
+diff --git a/client/src/pages/AdminOrderDetailPage.tsx b/client/src/pages/AdminOrderDetailPage.tsx
+index ed903bc..6d92958 100644
+--- a/client/src/pages/AdminOrderDetailPage.tsx
++++ b/client/src/pages/AdminOrderDetailPage.tsx
+@@ -288,7 +288,8 @@ export default function AdminOrderDetailPage() {
+   // invoice due still includes it. Net it out, as lib/orderMoney.js does,
+   // so the header stops reading "Paid $336 / Due $690".
+   const invoiceDue = invoices.reduce((s, i) => s + Math.max(0, Number(i.amount_due || 0)), 0);
+-  const totalDue = invoices.length > 0
++  // A declined quote owes nothing, whatever its price says.
++  const totalDue = quote.status === 'rejected' ? 0 : invoices.length > 0
+     ? Math.max(0, invoiceDue - (invoicePaid > 0 ? 0 : quoteDeposit))
+     : Math.max(0, Number(quote.estimated_price || 0) - totalPaid);
+   const stages = quote.order_stages || {};
+diff --git a/client/src/pages/AdminPage.tsx b/client/src/pages/AdminPage.tsx
+index 25a9e7d..ce49614 100644
+--- a/client/src/pages/AdminPage.tsx
++++ b/client/src/pages/AdminPage.tsx
+@@ -5953,7 +5953,7 @@ export default function AdminPage() {
+                     )}
+                   </div>
+                   <div className="flex items-center gap-2 w-full md:w-auto">
+-                   <div className="flex items-center gap-2 overflow-x-auto flex-1 min-w-0 pb-0.5">
++                   <div className="flex items-center gap-2 flex-wrap flex-1 min-w-0">
+                     {(['all', 'draft', 'sent', 'partial', 'paid', 'overdue', 'archived'] as InvoiceFilter[]).map(f => (
+                       <button
+                         key={f}
+diff --git a/client/src/pages/PaymentPage.tsx b/client/src/pages/PaymentPage.tsx
+index d67672b..e5b92e2 100644
+--- a/client/src/pages/PaymentPage.tsx
++++ b/client/src/pages/PaymentPage.tsx
+@@ -141,6 +141,19 @@ export function PaymentCheckout() {
+       .then((res) => res.json())
+       .then((data) => {
+         if (data?.id) {
++          // Settle the page before showing Pay buttons: an accepted, paid
++          // or declined quote must not offer the deposit again (the server
++          // refuses it anyway, but the customer should not see the choice).
++          const st = String(data.status || '');
++          if (data.balance_paid_at) {
++            setBlocked({ code: 'paid', message: 'This order is already paid in full. Nothing more is due.' });
++          } else if (st === 'rejected' || st === 'declined') {
++            setBlocked({ code: 'declined', message: 'This quote was declined, so it can no longer be paid. Call us if you changed your mind \u2014 we\u2019ll be glad to re-quote it.' });
++          } else if (data.archived_at) {
++            setBlocked({ code: 'expired', message: 'This quote has expired (quotes are valid for 14 days). Please request a new quote \u2014 we\u2019d love to work with you.' });
++          } else if (data.accepted_at || ['accepted', 'paid', 'awaiting_approval', 'in_production', 'ready', 'completed'].includes(st)) {
++            setBlocked({ code: 'accepted', message: 'Your deposit is already in and this order is underway. Any remaining balance is collected when it\u2019s ready.', redirectUrl: `/quote/accepted/${data.id}` });
++          }
+           setQuote({
+             id: data.id,
+             customer_name: data.customer_name ?? null,
+diff --git a/server/routes/quotes.js b/server/routes/quotes.js
+index 0609cc8..df071e9 100644
+--- a/server/routes/quotes.js
++++ b/server/routes/quotes.js
+@@ -454,7 +454,7 @@ router.get('/:id/public', async (req, res, next) => {
+     if (!token) return res.status(400).json({ error: 'token is required' });
+     const result = await pool.query(
+       `SELECT id, customer_name, product_name, estimated_price, deposit_amount,
+-              balance_paid_at, status, accept_token,
++              balance_paid_at, accepted_at, archived_at, status, accept_token,
+               mockup_image_url, mockup_image_url_back,
+               mockup_image_url_sleeve, mockup_image_url_sleeve_left,
+               extra_mockups
+-- 
+2.43.0
+

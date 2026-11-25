@@ -1,0 +1,194 @@
+<title>TSB Order Process Audit</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+  /* Layout: a print-shop job ticket. One column, ruled sections, red stamp accents (TSB red), status chips. */
+  :root {
+    --bg: #faf9f7;
+    --paper: #ffffff;
+    --fg: #1b1917;
+    --muted: #6b655e;
+    --rule: #e4dfd8;
+    --accent: #c8102e;
+    --accent-ink: #ffffff;
+    --good: #1f7a3f;
+    --good-bg: #e5f3ea;
+    --warn: #9a5b00;
+    --warn-bg: #fbeedb;
+    --bad: #a3202d;
+    --bad-bg: #f9e3e5;
+    --info-bg: #eef1f6;
+    --display: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+    --body: 'Inter', system-ui, -apple-system, sans-serif;
+    --mono: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #15130f; --paper: #1e1b17; --fg: #f1ede7; --muted: #a39b91; --rule: #342f29;
+      --accent: #ff4b63; --accent-ink: #1a0a0d;
+      --good: #6fd196; --good-bg: #163122; --warn: #f0b457; --warn-bg: #3a2a0f; --bad: #ff8a95; --bad-bg: #3d161b; --info-bg: #23262d;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #15130f; --paper: #1e1b17; --fg: #f1ede7; --muted: #a39b91; --rule: #342f29;
+    --accent: #ff4b63; --accent-ink: #1a0a0d;
+    --good: #6fd196; --good-bg: #163122; --warn: #f0b457; --warn-bg: #3a2a0f; --bad: #ff8a95; --bad-bg: #3d161b; --info-bg: #23262d;
+    color-scheme: dark;
+  }
+  body { background: var(--bg); color: var(--fg); font-family: var(--body); line-height: 1.55; margin: 0; }
+  .wrap { max-width: 880px; margin: 0 auto; padding-block: 2.5rem 4rem; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+  h1, h2, h3 { font-family: var(--display); text-wrap: balance; line-height: 1.15; margin: 0; }
+  h1 { font-size: clamp(1.9rem, 4vw, 2.6rem); font-weight: 700; letter-spacing: -0.01em; }
+  h2 { font-size: 1.35rem; font-weight: 700; margin-top: 2.75rem; padding-top: 1rem; border-top: 2px solid var(--fg); }
+  h3 { font-size: 1.02rem; font-weight: 700; margin-top: 1.5rem; }
+  p { margin: 0.6rem 0; max-width: 68ch; }
+  .eyebrow { font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+  .stamp { display: inline-block; font-family: var(--display); font-weight: 700; font-size: 0.78rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); border: 2px solid var(--accent); border-radius: 4px; padding: 0.15rem 0.5rem; transform: rotate(-2deg); }
+  .lede { font-size: 1.08rem; color: var(--fg); max-width: 62ch; }
+  .meta { display: flex; flex-wrap: wrap; gap: 0.4rem 1.5rem; font-size: 0.85rem; color: var(--muted); margin-top: 1rem; }
+  .meta b { color: var(--fg); font-weight: 600; }
+  .summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 0.75rem; margin: 1.5rem 0 0; }
+  .tile { background: var(--paper); border: 1px solid var(--rule); border-radius: 6px; padding: 0.9rem 1rem; }
+  .tile .n { font-family: var(--display); font-size: 1.9rem; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; }
+  .tile .l { font-size: 0.8rem; color: var(--muted); margin-top: 0.3rem; }
+  .chip { display: inline-block; font-size: 0.72rem; font-weight: 600; letter-spacing: 0.03em; padding: 0.12rem 0.5rem; border-radius: 999px; vertical-align: middle; white-space: nowrap; }
+  .chip.fixed { background: var(--good-bg); color: var(--good); }
+  .chip.open { background: var(--warn-bg); color: var(--warn); }
+  .chip.bug { background: var(--bad-bg); color: var(--bad); }
+  .chip.env { background: var(--info-bg); color: var(--muted); }
+  ul { padding-left: 1.2rem; margin: 0.5rem 0; }
+  li { margin: 0.35rem 0; max-width: 72ch; }
+  li b { font-weight: 600; }
+  table { border-collapse: collapse; width: 100%; font-size: 0.9rem; }
+  .tablewrap { overflow-x: auto; border: 1px solid var(--rule); border-radius: 6px; background: var(--paper); margin: 0.75rem 0; }
+  th, td { text-align: left; padding: 0.55rem 0.75rem; border-bottom: 1px solid var(--rule); vertical-align: top; }
+  th { font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+  tr:last-child td { border-bottom: 0; }
+  td.num { font-variant-numeric: tabular-nums; white-space: nowrap; }
+  code { font-family: var(--mono); font-size: 0.85em; background: var(--info-bg); padding: 0.08rem 0.35rem; border-radius: 3px; }
+  pre { font-family: var(--mono); font-size: 0.82rem; background: var(--paper); border: 1px solid var(--rule); border-radius: 6px; padding: 0.9rem 1rem; overflow-x: auto; margin: 0.75rem 0; }
+  .flow { display: grid; grid-template-columns: 1fr; gap: 0.5rem; margin: 1rem 0; }
+  .step { background: var(--paper); border: 1px solid var(--rule); border-left: 4px solid var(--accent); border-radius: 4px; padding: 0.7rem 0.9rem; }
+  .step .t { font-family: var(--display); font-weight: 700; }
+  .step .d { font-size: 0.88rem; color: var(--muted); }
+  .callout { background: var(--paper); border: 1px solid var(--rule); border-radius: 6px; padding: 1rem 1.1rem; margin: 1rem 0; }
+  .callout.red { border-color: var(--accent); }
+  a { color: var(--accent); }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="wrap">
+  <div class="eyebrow">T-Shirt Brothers · tshirtbrothers.com · admin + customer order process</div>
+  <h1 style="margin-top:0.4rem">TSB Order Process Audit</h1>
+  <p class="lede">Two agents walked the live app, one as a walk-in customer on a phone and one as the shop owner at the counter, through quote → price → accept → invoice → payment → close-out. This is what they found, what is now fixed on branch <code>fix/order-process-vetting</code>, and what is still open.</p>
+  <div class="meta">
+    <span><b>Date</b> 2026-11-25</span>
+    <span><b>Build vetted</b> main @ cc90404</span>
+    <span><b>Fix branch</b> 4 commits, 18 files</span>
+    <span><b>Checks</b> server tests 305/305 · client typecheck clean</span>
+  </div>
+
+  <div class="summary">
+    <div class="tile"><div class="n">21</div><div class="l">findings fixed and re-verified</div></div>
+    <div class="tile"><div class="n">7</div><div class="l">findings left for a follow-up</div></div>
+    <div class="tile"><div class="n">10 → 3</div><div class="l">clicks to bill a walk-in and record cash</div></div>
+    <div class="tile"><div class="n">4 → 2</div><div class="l">clicks to close out a draft someone paid in cash</div></div>
+  </div>
+
+  <h2>The three things you reported</h2>
+
+  <h3>1. "I couldn't close out an invoice" <span class="chip fixed">Fixed</span></h3>
+  <p>Confirmed. Three separate gaps combined into this:</p>
+  <ul>
+    <li><b>Drafts could not take money.</b> The server treats a draft as "not a bill yet", so the list hid the Record Payment button on every draft. Cash taken before the bill was sent had nowhere to go. Desktop and phone disagreed (the phone card did show it).</li>
+    <li><b>No Close / Void / Archive anywhere on the Invoices screen.</b> The archive route existed on the server but the only UI for it was a menu on the dashboard pipeline, which never listed drafts. The only exits were Delete (irreversible) or leaving it forever.</li>
+    <li><b>"Save &amp; Mark Paid" used a browser <code>prompt()</code></b> to ask how they paid. On iOS and inside the app wrapper that dialog is blocked, so the button appeared to do nothing.</li>
+  </ul>
+  <p>Now: every unpaid row, drafts included, has a green <b>Mark paid</b> (or <b>Collect balance</b>) button that opens a modal with Cash / Zelle / Cash App / Card / Check chips, amount pre-filled to what is due, and a <b>Mark Paid in Full</b> confirm. Every row and the editor have <b>Close out</b> (paid) / <b>Void</b> (unpaid) which archives without deleting; the list has <b>Partial</b> and <b>Archived</b> filters. All browser dialogs on the invoice screen were replaced with in-app confirms. A partially paid invoice no longer flips back to "sent" when you resend the balance.</p>
+
+  <h3>2. "Product pictures and information are truncated when adding to a quote" <span class="chip fixed">Fixed</span></h3>
+  <p>Confirmed in two places. The type-ahead under the Product box was an absolutely positioned list inside a scrolling drawer, so it was clipped at the drawer edge, and inside the Send Price modal (capped at 512px wide) it was cut to two half rows with 32px thumbnails and names ending in "…". The <b>Browse</b> button also searched the catalog for the line's full product name ("Gildan Heavy Cotton T-Shirt") and found nothing.</p>
+  <p>Now: suggestions render in a floating layer above everything (it follows scrolling and flips up when there is no room below), 440px+ wide, with 56px photos, names on two lines, brand · style · category, and retail / blank price. The Send Price modal widens when the line-item editor is open. Browse opens with an empty search when the line already has a product. The invoice editor's own line-item type-ahead got the same photo/brand/price treatment.</p>
+
+  <h3>3. "I should be able to just send a bill to a customer on the spot" <span class="chip fixed">Fixed · new</span></h3>
+  <p>Before: the shortest path to bill a walk-in $45 was Invoices → New → name → email → description → qty → price → Preview &amp; Send → Save &amp; Mark Paid → browser prompt. Nine to ten clicks, and the defaults were wrong for a counter sale: 7.75% tax auto-applied ($45 became $48.49) and "Require 50% deposit" was on, so an emailed link asked for $24.25.</p>
+  <p>Now there is a <b>Quick bill</b> button on the dashboard Quick Actions and in the Invoices header:</p>
+  <div class="flow">
+    <div class="step"><div class="t">Who</div><div class="d">Name (finds past customers as you type and fills email + phone), email, mobile. Email <i>or</i> phone is enough.</div></div>
+    <div class="step"><div class="t">What for</div><div class="d">Description · qty · price each. More lines if needed. Tax off unless you tick it. No deposit.</div></div>
+    <div class="step"><div class="t">Then one of three</div><div class="d"><b>Email pay link</b> · <b>Text pay link</b> · <b>They paid just now</b> (Cash / Zelle / Cash App / Card / Check → Mark paid &amp; email receipt).</div></div>
+  </div>
+  <p>Every quick bill becomes a normal invoice with an order number (TSB-n), so the invoice list, the order page and the customer page all see it. If the email or text fails at the provider, the modal says the bill is saved and offers Open the invoice / Retry / Keep as draft. A phone-only customer gets Text + Mark paid (the database now allows an invoice without an email).</p>
+
+  <h2>What else the walkthroughs found and fixed</h2>
+  <p>These were not in your list but broke the "all the elements connect" goal, and several touch money.</p>
+
+  <div class="tablewrap"><table>
+    <thead><tr><th>Finding</th><th>Where</th><th>Status</th></tr></thead>
+    <tbody>
+      <tr><td><b>The emailed accept link could take a second deposit.</b> The checkout endpoints had no status check, so a parent re-tapping the email on an accepted order got "Pay deposit $321" again; a declined quote could still be paid.</td><td>Customer payment page · <code>payments.js</code></td><td><span class="chip fixed">Fixed</span> 409 "already underway" / 410 "declined", with a settled-state page instead of "Payment Error".</td></tr>
+      <tr><td><b>Quote → Invoice collapsed every line into one</b> ("Custom printing order × 24 at $28.75"). Colors, sizes, caps and the $60 fee were lost from the bill the customer received.</td><td>Admin · convert</td><td><span class="chip fixed">Fixed</span> One line per quote item with color and size run, fee lines kept, total reconciled to the quoted price.</td></tr>
+      <tr><td><b>Converting an accepted quote minted a duplicate invoice.</b> Accepting a quote already books an invoice through the Stripe webhook; the admin's "Invoice" button created a second one beside it.</td><td>Admin · convert</td><td><span class="chip fixed">Fixed</span> Opens the existing invoice with a toast.</td></tr>
+      <tr><td><b>Deposit paid on the quote was invisible on the invoice.</b> An invoice written after a quote deposit opened at $0 paid, so the emailed Pay Now asked for the deposit again.</td><td>Server · invoice create</td><td><span class="chip fixed">Fixed</span> First invoice for an accepted quote starts with the deposit recorded (never twice).</td></tr>
+      <tr><td><b>Three screens, three different balances.</b> Orders list read the quote's deposit ($336 due on paid orders); dashboard "Unpaid balance" added the quote balance on top of the invoice balance; the order page showed "Paid $336 / Due $690".</td><td>Orders · Dashboard · Order page</td><td><span class="chip fixed">Fixed</span> All three read the same resolved money block (invoice wins when one exists).</td></tr>
+      <tr><td><b>Two prices for the same shirts.</b> Sending a price updated the quote total but not its line items, so the customer's checkout showed $666.90 on the line and $642.00 in the total.</td><td>Server · send-price</td><td><span class="chip fixed">Fixed</span> Line prices sync to the sent total.</td></tr>
+      <tr><td><b>Send Price half-failed.</b> A mail error after the quote was already flipped to "quoted" returned 500 to the admin while the customer silently had a live quote; re-sending minted a new token that killed the link already in their inbox.</td><td>Server · send-price</td><td><span class="chip fixed">Fixed</span> Price saved + clear "email failed, text the link" message; token kept on resend.</td></tr>
+      <tr><td><b>Row "Actions" menu needed two clicks</b> (the click's own scroll closed it).</td><td>Admin lists</td><td><span class="chip fixed">Fixed</span></td></tr>
+      <tr><td><b>Due Date rendered blank</b> in the invoice editor (ISO timestamp in a date field).</td><td>Invoice editor</td><td><span class="chip fixed">Fixed</span></td></tr>
+      <tr><td><b>Customer invoice page</b> said "Due $690" right above "Pay $345 Now"; no PDF download; no payment history on paid invoices.</td><td>Customer invoice</td><td><span class="chip fixed">Fixed</span> "Balance" + "Due now (50% deposit)", payment history, Download receipt (PDF).</td></tr>
+      <tr><td><b>Sticky "Get a Quote" bar covered the Pay buttons</b> on phones.</td><td>Customer · mobile</td><td><span class="chip fixed">Fixed</span> Hidden on /payment and /invoice.</td></tr>
+      <tr><td><b>Declined orders still offered "Send Balance Request" and "Complete this order".</b></td><td>Order page</td><td><span class="chip fixed">Fixed</span></td></tr>
+      <tr><td><b>Card-fee disclosure</b> missing on the quote checkout page (present on invoices).</td><td>Customer payment</td><td><span class="chip fixed">Fixed</span></td></tr>
+    </tbody>
+  </table></div>
+
+  <h2>Still open</h2>
+  <p>Worth doing, not done here. Each is a larger change or a judgement call about how you want the shop to run.</p>
+  <ul>
+    <li><b>Send Price modal prices one size grid for the whole quote.</b> A second product added inside the modal is folded into the first product's S/M/L/XL rows with no label. Pricing per line needs the pricing form reworked around <code>quote_items</code>. <span class="chip open">Open</span></li>
+    <li><b>No admin "New quote".</b> Quotes can only be started from the public quote pages; the admin path is Invoices → New (or now Quick bill). An admin-side "New quote for a walk-in" would close that gap. <span class="chip open">Open</span></li>
+    <li><b>Customer account page</b> labels a pending quote "Quoted: $432" (the auto-estimate), has no Accept / Pay deposit action on a priced quote, no invoices list, and loses the <code>?redirect</code> on login. <span class="chip open">Open</span></li>
+    <li><b>Easy Quote wizard</b> stores color, print location and quality only in free-text notes (not on <code>quote_items</code>), never states the deposit amount on "Accept &amp; Pay Deposit", and the confirmation has no "what happens next" or tracking link. <span class="chip open">Open</span></li>
+    <li><b>Mobile admin layout</b>: the order page stepper needs horizontal scroll inside its card; the new-invoice line-item row is cramped at 390px; the Products section scrolls sideways. <span class="chip open">Open</span></li>
+    <li><b>Raw error text reaches customers</b> in development (e.g. "getaddrinfo ENOTFOUND" on art upload). Production's error middleware masks server errors, but the Stripe SDK message on the invoice page's Pay Now still shows verbatim. <span class="chip open">Open</span></li>
+    <li><b>Quote status badge</b> stays "Accepted" on orders paid in full. <span class="chip open">Open</span></li>
+    <li><b>Quotes list</b> hides "Convert to Invoice" once an invoice exists and shows an invoice chip instead; the chip opens the invoice silently. Works, but worth a word on the row. <span class="chip open">Open</span></li>
+  </ul>
+
+  <h2>Verification</h2>
+  <p>A third agent re-ran the scenarios against the fixed build (desktop 1440px and iPhone 390px), then the last three leftovers it found were fixed and re-checked by hand.</p>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Scenario</th><th>Result</th><th>Evidence</th></tr></thead>
+    <tbody>
+      <tr><td>Invoices list: Mark paid on a draft, Close out, Partial / Archived filters, phone layout</td><td><span class="chip fixed">Pass</span></td><td class="num">5 clicks for mark-paid + close-out; no browser dialogs; toast "paid in full"</td></tr>
+      <tr><td>Quick Bill: mark paid (Zelle), text link, email link, phone-only customer, from dashboard and from Invoices, desktop and phone</td><td><span class="chip fixed">Pass</span></td><td class="num">2–3 clicks, 5–6 fields; provider failures show the recovery panel; invoice always exists with TSB-n</td></tr>
+      <tr><td>Quote → invoice keeps 3 lines (hoodie with sizes, fee, caps), total $690, deposit off; existing invoice reused; row menu opens first click</td><td><span class="chip fixed">Pass</span></td><td>INV editor shows product · color (M×8, L×10, XL×6)</td></tr>
+      <tr><td>Product picker in the drawer and in Send Price; Browse on a catalog line</td><td><span class="chip fixed">Pass</span></td><td>56px photos, brand · style · category, prices; nothing clipped at 390px</td></tr>
+      <tr><td>Money agrees: Orders row, order page, dashboard tile; deposit carried onto first invoice</td><td><span class="chip fixed">Pass</span></td><td class="num">$642 / $0 everywhere; carry $200 of $400 recorded as "deposit on quote"</td></tr>
+      <tr><td>Customer payment page: paid / declined quotes settle on load; provider failure keeps the chooser with retry; fee note</td><td><span class="chip fixed">Pass</span></td><td>Re-checked after the on-load fix: 0 Pay buttons on paid and declined quotes</td></tr>
+      <tr><td>Customer invoice page: Balance + Due now, PDF 200, payment history on paid</td><td><span class="chip fixed">Pass</span></td><td>application/pdf 200 with token; 403 without</td></tr>
+      <tr><td>Declined order page: no balance request / complete; no "Due"</td><td><span class="chip fixed">Pass</span></td><td>Re-checked after the fix</td></tr>
+      <tr><td>Admin dashboard at 390px</td><td><span class="chip fixed">Pass</span></td><td class="num">Page width 530 → 390; Quick Bill tappable</td></tr>
+    </tbody>
+  </table></div>
+  <p>Automated checks on the final branch: server unit tests 305 passing (4 new tests cover the deposit carry and the checkout guard), client TypeScript strict typecheck clean.</p>
+
+  <h2>Test environment notes <span class="chip env">Environment</span></h2>
+  <ul>
+    <li>Stripe, Resend (email), Twilio (SMS) and DigitalOcean Spaces (uploads) were placeholder keys, so every provider call failed. Those failures are not app bugs; how the UI handled them is reported above.</li>
+    <li>The database was rebuilt from the repo's migrations plus a hand-written bootstrap for the tables production created by hand (<code>invoices</code>, <code>quote_items</code>, <code>promotions</code>, <code>saved_designs</code>, <code>gang_sheets</code>). Consider committing a baseline schema so a fresh clone can boot.</li>
+    <li>One repo migration, <code>jds_price_tiers.sql</code>, fails on Postgres 16 ("cannot use subquery in check constraint") and is retried on every boot.</li>
+  </ul>
+
+  <h2>Shipping it</h2>
+  <div class="callout red">
+    <p><b>This session could not push to <code>kevinskey/tshirtbrothers</code></b> (repository access was denied for this session). The work is three commits on branch <code>fix/order-process-vetting</code> in the session's clone, and the same commits are exported as patch files you can apply:</p>
+    <pre>git fetch origin && git checkout -b fix/order-process-vetting origin/main
+git am 0001-*.patch 0002-*.patch 0003-*.patch 0004-*.patch
+cd server && npm test        # 305 passing
+cd ../client && npx tsc -p tsconfig.app.json --noEmit
+git checkout main && git merge --no-ff fix/order-process-vetting && git push origin main</pre>
+    <p>One new migration runs on boot: <code>invoices_customer_email_optional_20261125.sql</code> (drops NOT NULL on <code>invoices.customer_email</code> for phone-only quick bills). No data is changed.</p>
+  </div>
+</div>
