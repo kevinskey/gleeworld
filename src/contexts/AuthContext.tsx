@@ -44,6 +44,34 @@ const cleanupAuthState = () => {
   }
 };
 
+// True when a Supabase session is sitting in localStorage. gotrue-js writes it
+// under `sb-<ref>-auth-token`; an *expired* access token still counts, because
+// what restores the session is the refresh token stored alongside it. Used to
+// tell "this device has never signed in" apart from "this device is signed in
+// but we haven't finished talking to GoTrue yet".
+const hasPersistedSession = () => {
+  try {
+    return Object.keys(localStorage).some((k) => /^sb-.*-auth-token$/.test(k));
+  } catch {
+    return false;
+  }
+};
+
+// GoTrue error messages that mean the refresh token is genuinely dead and no
+// amount of retrying will bring the session back. Anything *not* on this list
+// (network blip, droplet restart, 502 from Kong, clock skew) is transient and
+// must not cost the user their session.
+const isRefreshTokenDead = (message?: string) => {
+  const m = String(message || '').toLowerCase();
+  return (
+    m.includes('refresh token not found') ||
+    m.includes('refresh_token_not_found') ||
+    m.includes('invalid refresh token') ||
+    m.includes('already used') ||
+    m.includes('user from sub claim in jwt does not exist')
+  );
+};
+
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
@@ -62,23 +90,29 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (initializedRef.current) return;
     initializedRef.current = true;
 
-    // Safety timeout to prevent infinite loading state
+    // Safety timeout to prevent infinite loading state. A device that already
+    // has a stored session gets a longer leash: flipping `loading` to false
+    // with `user` still null is what bounces ProtectedRoute to /auth, so on a
+    // slow connection a 5s cap showed a signed-in user the login form.
     const safetyTimeout = setTimeout(() => {
       if (mountedRef.current && loading) {
         console.warn('AuthContext: Safety timeout triggered - forcing loading to complete');
         setLoading(false);
       }
-    }, 5000);
+    }, hasPersistedSession() ? 15000 : 5000);
 
     const initializeAuth = async () => {
       try {
-        const { data, error } = await supabase.auth.getSession();
-        
+        let { data, error } = await supabase.auth.getSession();
+
         if (error) {
           console.error('AuthContext session error:', error.message);
-          if (error.message?.includes('JWT') || error.message?.includes('exp') || error.message?.includes('InvalidJWT')) {
+          if (isRefreshTokenDead(error.message)) {
+            // Genuinely unrecoverable. Note scope:'local' — this revokes only
+            // THIS device. The old code used scope:'global', so one bad token
+            // on one device logged the user out of every other device too.
             cleanupAuthState();
-            await supabase.auth.signOut({ scope: 'global' });
+            await supabase.auth.signOut({ scope: 'local' });
             if (mountedRef.current) {
               setSession(null);
               setUser(null);
@@ -86,10 +120,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             }
             return;
           }
+          // Transient failure: leave storage alone so the refresh token
+          // survives, and give it one more try before this boot gives up.
+          // Previously ANY error mentioning "JWT"/"exp" (which includes
+          // ordinary network and 5xx wrappers) wiped the stored session.
+          const retry = await supabase.auth.getSession();
+          if (!retry.error) {
+            data = retry.data;
+          } else {
+            console.warn('AuthContext: session retry also failed, keeping stored tokens for autoRefresh', retry.error.message);
+          }
         }
-        
+
         const session = data?.session || null;
-        
+
         if (mountedRef.current) {
           setSession(session);
           setUser(session?.user ?? null);
@@ -106,7 +150,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             }
             
             if (event === 'TOKEN_REFRESHED' && !session) {
-              cleanupAuthState();
+              // Drop React state only. gotrue-js owns the storage keys and
+              // clears them itself when a refresh is fatal; wiping them here
+              // threw away refresh tokens that were still good.
               setSession(null);
               setUser(null);
               return;
@@ -293,8 +339,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
       
       // Sign out from Supabase (do this after clearing state to avoid loading screens)
+      //
+      // scope:'local' revokes only the session on THIS device. It used to be
+      // 'global', which revoked every session the user had — sign out on the
+      // phone and the laptop and iPad were logged out too, which is a large
+      // part of why signing in felt constant.
       try {
-        await supabase.auth.signOut({ scope: 'global' });
+        await supabase.auth.signOut({ scope: 'local' });
       } catch (error) {
         console.error('AuthContext: Error signing out:', error);
       }
@@ -316,7 +367,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setSession(null);
     
     try {
-      await supabase.auth.signOut({ scope: 'global' });
+      // Local scope: resetting a wedged session on this device must not log
+      // the user out of their other devices.
+      await supabase.auth.signOut({ scope: 'local' });
     } catch (error) {
       console.warn('AuthContext: Reset auth signout failed:', error);
     }

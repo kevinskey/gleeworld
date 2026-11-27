@@ -517,7 +517,11 @@ export async function executeClientAction(
         // clean message rather than crash.
         const { data: rawTenants, error: rpcErr } = await deps.supabase.rpc('my_tenants', {});
         if (rpcErr) return { ok: false, message: `Couldn't look up your worlds: ${rpcErr.message ?? 'unknown error'}` };
-        const tenants = (rawTenants ?? []) as Array<{ slug: string; name: string | null }>;
+        // custom_domain is part of what my_tenants returns (see MyTenant in
+        // useMyTenants) and is read below to build the switch/home URL. The
+        // cast used to omit it, so the reads at tenantSwitchUrl/tenantHomeUrl
+        // were type errors even though the value was there at runtime.
+        const tenants = (rawTenants ?? []) as Array<{ slug: string; name: string | null; custom_domain?: string | null }>;
         if (tenants.length <= 1) {
           return { ok: false, message: "You're only in one world — there's nothing to switch to." };
         }
@@ -532,7 +536,7 @@ export async function executeClientAction(
         }
 
         const query = String(a.query ?? '').trim().toLowerCase();
-        let target: { slug: string; name: string | null } | null = null;
+        let target: (typeof others)[number] | null = null;
         if (query) {
           // Exact slug/name match wins over substring so 'main' doesn't
           // fuzzily hit 'kevinsworld' or 'gleeworld-main-choir'.

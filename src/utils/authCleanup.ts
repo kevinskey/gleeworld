@@ -43,12 +43,13 @@ export const resetAuthState = async (navigateFn?: (path: string) => void) => {
   console.log('authCleanup: Resetting complete auth state...');
   
   try {
-    // Sign out globally first
+    // This device only — a global scope would revoke the user's sessions on
+    // every other device they own.
     try {
-      await supabase.auth.signOut({ scope: 'global' });
-      console.log('authCleanup: Global sign out completed');
+      await supabase.auth.signOut({ scope: 'local' });
+      console.log('authCleanup: Local sign out completed');
     } catch (error) {
-      console.warn('authCleanup: Global sign out failed:', error);
+      console.warn('authCleanup: Local sign out failed:', error);
     }
     
     // Clean up all auth state

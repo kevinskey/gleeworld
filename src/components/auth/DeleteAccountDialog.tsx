@@ -26,7 +26,11 @@ export function DeleteAccountDialog({ open, onOpenChange }: {
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
 
-      await supabase.auth.signOut().catch(() => {});
+      // Explicitly global: the account is gone, so every session the user has
+      // anywhere should die with it. (auth-js already defaults to 'global' —
+      // stated outright so it isn't "fixed" to 'local' alongside the other
+      // sign-out call sites, where local is the correct scope.)
+      await supabase.auth.signOut({ scope: 'global' }).catch(() => {});
       window.location.href = '/';
     } catch (e: any) {
       toast({
