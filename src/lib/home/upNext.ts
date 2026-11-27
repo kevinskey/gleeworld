@@ -4,7 +4,10 @@ export interface FeedRowLike {
 
 const GRACE_MS = 30 * 60 * 1000;
 
-export function selectUpNext(rows: FeedRowLike[], now: Date): FeedRowLike | null {
+// Generic in the row type so callers keep their own extra fields (HouseHome
+// reads `.id` off the result to de-dupe the Up Next card against the day
+// list). Returning the bare FeedRowLike erased them.
+export function selectUpNext<T extends FeedRowLike>(rows: T[], now: Date): T | null {
   const cutoff = now.getTime() - GRACE_MS;
   const upcoming = rows
     .filter((r) => r.section === 'schedule' && new Date(r.event_at).getTime() >= cutoff)

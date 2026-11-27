@@ -219,7 +219,11 @@ export default function TrialExpiredPage() {
                 variant="ghost"
                 size="sm"
                 className="text-xs"
-                onClick={async () => { await supabase.auth.signOut(); navigate('/auth', { replace: true }); }}
+                // scope:'local' — auth-js defaults a bare signOut() to
+                // 'global', which would revoke this user's sessions on every
+                // other device too. Signing out of the trial screen here
+                // should only affect this one.
+                onClick={async () => { await supabase.auth.signOut({ scope: 'local' }); navigate('/auth', { replace: true }); }}
               >
                 <LogOut className="w-3 h-3 mr-1" /> Sign out
               </Button>
